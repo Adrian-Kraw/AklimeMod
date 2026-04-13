@@ -27,7 +27,10 @@ function AklimeMod_InitDB()
     def(db.raidFrameCenter, "enabled", true)
     def(db.raidFrameCenter, "offsetX",  0)
 
-    db.dungeonEye = db.dungeonEye or {}
+    db.chatInteraction = db.chatInteraction or {}
+    def(db.chatInteraction, "copyPaste",  false)
+    def(db.chatInteraction, "clickLinks", false)
+    def(db.chatInteraction, "btnLocked",  false)
     def(db.dungeonEye, "enabled", false)
     def(db.dungeonEye, "locked",  false)
 

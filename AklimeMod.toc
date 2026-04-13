@@ -24,6 +24,7 @@ Modules\Interface\Colorizer\ColorizerSkins_Windows.lua
 
 Modules\QoL\AutoRepair.lua
 Modules\QoL\EasyDelete.lua
+Modules\QoL\ChatInteraction.lua
 
 UI\MainWindow.lua
 UI\ColorizerUI.lua

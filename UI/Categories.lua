@@ -119,8 +119,23 @@ end
 local function toggleInitializer(button, node)
     local data = node:GetData()
     if button.name then button.name:SetText(data.name or "") end
+    local disabled = data.isDisabled and data.isDisabled()
     button.toggle:SetChecked(data.getVal())
-    button.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
+    if disabled then
+        button.toggle:Disable()
+        button.toggle:SetAlpha(0.35)
+        if button.name then button.name:SetTextColor(0.4, 0.4, 0.4, 1) end
+    else
+        button.toggle:Enable()
+        button.toggle:SetAlpha(1.0)
+        if button.name then button.name:SetTextColor(1, 0.82, 0, 1) end
+    end
+    button.toggle:SetScript("OnClick", function(self)
+        if data.isDisabled and data.isDisabled() then
+            self:SetChecked(not self:GetChecked()); return
+        end
+        data.setVal(self:GetChecked())
+    end)
 end
 
 -- Standard-Factory fuer QoL und andere Kategorien
@@ -443,6 +458,45 @@ local function BuildQoLContent()
     ShowScrollView()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     local dp = newDP()
+
+    local chatNode = addModule(dp, "Chat Interaktion",
+        function()
+            return AklimeMod_ChatInteraction.IsCopyPasteEnabled()
+                or AklimeMod_ChatInteraction.IsClickLinksEnabled()
+        end,
+        function(v)
+            AklimeMod_ChatInteraction.SetCopyPasteEnabled(v)
+            AklimeMod_ChatInteraction.SetClickLinksEnabled(v)
+        end
+    )
+    -- Toggle: Chat kopieren
+    chatNode:Insert({
+        Template = "AklimeMod_ToggleTemplate",
+        name     = "Chat kopieren aktivieren  (\"C\"-Button, verschiebbar)",
+        getVal   = function() return AklimeMod_ChatInteraction.IsCopyPasteEnabled() end,
+        setVal   = function(v)
+            AklimeMod_ChatInteraction.SetCopyPasteEnabled(v)
+            -- Neu rendern damit "Fixieren"-Toggle grau/aktiv wird
+            chatNode:SetCollapsed(true)
+            chatNode:SetCollapsed(false)
+        end,
+    })
+    -- Toggle: Fixieren (ausgegraut wenn copyPaste aus)
+    chatNode:Insert({
+        Template     = "AklimeMod_ToggleTemplate",
+        name         = "C-Button Position fixieren (kein Drag)",
+        getVal       = function() return AklimeMod_ChatInteraction.IsBtnLocked() end,
+        setVal       = function(v) AklimeMod_ChatInteraction.SetBtnLocked(v) end,
+        isDisabled   = function() return not AklimeMod_ChatInteraction.IsCopyPasteEnabled() end,
+    })
+    -- Toggle: Links klickbar
+    chatNode:Insert({
+        Template = "AklimeMod_ToggleTemplate",
+        name     = "Links klickbar machen",
+        getVal   = function() return AklimeMod_ChatInteraction.IsClickLinksEnabled() end,
+        setVal   = function(v) AklimeMod_ChatInteraction.SetClickLinksEnabled(v) end,
+    })
+    addInfo(chatNode, "C-Button: frei verschiebbar per Drag.\nLinks im Chat öffnen ein Kopierfenster.")
 
     local repairNode = addModule(dp, "Auto Repair",
         function() return AklimeModDB.autoRepair.enabled end,
