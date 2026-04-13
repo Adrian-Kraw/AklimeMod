@@ -1,0 +1,24 @@
+## Interface: 120001, 120000
+## Title: AklimeMod
+## Notes: /akm
+## Author: Aklime
+## Version: 1.0.0
+## SavedVariables: AklimeModDB
+## AddonCompartmentFunc: AklimeMod_OpenSettings
+## IconTexture: Interface\AddOns\AklimeMod\Assets\icon
+
+Templates\AklimeMod_Templates.xml
+
+Core\DB.lua
+
+UI\MainWindow.lua
+UI\Categories.lua
+
+Modules\Interface\EliteFrame.lua
+Modules\Interface\RareFrame.lua
+Modules\Interface\Colorizer.lua
+
+Modules\QoL\AutoRepair.lua
+Modules\QoL\EasyDelete.lua
+
+AklimeMod.lua
