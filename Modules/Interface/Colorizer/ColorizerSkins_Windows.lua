@@ -1576,9 +1576,61 @@ C:Register("winCommunities", {
     end,
 })
 
+
+-- ========================================================
+-- AklimeMod selbst (eigenes Fenster färben)
+-- ========================================================
+C:Register("winAklimeMod", {
+    label  = "AklimeMod",
+    group  = "Addons",
+    colors = {
+        main       = { label="Rahmen",      r=DM.r, g=DM.g, b=DM.b, a=1,   order=1 },
+        background = { label="Hintergrund", r=DG.r, g=DG.g, b=DG.b, a=0.9, order=2 },
+        borders    = { label="Inset-Rahmen",r=DR.r, g=DR.g, b=DR.b, a=1,   order=3 },
+        controls   = { label="Controls",   r=DC.r, g=DC.g, b=DC.b, a=1,   order=4 },
+    },
+    apply = function(self)
+        local mr,mg,mb,ma = col("winAklimeMod","main")
+        local br,bg2,bb,ba = col("winAklimeMod","background")
+        local ir,ig,ib,ia = col("winAklimeMod","borders")
+        local cr,cg,cb,ca = col("winAklimeMod","controls")
+        local frame = AklimeModFrame
+        if not frame then return end
+        -- Hauptrahmen (NineSlice)
+        SkinNS(frame, mr,mg,mb,ma)
+        -- Hintergrund (die Holztextur)
+        if frame.Bg then
+            frame.Bg:SetDesaturation(1)
+            frame.Bg:SetVertexColor(br,bg2,bb,ba)
+        end
+        -- Linker und rechter Inset
+        SkinNS(frame.leftInset,  ir,ig,ib,ia)
+        SkinNS(frame.rightInset, ir,ig,ib,ia)
+        -- Suchfeld
+        SkinBox(AklimeModSearchBox, cr,cg,cb,ca)
+        -- ScrollBar der rechten Seite
+        SkinScrollBar(frame.rightInset, cr,cg,cb,ca)
+    end,
+    remove = function(self)
+        local frame = AklimeModFrame
+        if not frame then return end
+        RestoreNS(frame)
+        if frame.Bg then R(frame.Bg) end
+        RestoreNS(frame.leftInset)
+        RestoreNS(frame.rightInset)
+        RestoreBox(AklimeModSearchBox)
+        RestoreScrollBar(frame.rightInset)
+    end,
+})
+
 -- ========================================================
 -- Gruppen-Reihenfolge
 -- ========================================================
+table.insert(AklimeMod_Colorizer.groupOrder, {
+    label = "Addons",
+    keys  = { "winAklimeMod" },
+})
+
 table.insert(AklimeMod_Colorizer.groupOrder, {
     label = "Windows",
     keys  = {
