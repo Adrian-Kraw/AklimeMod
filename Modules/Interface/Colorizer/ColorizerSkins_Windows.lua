@@ -769,24 +769,36 @@ C:Register("winFriends", {
 -- ========================================================
 C:Register("winGameMenu", {
     label="Spielmenü", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=0,g=0,b=0,a=0.7,order=2},controls={label="Buttons",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
+    colors={
+        main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
+        background={label="Hintergrund",r=0,g=0,b=0,a=0.7,order=2},
+    },
     apply=function(self)
-        local mr,mg,mb,ma=col("winGameMenu","main"); local br,bg2,bb,ba=col("winGameMenu","background")
-        SkinSB(GameMenuFrame,mr,mg,mb,ma)
-        for _,tex in pairs({GameMenuFrame.Header.LeftBG,GameMenuFrame.Header.CenterBG,GameMenuFrame.Header.RightBG}) do T(tex,mr,mg,mb,ma) end
-        if GameMenuFrame.Border and GameMenuFrame.Border.Bg then
-            GameMenuFrame.Border.Bg:SetDesaturation(1); GameMenuFrame.Border.Bg:SetColorTexture(br,bg2,bb,ba)
-            GameMenuFrame.Border.Bg:SetVertexColor(br,bg2,bb,ba)
+        local mr,mg,mb,ma = col("winGameMenu","main")
+        local br,bg2,bb,ba = col("winGameMenu","background")
+        SkinSB(GameMenuFrame, mr,mg,mb,ma)
+        for _,tex in pairs({GameMenuFrame.Header.LeftBG,GameMenuFrame.Header.CenterBG,GameMenuFrame.Header.RightBG}) do
+            T(tex, mr,mg,mb,ma)
+        end
+        local bg = GameMenuFrame.Border and GameMenuFrame.Border.Bg
+        if bg then
+            bg:SetDesaturation(1)
+            bg:SetColorTexture(br, bg2, bb, ba)
+            bg:SetVertexColor(br, bg2, bb, ba)
         end
     end,
     remove=function(self)
         RB(GameMenuFrame)
-        R(GameMenuFrame.Header.LeftBG); R(GameMenuFrame.Header.CenterBG); R(GameMenuFrame.Header.RightBG)
-        -- Hintergrund zurücksetzen
-        if GameMenuFrame.Border and GameMenuFrame.Border.Bg then
-            GameMenuFrame.Border.Bg:SetDesaturation(0)
-            GameMenuFrame.Border.Bg:SetColorTexture(0,0,0,0.9)
-            GameMenuFrame.Border.Bg:SetVertexColor(1,1,1,1)
+        R(GameMenuFrame.Header.LeftBG)
+        R(GameMenuFrame.Header.CenterBG)
+        R(GameMenuFrame.Header.RightBG)
+        local bg = GameMenuFrame.Border and GameMenuFrame.Border.Bg
+        if bg then
+            -- Blizzard-Original: schwarze Fläche mit 85% Alpha
+            -- Dieser Wert kommt aus dem GameMenu-XML (hardcoded Blizzard-Wert)
+            bg:SetDesaturation(0)
+            bg:SetColorTexture(0, 0, 0, 0.85)
+            bg:SetVertexColor(1, 1, 1, 1)
         end
     end,
 })
