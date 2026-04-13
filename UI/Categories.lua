@@ -328,6 +328,17 @@ local function BuildInterfaceContent(filter)
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
     )
 
+    -- Dungeon Eye
+    local dungeonEyeNode = addModule(dp3, "Dungeon Eye",
+        function() return AklimeMod_DungeonEye.IsEnabled() end,
+        function(v) AklimeMod_DungeonEye.SetEnabled(v) end
+    )
+    addToggle(dungeonEyeNode, "An Minimap-Rand fixieren",
+        function() return AklimeMod_DungeonEye.IsLocked() end,
+        function(v) AklimeMod_DungeonEye.SetLocked(v) end
+    )
+    addInfo(dungeonEyeNode, "Kein Haken = frei per Drag ziehbar.\nHaken = springt an den Minimap-Rand.")
+
     -- Raid Frame Zentrierung
     local raidCenterNode = addModule(dp3, "Raid Frame Zentrierung",
         function() return AklimeMod_RaidFrameCenter.IsEnabled() end,

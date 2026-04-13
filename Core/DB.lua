@@ -27,6 +27,10 @@ function AklimeMod_InitDB()
     def(db.raidFrameCenter, "enabled", true)
     def(db.raidFrameCenter, "offsetX",  0)
 
+    db.dungeonEye = db.dungeonEye or {}
+    def(db.dungeonEye, "enabled", false)
+    def(db.dungeonEye, "locked",  false)
+
     db.reloadUI = db.reloadUI or {}
     def(db.reloadUI, "enabled", false)
 
