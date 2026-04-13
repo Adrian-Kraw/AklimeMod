@@ -14,13 +14,11 @@ minimapBtn:RegisterForDrag("LeftButton")
 minimapBtn:SetHighlightTexture(136477)
 
 local btnOverlay = minimapBtn:CreateTexture(nil, "OVERLAY")
-btnOverlay:SetSize(70, 70)
-btnOverlay:SetTexture(136430)
+btnOverlay:SetSize(70, 70); btnOverlay:SetTexture(136430)
 btnOverlay:SetPoint("TOPLEFT", minimapBtn, "TOPLEFT")
 
 local btnBg = minimapBtn:CreateTexture(nil, "BACKGROUND")
-btnBg:SetSize(33, 33)
-btnBg:SetTexture(136467)
+btnBg:SetSize(33, 33); btnBg:SetTexture(136467)
 btnBg:SetPoint("CENTER", minimapBtn, "CENTER")
 
 local btnIcon = minimapBtn:CreateTexture(nil, "ARTWORK")
@@ -42,8 +40,7 @@ minimapBtn:SetScript("OnDragStart", function(self)
         local scale  = Minimap:GetEffectiveScale()
         local cx, cy = GetCursorPosition()
         cx, cy = cx / scale, cy / scale
-        local angle = math.deg(math.atan2(cy - my, cx - mx))
-        AklimeModDB.minimapAngle = angle
+        AklimeModDB.minimapAngle = math.deg(math.atan2(cy - my, cx - mx))
         UpdateMinimapPos()
     end)
 end)
@@ -60,7 +57,7 @@ end)
 minimapBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 -- ============================================================
--- Slash Command
+-- Slash Commands
 -- ============================================================
 SLASH_AKLIMEMOD1, SLASH_AKLIMEMOD2 = "/akm", "/aklimemod"
 SlashCmdList["AKLIMEMOD"] = function() AklimeMod_OpenSettings() end
@@ -76,11 +73,13 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
 
     if event == "ADDON_LOADED" and arg1 == "AklimeMod" then
         AklimeMod_InitDB()
+        -- Colorizer-DB nach den Skins befuellen (Skins sind bereits geladen)
+        if AklimeMod_Colorizer then
+            AklimeMod_Colorizer:Init()
+        end
         UpdateMinimapPos()
         AklimeMod_BuildLeftPanel()
-        if AklimeMod_Colorizer then AklimeMod_Colorizer:Init() end
         AklimeMod_InitSearch()
-        -- Slash-Commands je nach gespeichertem Toggle-Zustand
         if AklimeModDB.reloadUI and AklimeModDB.reloadUI.enabled then
             SLASH_AKM_RL1, SLASH_AKM_RL2 = "/rl", "/nl"
             SlashCmdList["AKM_RL"] = function() ReloadUI() end
@@ -90,7 +89,6 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         AklimeMod_UpdateRareFrame()
 
     elseif event == "PLAYER_ENTERING_WORLD" then
-        -- Elite Frame nach Zone/Login neu anwenden
         if AklimeModDB and AklimeModDB.eliteFrame and AklimeModDB.eliteFrame.enabled then
             C_Timer.After(0.5, function()
                 AklimeMod_ApplyEliteFrame(AklimeModDB.eliteFrame.style)

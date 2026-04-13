@@ -1,8 +1,8 @@
 ## Interface: 120001, 120000
 ## Title: AklimeMod
-## Notes: /akm
+## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
-## Version: 1.0.0
+## Version: 1.2.0
 ## SavedVariables: AklimeModDB
 ## AddonCompartmentFunc: AklimeMod_OpenSettings
 ## IconTexture: Interface\AddOns\AklimeMod\Assets\icon
@@ -11,14 +11,20 @@ Templates\AklimeMod_Templates.xml
 
 Core\DB.lua
 
-UI\MainWindow.lua
-UI\Categories.lua
-
 Modules\Interface\EliteFrame.lua
 Modules\Interface\RareFrame.lua
-Modules\Interface\Colorizer.lua
+Modules\Interface\Colorizer\ColorizerCore.lua
+Modules\Interface\Colorizer\ColorizerSkins_UnitFrames.lua
+Modules\Interface\Colorizer\ColorizerSkins_HUD.lua
+Modules\Interface\Colorizer\ColorizerSkins_MicroMenu.lua
+Modules\Interface\Colorizer\ColorizerSkins_ActionBars.lua
+Modules\Interface\Colorizer\ColorizerSkins_Windows.lua
 
 Modules\QoL\AutoRepair.lua
 Modules\QoL\EasyDelete.lua
+
+UI\MainWindow.lua
+UI\ColorizerUI.lua
+UI\Categories.lua
 
 AklimeMod.lua

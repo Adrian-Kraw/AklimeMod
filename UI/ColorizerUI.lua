@@ -1,0 +1,306 @@
+-- UI/ColorizerUI.lua
+-- Sub-Farben-UI für den Colorizer — exakt wie FrameColor:
+-- - Swatch-Button: rund, zeigt aktuelle Farbe (wie FrameColor colorPicker.backgroundTexture)
+-- - followClassColor-Checkbox: aktiviert Klassenfarbe, Swatch zeigt dann Klassen-Icon
+-- - Kein Lock-Button
+
+-- ============================================================
+-- Klassenicon-Atlas (WoW hat 13 Klassen)
+-- ============================================================
+local classIconAtlas = {
+    DEATHKNIGHT = "classicon-deathknight",
+    DEMONHUNTER = "classicon-demonhunter",
+    DRUID       = "classicon-druid",
+    EVOKER      = "classicon-evoker",
+    HUNTER      = "classicon-hunter",
+    MAGE        = "classicon-mage",
+    MONK        = "classicon-monk",
+    PALADIN     = "classicon-paladin",
+    PRIEST      = "classicon-priest",
+    ROGUE       = "classicon-rogue",
+    SHAMAN      = "classicon-shaman",
+    WARLOCK     = "classicon-warlock",
+    WARRIOR     = "classicon-warrior",
+}
+
+local playerClass = select(2, UnitClass("player"))
+
+-- ============================================================
+-- Swatch-Helfer
+-- ============================================================
+local function SetSwatchFromDB(colorPicker, skinKey, colorKey)
+    if not colorPicker or not colorPicker.swatch then return end
+    local db = AklimeModDB.colorizer[skinKey]
+    local co = db and db.colors and db.colors[colorKey]
+    if co and co.followClassColor then
+        -- Zeige Klassenicon statt Farbe
+        local atlas = classIconAtlas[playerClass]
+        if atlas then
+            colorPicker.swatch:SetAtlas(atlas)
+        else
+            colorPicker.swatch:SetColorTexture(1, 1, 1, 1)
+        end
+    else
+        -- Zeige die gespeicherte Farbe
+        colorPicker.swatch:SetAtlas(nil)  -- Atlas zurücksetzen
+        if co then
+            colorPicker.swatch:SetColorTexture(co.r, co.g, co.b, 1)
+        else
+            colorPicker.swatch:SetColorTexture(0.28, 0.28, 0.28, 1)
+        end
+    end
+end
+
+-- ============================================================
+-- Sub-Farb-Zeile Initializer
+-- ============================================================
+local function subColorInitializer(button, node)
+    local d  = node:GetData()
+    local C  = AklimeMod_Colorizer
+
+    if button.name then button.name:SetText(d.colorLabel or "") end
+
+    local function getEntry()
+        local db = AklimeModDB.colorizer[d.skinKey]
+        return db and db.colors and db.colors[d.colorKey]
+    end
+
+    -- Swatch initial setzen
+    SetSwatchFromDB(button.colorPicker, d.skinKey, d.colorKey)
+
+    -- followClassColor Checkbox
+    local entry = getEntry()
+    if button.followClassColor then
+        button.followClassColor:SetChecked(entry and entry.followClassColor or false)
+        -- Tooltip
+        button.followClassColor:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine("Klassenfarbe verwenden", 1, 1, 1)
+            GameTooltip:AddLine("Aktiviert: Swatch zeigt dein Klassenicon", 0.7, 0.7, 0.7)
+            GameTooltip:Show()
+        end)
+        button.followClassColor:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        button.followClassColor:SetScript("OnClick", function(self)
+            local e = getEntry()
+            if not e then return end
+            e.followClassColor = self:GetChecked()
+            -- Swatch aktualisieren
+            SetSwatchFromDB(button.colorPicker, d.skinKey, d.colorKey)
+            -- ColorPicker deaktivieren wenn Klassenfarbe aktiv
+            if button.colorPicker then
+                button.colorPicker:SetEnabled(not e.followClassColor)
+            end
+            -- Skin neu anwenden
+            if C:IsEnabled(d.skinKey) then
+                local skin = C.skins[d.skinKey]
+                if skin then pcall(function() skin:apply() end) end
+            end
+        end)
+
+        -- ColorPicker initial deaktivieren wenn followClassColor aktiv
+        if button.colorPicker and entry and entry.followClassColor then
+            button.colorPicker:SetEnabled(false)
+        elseif button.colorPicker then
+            button.colorPicker:SetEnabled(true)
+        end
+    end
+
+    -- ColorPicker Tooltip
+    if button.colorPicker then
+        button.colorPicker:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine("Farbe wählen", 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        -- ColorPicker Klick → WoW ColorPickerFrame öffnen
+        button.colorPicker:SetScript("OnClick", function()
+            local e = getEntry()
+            if not e or e.followClassColor then return end
+
+            local oldR, oldG, oldB, oldA = e.r, e.g, e.b, e.a
+
+            local function onChange()
+                local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+                local na = ColorPickerFrame:GetColorAlpha()
+                e.r, e.g, e.b, e.a = nr, ng, nb, na
+                SetSwatchFromDB(button.colorPicker, d.skinKey, d.colorKey)
+                -- Live-Update
+                if C:IsEnabled(d.skinKey) then
+                    local skin = C.skins[d.skinKey]
+                    if skin then pcall(function() skin:apply() end) end
+                end
+            end
+
+            ColorPickerFrame:Hide()
+            ColorPickerFrame:SetupColorPickerAndShow({
+                swatchFunc  = onChange,
+                opacityFunc = onChange,
+                cancelFunc  = function()
+                    e.r, e.g, e.b, e.a = oldR, oldG, oldB, oldA
+                    SetSwatchFromDB(button.colorPicker, d.skinKey, d.colorKey)
+                    if C:IsEnabled(d.skinKey) then
+                        local skin = C.skins[d.skinKey]
+                        if skin then pcall(function() skin:apply() end) end
+                    end
+                end,
+                hasOpacity = true,
+                opacity    = e.a or 1,
+                r = e.r, g = e.g, b = e.b,
+            })
+        end)
+    end
+end
+
+-- ============================================================
+-- Skin-Header Initializer
+-- ============================================================
+local function skinHeaderInitializer(button, node)
+    local d = node:GetData()
+    local C = AklimeMod_Colorizer
+
+    if button.name then button.name:SetText(d.name or "") end
+    button.enableButton:SetChecked(C:IsEnabled(d.skinKey))
+
+    local function updateVisuals()
+        local enabled = C:IsEnabled(d.skinKey)
+        if button.name then
+            if enabled then
+                button.name:SetTextColor(GameFontNormalLeft:GetTextColor())
+            else
+                button.name:SetTextColor(0.5, 0.5, 0.5, 1)
+            end
+        end
+        local atlas = node:IsCollapsed()
+            and "Options_ListExpand_Right"
+            or  "Options_ListExpand_Right_Expanded"
+        if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+        if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+    end
+    updateVisuals()
+
+    button:SetScript("OnClick", function()
+        node:ToggleCollapsed()
+        updateVisuals()
+    end)
+
+    button.enableButton:SetScript("OnClick", function(self)
+        local v = self:GetChecked()
+        AklimeModDB.colorizer[d.skinKey].enabled = v
+        local skin = C.skins[d.skinKey]
+        if skin then
+            if v then
+                pcall(function() skin:apply() end)
+            else
+                pcall(function() skin:remove() end)
+            end
+        end
+        if not v then node:SetCollapsed(true) end
+        updateVisuals()
+    end)
+end
+
+-- ============================================================
+-- Toggle Initializer (Skin-interne Toggles)
+-- ============================================================
+local function skinToggleInitializer(button, node)
+    local d  = node:GetData()
+    local C  = AklimeMod_Colorizer
+    if button.name then button.name:SetText(d.toggleLabel or "") end
+    local db = AklimeModDB.colorizer[d.skinKey]
+    if button.toggle then
+        button.toggle:SetChecked(db and db.toggles and db.toggles[d.toggleKey] or false)
+        button.toggle:SetScript("OnClick", function(self)
+            if db and db.toggles then db.toggles[d.toggleKey] = self:GetChecked() end
+            if C:IsEnabled(d.skinKey) then
+                local skin = C.skins[d.skinKey]
+                if skin then
+                    pcall(function() skin:remove() end)
+                    pcall(function() skin:apply()  end)
+                end
+            end
+        end)
+    end
+end
+
+-- ============================================================
+-- Separator Initializer
+-- ============================================================
+local function separatorInitializer(frame, node)
+    local data = node:GetData()
+    if not frame.label then return end
+    frame.label:SetText(data.label or "")
+    if data.centered then
+        frame.label:SetFont(GameFontNormalLarge:GetFont())
+        frame.label:SetTextColor(1, 0.82, 0, 1)
+        frame.label:SetJustifyH("CENTER")
+        frame.label:ClearAllPoints()
+        frame.label:SetPoint("LEFT",  frame, "LEFT",  0, 0)
+        frame.label:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
+    elseif data.sublabel then
+        frame.label:SetFont(GameFontHighlightSmall:GetFont())
+        frame.label:SetTextColor(0.65, 0.65, 0.65, 1)
+        frame.label:SetJustifyH("LEFT")
+        frame.label:ClearAllPoints()
+        frame.label:SetPoint("LEFT", frame, "LEFT", 8, 0)
+    else
+        frame.label:SetFont(GameFontNormalLarge:GetFont())
+        frame.label:SetTextColor(1, 0.82, 0, 1)
+        frame.label:SetJustifyH("LEFT")
+        frame.label:ClearAllPoints()
+        frame.label:SetPoint("LEFT", frame, "LEFT", 8, 0)
+    end
+end
+
+-- ============================================================
+-- Element-Factory (erweitert — unterstützt auch Module-Header für Elite/Rare)
+-- ============================================================
+function AklimeMod_ColorizerRightFactory(factory, node)
+    local d = node:GetData()
+    local t = d.Template
+    if t == "AklimeMod_SkinHeaderTemplate" then
+        factory(t, skinHeaderInitializer)
+    elseif t == "AklimeMod_SubColorTemplate" then
+        factory(t, subColorInitializer)
+    elseif t == "AklimeMod_ToggleTemplate" and d.toggleKey then
+        factory(t, skinToggleInitializer)
+    elseif t == "AklimeMod_ToggleTemplate" then
+        -- Normaler Toggle für Elite/Rare
+        factory(t, function(btn, nd)
+            local data = nd:GetData()
+            if btn.name then btn.name:SetText(data.name or "") end
+            btn.toggle:SetChecked(data.getVal())
+            btn.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
+        end)
+    elseif t == "AklimeMod_ModuleHeaderTemplate" then
+        factory(t, function(button, nd)
+            local data = nd:GetData()
+            if button.name then button.name:SetText(data.name or "") end
+            button.enableButton:SetChecked(data.getEnabled())
+            local function updateArrow()
+                local atlas = nd:IsCollapsed() and "Options_ListExpand_Right" or "Options_ListExpand_Right_Expanded"
+                if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+                if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+            end
+            updateArrow()
+            button:SetScript("OnClick", function() nd:ToggleCollapsed(); updateArrow() end)
+            button.enableButton:SetScript("OnClick", function(self)
+                data.setEnabled(self:GetChecked()); updateArrow()
+            end)
+        end)
+    elseif t == "AklimeMod_SeparatorTemplate" then
+        factory(t, separatorInitializer)
+    elseif t == "AklimeMod_InfoTextTemplate" then
+        factory(t, function(frame, nd)
+            if frame.info then frame.info:SetText(nd:GetData().text or "") end
+        end)
+    elseif t == "AklimeMod_ActionButtonTemplate" then
+        factory(t, function(frame, nd)
+            local data = nd:GetData()
+            if frame.label then frame.label:SetText(data.label or "") end
+            frame:SetScript("OnClick", function() if data.onClick then data.onClick() end end)
+        end)
+    end
+end
