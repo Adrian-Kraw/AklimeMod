@@ -328,6 +328,13 @@ local function BuildInterfaceContent(filter)
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
     )
 
+    -- Raid Frame Zentrierung
+    local raidCenterNode = addModule(dp3, "Raid Frame Zentrierung",
+        function() return AklimeMod_RaidFrameCenter.IsEnabled() end,
+        function(v) AklimeMod_RaidFrameCenter.SetEnabled(v) end
+    )
+    addInfo(raidCenterNode, "Zentriert Raid-Frames dynamisch.\nGruppen werden immer um die Bildschirmmitte angeordnet.\nIm Bearbeitungsmodus inaktiv.")
+
     -- Colorizer-Nodes direkt in dp3 einfügen
     local function insertColorizerNodes(targetDP, searchFilter)
         local C = AklimeMod_Colorizer
