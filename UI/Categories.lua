@@ -498,6 +498,20 @@ local function BuildQoLContent()
     })
     addInfo(chatNode, "C-Button: frei verschiebbar per Drag.\nLinks im Chat öffnen ein Kopierfenster.")
 
+    local vaultNode = addModule(dp, "Wöchentliche Schatzkammer",
+        function() return true end,
+        function(v) end
+    )
+    addInfo(vaultNode, "Öffnet die wöchentliche Schatzkammer.\nAuch über das Radialmenü am Minimap-Icon erreichbar.")
+    addAction(vaultNode, "Schatzkammer öffnen", function()
+        C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
+        if WeeklyRewardsFrame:IsShown() then
+            WeeklyRewardsFrame:Hide()
+        else
+            WeeklyRewardsFrame:Show()
+        end
+    end)
+
     local repairNode = addModule(dp, "Auto Repair",
         function() return AklimeModDB.autoRepair.enabled end,
         function(v) AklimeModDB.autoRepair.enabled = v end
