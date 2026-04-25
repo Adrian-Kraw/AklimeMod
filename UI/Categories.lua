@@ -173,6 +173,13 @@ local function toggleInitializer(button, node)
         end
         data.setVal(self:GetChecked())
     end)
+    button.toggle:HookScript("OnMouseDown", function(self)
+        self:StopMousePropagation()
+    end)
+    -- Verhindert dass Klick auf Toggle den Parent-Node collapsed
+    button:SetScript("OnClick", function(self, mouseButton)
+        -- Nichts tun — Toggle regelt sich selbst
+    end)
 end
 
 -- Standard-Factory fuer QoL und andere Kategorien
@@ -186,7 +193,10 @@ function AklimeMod_RightFactory(factory, node)
         factory(t, toggleInitializer)
     elseif t == "AklimeMod_InfoTextTemplate" then
         factory(t, function(frame, nd)
-            if frame.info then frame.info:SetText(nd:GetData().text or "") end
+            local data = nd:GetData()
+            local text = data.text
+            if type(text) == "function" then text = text() end
+            if frame.info then frame.info:SetText(text or "") end
         end)
     elseif t == "AklimeMod_ActionButtonTemplate" then
         factory(t, actionInitializer)
@@ -639,6 +649,46 @@ local function BuildQoLContent()
         "Hinweis: Blizzard sperrt Mana-Werte (Secret Values) in 12.0.\n" ..
         "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht moeglich."
     )
+
+    -- ============================================================
+    -- Trennlinie: Gesundheit
+    -- ============================================================
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Gesundheit",
+        centered = false,
+    })
+
+    local drinkNode = addModule(dp, "Trinkerinnerung",
+        function() return AklimeMod_DrinkReminder.IsEnabled() end,
+        function(v) AklimeMod_DrinkReminder.SetEnabled(v) end
+    )
+    addInfo(drinkNode,
+        "Erinnert dich regelmäßig daran zu trinken und dich zu strecken.\n" ..
+        "Erscheint als Ingame-Popup oben mittig. In Instanzen wird die\n" ..
+        "Meldung zurückgehalten und kommt wenn du wieder draußen bist."
+    )
+    addToggle(drinkNode, "Nicht in Instanzen",
+        function() return AklimeMod_DrinkReminder.GetDisableInInstance() end,
+        function(v) AklimeMod_DrinkReminder.SetDisableInInstance(v) end
+    )
+    addInfo(drinkNode, "Intervall:")
+    local intervals = {
+        { label = "30 Minuten", minutes = 30  },
+        { label = "1 Stunde",   minutes = 60  },
+        { label = "2 Stunden",  minutes = 120 },
+    }
+    for _, opt in ipairs(intervals) do
+        local m = opt.minutes
+        addToggle(drinkNode,
+            opt.label,
+            function() return AklimeMod_DrinkReminder.GetInterval() == m end,
+            function(v) if v then AklimeMod_DrinkReminder.SetInterval(m) end end
+        )
+    end
+    addAction(drinkNode, "Jetzt testen", function()
+        AklimeMod_DrinkReminder.ShowNow()
+    end)
 
     RSV():SetDataProvider(dp)
 end

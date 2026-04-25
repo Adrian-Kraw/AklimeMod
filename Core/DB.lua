@@ -52,6 +52,11 @@ function AklimeMod_InitDB()
     db.leaveServiceChannel = db.leaveServiceChannel or {}
     def(db.leaveServiceChannel, "enabled", true)  -- Default: an
 
+    db.drinkReminder = db.drinkReminder or {}
+    def(db.drinkReminder, "enabled",           false)
+    def(db.drinkReminder, "intervalMinutes",   60)
+    def(db.drinkReminder, "disableInInstance", true)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end
