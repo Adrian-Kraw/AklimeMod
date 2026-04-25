@@ -421,6 +421,39 @@ local function BuildInterfaceContent(filter)
             centered = true,
         })
 
+        -- Master-Toggle: alle Skins an/aus
+        local function AllEnabled()
+            for _, group in ipairs(C.groupOrder) do
+                for _, key in ipairs(group.keys) do
+                    if not C:IsEnabled(key) then return false end
+                end
+            end
+            return true
+        end
+
+        local function SetAll(v)
+            for _, group in ipairs(C.groupOrder) do
+                for _, key in ipairs(group.keys) do
+                    AklimeModDB.colorizer[key] = AklimeModDB.colorizer[key] or {}
+                    AklimeModDB.colorizer[key].enabled = v
+                    local skin = C.skins[key]
+                    if skin then
+                        if v then pcall(function() skin:apply() end)
+                        else      pcall(function() skin:remove() end) end
+                    end
+                end
+            end
+            -- UI neu aufbauen
+            if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
+        end
+
+        targetDP:Insert({
+            Template   = "AklimeMod_ModuleHeaderTemplate",
+            name       = "Alle aktivieren / deaktivieren",
+            getEnabled = AllEnabled,
+            setEnabled = SetAll,
+        })
+
         for _, group in ipairs(C.groupOrder) do
             local groupHasMatch = true
             if searchFilter and searchFilter ~= "" then
@@ -497,6 +530,7 @@ local function BuildInterfaceContent(filter)
     insertColorizerNodes(dp3, filter)
     RSV():SetDataProvider(dp3)
 end
+AklimeMod_BuildInterfaceContent = BuildInterfaceContent
 
 -- ============================================================
 -- Quality of Life
