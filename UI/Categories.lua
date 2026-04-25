@@ -411,6 +411,12 @@ local function BuildInterfaceContent(filter)
     )
     addInfo(raidCenterNode, "Zentriert Raid-Frames dynamisch.\nGruppen werden immer um die Bildschirmmitte angeordnet.\nIm Bearbeitungsmodus inaktiv.")
 
+    local hideMacroNode = addModule(dp3, "Makro-Namen ausblenden",
+        function() return AklimeMod_HideMacroNames.IsEnabled() end,
+        function(v) AklimeMod_HideMacroNames.SetEnabled(v) end
+    )
+    addInfo(hideMacroNode, "Versteckt die Makro-Namen auf allen Action Buttons.\nNeu erstellte Makros werden ebenfalls sofort ausgeblendet.")
+
     -- Colorizer-Nodes direkt in dp3 einfügen
     local function insertColorizerNodes(targetDP, searchFilter)
         local C = AklimeMod_Colorizer

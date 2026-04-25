@@ -15,6 +15,7 @@ Modules\Interface\EliteFrame.lua
 Modules\Interface\RareFrame.lua
 Modules\Interface\RaidFrameCenter.lua
 Modules\Interface\DungeonEye.lua
+Modules\Interface\HideMacroNames.lua
 Modules\Interface\Colorizer\ColorizerCore.lua
 Modules\Interface\Colorizer\ColorizerSkins_UnitFrames.lua
 Modules\Interface\Colorizer\ColorizerSkins_HUD.lua

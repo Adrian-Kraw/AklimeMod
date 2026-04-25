@@ -60,6 +60,9 @@ function AklimeMod_InitDB()
     db.clock24h = db.clock24h or {}
     def(db.clock24h, "enabled", false)
 
+    db.hideMacroNames = db.hideMacroNames or {}
+    def(db.hideMacroNames, "enabled", false)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end
