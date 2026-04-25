@@ -43,6 +43,9 @@ function AklimeMod_InitDB()
     def(db.easyDelete, "skipDelete",  false)
     def(db.easyDelete, "skipConfirm", false)
 
+    db.manaWarning = db.manaWarning or {}
+    def(db.manaWarning, "enabled", false)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end

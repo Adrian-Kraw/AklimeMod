@@ -105,15 +105,52 @@ end
 local function moduleHeaderInitializer(button, node)
     local data = node:GetData()
     if button.name then button.name:SetText(data.name or "") end
-    button.enableButton:SetChecked(data.getEnabled())
-    local function updateArrow()
-        local atlas = node:IsCollapsed() and "Options_ListExpand_Right" or "Options_ListExpand_Right_Expanded"
-        if button.Right         then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
-        if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+
+    local function isEnabled() return data.getEnabled() end
+
+    local function updateVisuals()
+        local enabled = isEnabled()
+        local collapsed = node:IsCollapsed()
+
+        -- Wenn deaktiviert: collapsed erzwingen und Pfeil ausgrauen
+        if not enabled then
+            if not collapsed then node:SetCollapsed(true) end
+            if button.Right          then button.Right:SetAlpha(0.25) end
+            if button.HighlightRight then button.HighlightRight:SetAlpha(0) end
+        else
+            local atlas = collapsed and "Options_ListExpand_Right" or "Options_ListExpand_Right_Expanded"
+            if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize); button.Right:SetAlpha(1) end
+            if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize); button.HighlightRight:SetAlpha(1) end
+        end
     end
-    updateArrow()
-    button:SetScript("OnClick", function() node:ToggleCollapsed(); updateArrow() end)
-    button.enableButton:SetScript("OnClick", function(self) data.setEnabled(self:GetChecked()); updateArrow() end)
+
+    button.enableButton:SetChecked(isEnabled())
+    updateVisuals()
+
+    -- PreClick blockiert den Klick bevor ReputationHeaderTemplate ihn verarbeitet
+    button:SetScript("PreClick", function(self, mouseButton)
+        if mouseButton == "LeftButton" or mouseButton == nil then
+            if not isEnabled() then
+                -- Klick abfangen: collapsed erzwingen damit der Header nicht aufklappt
+                node:SetCollapsed(true)
+            end
+        end
+    end)
+
+    button:SetScript("OnClick", function(self, mouseButton)
+        if not isEnabled() then
+            node:SetCollapsed(true)
+            updateVisuals()
+            return
+        end
+        node:ToggleCollapsed()
+        updateVisuals()
+    end)
+
+    button.enableButton:SetScript("OnClick", function(self)
+        data.setEnabled(self:GetChecked())
+        updateVisuals()
+    end)
 end
 
 local function toggleInitializer(button, node)
@@ -576,6 +613,19 @@ local function BuildQoLContent()
             end
             refreshDeleteNode()
         end
+    )
+
+    local manaNode = addModule(dp, "Mana Warnung",
+        function() return AklimeMod_ManaWarning.IsEnabled() end,
+        function(v) AklimeMod_ManaWarning.SetEnabled(v) end
+    )
+    addInfo(manaNode,
+        "Sendet eine Nachricht im Gruppen- / Instanz-Chat wenn Mana niedrig ist.\n" ..
+        "Nur aktiv wenn du in einer Gruppe oder Instanz bist.\n\n" ..
+        "Im Kampf: Warnung bei Low Mana (~20%) und Out of Mana.\n" ..
+        "Außerhalb Kampf: Nur Out of Mana bei fehlgeschlagenem Spell.\n\n" ..
+        "Hinweis: Blizzard sperrt Mana-Werte (Secret Values) in 12.0.\n" ..
+        "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht moeglich."
     )
 
     RSV():SetDataProvider(dp)

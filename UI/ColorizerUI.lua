@@ -164,8 +164,11 @@ local function skinHeaderInitializer(button, node)
     if button.name then button.name:SetText(d.name or "") end
     button.enableButton:SetChecked(C:IsEnabled(d.skinKey))
 
+    local function isEnabled() return C:IsEnabled(d.skinKey) end
+
     local function updateVisuals()
-        local enabled = C:IsEnabled(d.skinKey)
+        local enabled = isEnabled()
+        local collapsed = node:IsCollapsed()
         if button.name then
             if enabled then
                 button.name:SetTextColor(GameFontNormalLeft:GetTextColor())
@@ -173,15 +176,30 @@ local function skinHeaderInitializer(button, node)
                 button.name:SetTextColor(0.5, 0.5, 0.5, 1)
             end
         end
-        local atlas = node:IsCollapsed()
-            and "Options_ListExpand_Right"
-            or  "Options_ListExpand_Right_Expanded"
-        if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
-        if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+        if not enabled then
+            if not collapsed then node:SetCollapsed(true) end
+            if button.Right          then button.Right:SetAlpha(0.25) end
+            if button.HighlightRight then button.HighlightRight:SetAlpha(0) end
+        else
+            local atlas = collapsed and "Options_ListExpand_Right" or "Options_ListExpand_Right_Expanded"
+            if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize); button.Right:SetAlpha(1) end
+            if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize); button.HighlightRight:SetAlpha(1) end
+        end
     end
     updateVisuals()
 
+    button:SetScript("PreClick", function(self, mouseButton)
+        if not isEnabled() then
+            node:SetCollapsed(true)
+        end
+    end)
+
     button:SetScript("OnClick", function()
+        if not isEnabled() then
+            node:SetCollapsed(true)
+            updateVisuals()
+            return
+        end
         node:ToggleCollapsed()
         updateVisuals()
     end)
@@ -279,15 +297,33 @@ function AklimeMod_ColorizerRightFactory(factory, node)
             local data = nd:GetData()
             if button.name then button.name:SetText(data.name or "") end
             button.enableButton:SetChecked(data.getEnabled())
-            local function updateArrow()
-                local atlas = nd:IsCollapsed() and "Options_ListExpand_Right" or "Options_ListExpand_Right_Expanded"
-                if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
-                if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize) end
+
+            local function isEnabled() return data.getEnabled() end
+
+            local function updateVisuals()
+                local enabled = isEnabled()
+                local collapsed = nd:IsCollapsed()
+                if not enabled then
+                    if not collapsed then nd:SetCollapsed(true) end
+                    if button.Right          then button.Right:SetAlpha(0.25) end
+                    if button.HighlightRight then button.HighlightRight:SetAlpha(0) end
+                else
+                    local atlas = collapsed and "Options_ListExpand_Right" or "Options_ListExpand_Right_Expanded"
+                    if button.Right          then button.Right:SetAtlas(atlas, TextureKitConstants.UseAtlasSize); button.Right:SetAlpha(1) end
+                    if button.HighlightRight then button.HighlightRight:SetAtlas(atlas, TextureKitConstants.UseAtlasSize); button.HighlightRight:SetAlpha(1) end
+                end
             end
-            updateArrow()
-            button:SetScript("OnClick", function() nd:ToggleCollapsed(); updateArrow() end)
+            updateVisuals()
+
+            button:SetScript("PreClick", function(self, mouseButton)
+                if not isEnabled() then nd:SetCollapsed(true) end
+            end)
+            button:SetScript("OnClick", function()
+                if not isEnabled() then nd:SetCollapsed(true); updateVisuals(); return end
+                nd:ToggleCollapsed(); updateVisuals()
+            end)
             button.enableButton:SetScript("OnClick", function(self)
-                data.setEnabled(self:GetChecked()); updateArrow()
+                data.setEnabled(self:GetChecked()); updateVisuals()
             end)
         end)
     elseif t == "AklimeMod_SeparatorTemplate" then
