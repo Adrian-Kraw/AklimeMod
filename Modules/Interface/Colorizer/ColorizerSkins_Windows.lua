@@ -782,6 +782,10 @@ C:Register("winGameMenu", {
         end
         local bg = GameMenuFrame.Border and GameMenuFrame.Border.Bg
         if bg then
+            -- Original-Textur cachen beim ersten apply
+            if not self._bgOrigTex then
+                self._bgOrigTex = bg:GetTexture()
+            end
             bg:SetDesaturation(1)
             bg:SetColorTexture(br, bg2, bb, ba)
             bg:SetVertexColor(br, bg2, bb, ba)
@@ -794,11 +798,14 @@ C:Register("winGameMenu", {
         R(GameMenuFrame.Header.RightBG)
         local bg = GameMenuFrame.Border and GameMenuFrame.Border.Bg
         if bg then
-            -- Blizzard-Original: schwarze Fläche mit 85% Alpha
-            -- Dieser Wert kommt aus dem GameMenu-XML (hardcoded Blizzard-Wert)
             bg:SetDesaturation(0)
-            bg:SetColorTexture(0, 0, 0, 0.85)
             bg:SetVertexColor(1, 1, 1, 1)
+            -- Original Blizzard Textur wiederherstellen
+            if self._bgOrigTex then
+                bg:SetTexture(self._bgOrigTex)
+            else
+                bg:SetColorTexture(0, 0, 0, 0)
+            end
         end
     end,
 })
