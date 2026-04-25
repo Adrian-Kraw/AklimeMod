@@ -104,6 +104,8 @@ end
 
 local function moduleHeaderInitializer(button, node)
     local data = node:GetData()
+    if not data or type(data.getEnabled) ~= "function" then return end
+
     if button.name then button.name:SetText(data.name or "") end
 
     local function isEnabled() return data.getEnabled() end
@@ -111,8 +113,6 @@ local function moduleHeaderInitializer(button, node)
     local function updateVisuals()
         local enabled = isEnabled()
         local collapsed = node:IsCollapsed()
-
-        -- Wenn deaktiviert: collapsed erzwingen und Pfeil ausgrauen
         if not enabled then
             if not collapsed then node:SetCollapsed(true) end
             if button.Right          then button.Right:SetAlpha(0.25) end
@@ -124,20 +124,19 @@ local function moduleHeaderInitializer(button, node)
         end
     end
 
+    if not button.enableButton then return end
     button.enableButton:SetChecked(isEnabled())
     updateVisuals()
 
-    -- PreClick blockiert den Klick bevor ReputationHeaderTemplate ihn verarbeitet
     button:SetScript("PreClick", function(self, mouseButton)
-        if mouseButton == "LeftButton" or mouseButton == nil then
-            if not isEnabled() then
-                -- Klick abfangen: collapsed erzwingen damit der Header nicht aufklappt
-                node:SetCollapsed(true)
-            end
+        if not node:GetData() or type(node:GetData().getEnabled) ~= "function" then return end
+        if (mouseButton == "LeftButton" or mouseButton == nil) and not isEnabled() then
+            node:SetCollapsed(true)
         end
     end)
 
     button:SetScript("OnClick", function(self, mouseButton)
+        if not node:GetData() or type(node:GetData().getEnabled) ~= "function" then return end
         if not isEnabled() then
             node:SetCollapsed(true)
             updateVisuals()
@@ -173,10 +172,6 @@ local function toggleInitializer(button, node)
         end
         data.setVal(self:GetChecked())
     end)
-    button.toggle:HookScript("OnMouseDown", function(self)
-        self:StopMousePropagation()
-    end)
-    -- Verhindert dass Klick auf Toggle den Parent-Node collapsed
     button:SetScript("OnClick", function(self, mouseButton)
         -- Nichts tun — Toggle regelt sich selbst
     end)
@@ -416,6 +411,30 @@ local function BuildInterfaceContent(filter)
         function(v) AklimeMod_HideMacroNames.SetEnabled(v) end
     )
     addInfo(hideMacroNode, "Versteckt die Makro-Namen auf allen Action Buttons.\nNeu erstellte Makros werden ebenfalls sofort ausgeblendet.")
+
+    if AklimeMod_MinimapCollector then
+        local mmCollectorNode = addModule(dp3, "Minimap Button Sammler",
+            function()
+                if not AklimeMod_MinimapCollector then return false end
+                return AklimeMod_MinimapCollector.IsEnabled()
+            end,
+            function(v)
+                if not AklimeMod_MinimapCollector then return end
+                AklimeMod_MinimapCollector.SetEnabled(v)
+            end
+        )
+        addInfo(mmCollectorNode, "Versteckt alle Addon-Minimap-Buttons in einem eigenen Button.\nKlick: Buttons aufklappen. Drag: Position ändern — wird automatisch gespeichert.")
+        addToggle(mmCollectorNode, "Eigenen AklimeMod-Button einschließen",
+            function()
+                if not AklimeMod_MinimapCollector then return false end
+                return AklimeMod_MinimapCollector.IncludeOwn()
+            end,
+            function(v)
+                if not AklimeMod_MinimapCollector then return end
+                AklimeMod_MinimapCollector.SetIncludeOwn(v)
+            end
+        )
+    end
 
     -- Colorizer-Nodes direkt in dp3 einfügen
     local function insertColorizerNodes(targetDP, searchFilter)

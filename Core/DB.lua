@@ -63,6 +63,12 @@ function AklimeMod_InitDB()
     db.hideMacroNames = db.hideMacroNames or {}
     def(db.hideMacroNames, "enabled", false)
 
+    db.minimapCollector = db.minimapCollector or {}
+    def(db.minimapCollector, "enabled",     false)
+    def(db.minimapCollector, "includeOwn",  false)
+    def(db.minimapCollector, "angle",       143)
+    def(db.minimapCollector, "locked",      false)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end
