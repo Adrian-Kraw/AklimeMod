@@ -724,6 +724,12 @@ local function BuildQoLContent()
     )
     addInfo(clock24hNode, "Setzt die Blizzard-Uhr auf 24-Stunden-Format.\nWird beim Login automatisch aktiviert wenn nicht bereits gesetzt.")
 
+    local mapCoordsNode = addModule(dp, "Karten-Koordinaten",
+        function() return AklimeMod_MapCoords.IsEnabled() end,
+        function(v) AklimeMod_MapCoords.SetEnabled(v) end
+    )
+    addInfo(mapCoordsNode, "Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.\nFormat: Maus: X / Y  -  Spieler: X / Y")
+
     -- ============================================================
     -- Trennlinie: Gesundheit
     -- ============================================================

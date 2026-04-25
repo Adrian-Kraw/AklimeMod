@@ -33,6 +33,7 @@ Modules\QoL\AutoSellJunk.lua
 Modules\QoL\LeaveServiceChannel.lua
 Modules\QoL\DrinkReminder.lua
 Modules\QoL\Clock24h.lua
+Modules\QoL\MapCoords.lua
 
 UI\MainWindow.lua
 UI\ColorizerUI.lua

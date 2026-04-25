@@ -50,7 +50,10 @@ function AklimeMod_InitDB()
     def(db.autoSellJunk, "enabled", false)
 
     db.leaveServiceChannel = db.leaveServiceChannel or {}
-    def(db.leaveServiceChannel, "enabled", true)  -- Default: an
+    def(db.leaveServiceChannel, "enabled", true)
+
+    db.mapCoords = db.mapCoords or {}
+    def(db.mapCoords, "enabled", false)  -- Default: an
 
     db.drinkReminder = db.drinkReminder or {}
     def(db.drinkReminder, "enabled",           false)
