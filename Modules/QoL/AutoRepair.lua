@@ -13,10 +13,8 @@ repairFrame:SetScript("OnEvent", function()
         local gw = GetGuildBankWithdrawMoney()
         if IsInGuild() and gw and (gw == -1 or gw >= cost) then
             RepairAllItems(1)
-            if GetRepairAllCost() == 0 then
-                print("|cFF00CCFFAklimeMod:|r Auf Gildenkosten repariert für: " .. GetCoinTextureString(cost))
-                return
-            end
+            print("|cFF00CCFFAklimeMod:|r Auf Gildenkosten repariert für: " .. GetCoinTextureString(cost))
+            return
         end
     end
 
