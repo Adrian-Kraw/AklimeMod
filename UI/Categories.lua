@@ -650,6 +650,12 @@ local function BuildQoLContent()
         "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht moeglich."
     )
 
+    local clock24hNode = addModule(dp, "24-Stunden-Uhr",
+        function() return AklimeMod_Clock24h.IsEnabled() end,
+        function(v) AklimeMod_Clock24h.SetEnabled(v) end
+    )
+    addInfo(clock24hNode, "Setzt die Blizzard-Uhr auf 24-Stunden-Format.\nWird beim Login automatisch aktiviert wenn nicht bereits gesetzt.")
+
     -- ============================================================
     -- Trennlinie: Gesundheit
     -- ============================================================

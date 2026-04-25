@@ -57,6 +57,9 @@ function AklimeMod_InitDB()
     def(db.drinkReminder, "intervalMinutes",   60)
     def(db.drinkReminder, "disableInInstance", true)
 
+    db.clock24h = db.clock24h or {}
+    def(db.clock24h, "enabled", false)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end

@@ -29,6 +29,7 @@ Modules\QoL\ManaWarning.lua
 Modules\QoL\AutoSellJunk.lua
 Modules\QoL\LeaveServiceChannel.lua
 Modules\QoL\DrinkReminder.lua
+Modules\QoL\Clock24h.lua
 
 UI\MainWindow.lua
 UI\ColorizerUI.lua
