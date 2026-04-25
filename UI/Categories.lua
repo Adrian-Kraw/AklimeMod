@@ -615,6 +615,12 @@ local function BuildQoLContent()
         end
     )
 
+    local sellJunkNode = addModule(dp, "Graue Items automatisch verkaufen",
+        function() return AklimeMod_AutoSellJunk.IsEnabled() end,
+        function(v) AklimeMod_AutoSellJunk.SetEnabled(v) end
+    )
+    addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Haendler oeffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
+
     local manaNode = addModule(dp, "Mana Warnung",
         function() return AklimeMod_ManaWarning.IsEnabled() end,
         function(v) AklimeMod_ManaWarning.SetEnabled(v) end

@@ -46,6 +46,9 @@ function AklimeMod_InitDB()
     db.manaWarning = db.manaWarning or {}
     def(db.manaWarning, "enabled", false)
 
+    db.autoSellJunk = db.autoSellJunk or {}
+    def(db.autoSellJunk, "enabled", false)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end
