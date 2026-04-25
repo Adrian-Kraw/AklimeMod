@@ -36,3 +36,4 @@ UI\ColorizerUI.lua
 UI\Categories.lua
 
 AklimeMod.lua
+Core\Commands.lua

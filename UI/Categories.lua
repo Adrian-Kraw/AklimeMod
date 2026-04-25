@@ -256,11 +256,11 @@ local function GetOrCreateDashboard(parent)
     Separator(y); y = y - 18
     Label("|cFFFFD100Befehle|r", y, "GameFontNormalLarge"); y = y - 28
     Separator(y); y = y - 18
-    for _, e in ipairs({
+    local cmds = AklimeMod_Commands or {
         { cmd="/akm",      desc="Addon öffnen / schließen" },
         { cmd="/akm help", desc="Alle Befehle im Chat anzeigen" },
-        { cmd="/akm todo", desc="Todo-Liste öffnen (kommt bald)" },
-    }) do
+    }
+    for _, e in ipairs(cmds) do
         local row = dashboardPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         row:SetPoint("TOPLEFT", dashboardPanel, "TOPLEFT", 20, y)
         row:SetText("|cFF00CCFF" .. e.cmd .. "|r   —   " .. e.desc)
@@ -276,6 +276,9 @@ local function BuildDashboardContent()
     ShowScrollView()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     RSV():SetDataProvider(newDP())
+
+    -- Dashboard Panel immer neu aufbauen damit Commands-Liste aktuell ist
+    if dashboardPanel then dashboardPanel:Hide(); dashboardPanel = nil end
     ShowCustomPanel(GetOrCreateDashboard(AklimeModFrame.rightInset))
 end
 

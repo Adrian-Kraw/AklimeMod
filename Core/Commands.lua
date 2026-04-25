@@ -1,0 +1,36 @@
+-- Core/Commands.lua
+-- Zentrale Registry aller /akm Slash-Commands.
+-- Dashboard und /akm help nutzen diese Liste als einzige Quelle.
+
+AklimeMod_Commands = {
+    { cmd = "/akm",          desc = "Addon öffnen / schließen"                    },
+    { cmd = "/akm help",     desc = "Alle Befehle im Chat anzeigen"               },
+    { cmd = "/akmana",       desc = "Mana-Warnung Status anzeigen"                },
+    { cmd = "/akmana test",  desc = "Mana-Warnung Testnachricht senden"           },
+    { cmd = "/akmsell",      desc = "(Fallback) Graue Items manuell verkaufen"    },
+}
+
+-- /akm help — gibt alle Befehle im Chat aus
+local function PrintHelp()
+    print("|cFFFFD100AklimeMod Befehle:|r")
+    for _, e in ipairs(AklimeMod_Commands) do
+        print(string.format("  |cFF00CCFF%-20s|r — %s", e.cmd, e.desc))
+    end
+end
+
+-- Hook auf den bestehenden /akm Slash-Handler
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(_, _, arg1)
+    if arg1 ~= "AklimeMod" then return end
+
+    local origSlash = SlashCmdList["AKLIMEMOD"]
+    SlashCmdList["AKLIMEMOD"] = function(input)
+        local cmd = strtrim(input or ""):lower()
+        if cmd == "help" then
+            PrintHelp()
+        elseif origSlash then
+            origSlash(input)
+        end
+    end
+end)
