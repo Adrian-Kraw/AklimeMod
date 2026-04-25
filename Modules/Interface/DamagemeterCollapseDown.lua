@@ -1,0 +1,102 @@
+-- Modules/Interface/DamageMeterCollapseDown.lua
+-- Schadensanzeige: leere Fläche nach unten verschwinden lassen.
+-- Blizzard versteckt MinimizeContainer aber lässt Frame auf voller Höhe.
+-- Wir setzen die Höhe nach dem Klick auf Header-Höhe.
+
+local function GetDB()
+    return AklimeModDB and AklimeModDB.damageMeterCollapseDown
+end
+
+local function IsEnabled()
+    local db = GetDB()
+    return db and db.enabled
+end
+
+local function PatchWindow(sw)
+    if not sw or sw._dmcd_patched then return end
+    sw._dmcd_patched = true
+
+    local mb = sw.MinimizeButton
+    if not mb then return end
+
+    local header = sw.Header
+
+    mb:HookScript("OnClick", function()
+        if not IsEnabled() then return end
+
+        -- Position VOR Blizzards Aktion speichern
+        if not sw._dmcd_origPoint then
+            local p1, relTo, p2, x, y = sw:GetPoint()
+            sw._dmcd_origPoint = { p1, relTo, p2, x, y }
+            sw._dmcd_fullH = sw:GetHeight()
+            sw._dmcd_fullW = sw:GetWidth()
+            -- Absolute Position jetzt merken (vor Blizzards Änderung)
+            sw._dmcd_absLeft   = sw:GetLeft()
+            sw._dmcd_absBottom = sw:GetBottom()
+        end
+
+        C_Timer.After(0, function()
+            local headerH = header and math.ceil(header:GetHeight()) or 32
+
+            if sw.isMinimized then
+                -- Eingeklappt: gespeicherte absolute Bottom-Position verwenden
+                sw:ClearAllPoints()
+                sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT",
+                    sw._dmcd_absLeft, sw._dmcd_absBottom)
+                sw:SetWidth(sw._dmcd_fullW)
+                sw:SetHeight(headerH)
+            else
+                -- Aufgeklappt: originale GetPoint Daten wiederherstellen
+                local p = sw._dmcd_origPoint
+                sw:ClearAllPoints()
+                sw:SetPoint(p[1], p[2], p[3], p[4], p[5])
+                sw:SetWidth(sw._dmcd_fullW)
+                sw:SetHeight(sw._dmcd_fullH)
+            end
+        end)
+    end)
+end
+
+local function PatchAllWindows()
+    if not DamageMeter then return end
+    local maxCount = (DamageMeterMixin and DamageMeterMixin:GetMaxSessionWindowCount()) or 5
+    for i = 1, maxCount do
+        PatchWindow(_G["DamageMeterSessionWindow" .. i])
+    end
+    if not DamageMeter._dmcd_hooked then
+        DamageMeter._dmcd_hooked = true
+        hooksecurefunc(DamageMeter, "SetupSessionWindow", function(_, _, idx)
+            C_Timer.After(0.1, function()
+                PatchWindow(_G["DamageMeterSessionWindow" .. idx])
+            end)
+        end)
+    end
+end
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+
+frame:SetScript("OnEvent", function(_, event, arg1)
+    if event == "ADDON_LOADED" then
+        if arg1 == "AklimeMod" then
+            frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        elseif arg1 == "Blizzard_DamageMeter" then
+            C_Timer.After(1.0, function()
+                if IsEnabled() then PatchAllWindows() end
+            end)
+        end
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        if DamageMeter and IsEnabled() then
+            C_Timer.After(1.0, PatchAllWindows)
+        end
+    end
+end)
+
+AklimeMod_DamageMeterCollapseDown = {
+    IsEnabled  = function() return IsEnabled() end,
+    SetEnabled = function(v)
+        local db = GetDB()
+        if db then db.enabled = v end
+        if v and DamageMeter then PatchAllWindows() end
+    end,
+}

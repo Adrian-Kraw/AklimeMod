@@ -412,6 +412,12 @@ local function BuildInterfaceContent(filter)
     )
     addInfo(hideMacroNode, "Versteckt die Makro-Namen auf allen Action Buttons.\nNeu erstellte Makros werden ebenfalls sofort ausgeblendet.")
 
+    local dmCollapseNode = addModule(dp3, "Schadensanzeige: nach unten klappen",
+        function() return AklimeMod_DamageMeterCollapseDown.IsEnabled() end,
+        function(v) AklimeMod_DamageMeterCollapseDown.SetEnabled(v) end
+    )
+    addInfo(dmCollapseNode, "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.\nStandardmäßig klappt sie nach oben — mit diesem Toggle nach unten.")
+
     if AklimeMod_MinimapCollector then
         local mmCollectorNode = addModule(dp3, "Minimap Button Sammler",
             function()
