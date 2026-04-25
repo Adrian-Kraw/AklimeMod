@@ -507,6 +507,33 @@ local function BuildInterfaceContent(filter)
                     sublabel = true,
                 })
 
+                -- Gruppe Master-Toggle
+                local grpKeys = group.keys
+                local function GroupAllEnabled()
+                    for _, key in ipairs(grpKeys) do
+                        if not C:IsEnabled(key) then return false end
+                    end
+                    return true
+                end
+                local function SetGroup(v)
+                    for _, key in ipairs(grpKeys) do
+                        AklimeModDB.colorizer[key] = AklimeModDB.colorizer[key] or {}
+                        AklimeModDB.colorizer[key].enabled = v
+                        local skin = C.skins[key]
+                        if skin then
+                            if v then pcall(function() skin:apply() end)
+                            else      pcall(function() skin:remove() end) end
+                        end
+                    end
+                    if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
+                end
+                targetDP:Insert({
+                    Template   = "AklimeMod_ModuleHeaderTemplate",
+                    name       = "Alle " .. group.label .. " an/aus",
+                    getEnabled = GroupAllEnabled,
+                    setEnabled = SetGroup,
+                })
+
                 for _, key in ipairs(group.keys) do
                     local skin = C.skins[key]
                     if skin then
