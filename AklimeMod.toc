@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120005, 120000
 ## Title: AklimeMod
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
@@ -27,6 +27,7 @@ Modules\QoL\EasyDelete.lua
 Modules\QoL\ChatInteraction.lua
 Modules\QoL\ManaWarning.lua
 Modules\QoL\AutoSellJunk.lua
+Modules\QoL\LeaveServiceChannel.lua
 
 UI\MainWindow.lua
 UI\ColorizerUI.lua

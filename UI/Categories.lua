@@ -621,6 +621,12 @@ local function BuildQoLContent()
     )
     addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Haendler oeffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
 
+    local leaveServiceNode = addModule(dp, "Dienste-Channel verlassen",
+        function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
+        function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
+    )
+    addInfo(leaveServiceNode, "Verlaesst automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer aendert sich — wird immer per Name gesucht.")
+
     local manaNode = addModule(dp, "Mana Warnung",
         function() return AklimeMod_ManaWarning.IsEnabled() end,
         function(v) AklimeMod_ManaWarning.SetEnabled(v) end
@@ -636,6 +642,7 @@ local function BuildQoLContent()
 
     RSV():SetDataProvider(dp)
 end
+AklimeMod_BuildQoLContent = BuildQoLContent  -- global fuer Module
 
 local function BuildEmpty(header)
     currentBuildFn = nil

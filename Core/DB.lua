@@ -49,6 +49,9 @@ function AklimeMod_InitDB()
     db.autoSellJunk = db.autoSellJunk or {}
     def(db.autoSellJunk, "enabled", false)
 
+    db.leaveServiceChannel = db.leaveServiceChannel or {}
+    def(db.leaveServiceChannel, "enabled", true)  -- Default: an
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end
