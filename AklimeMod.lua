@@ -87,6 +87,10 @@ local MENU_ITEMS = {
             C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
             if WeeklyRewardsFrame:IsShown() then WeeklyRewardsFrame:Hide()
             else WeeklyRewardsFrame:Show() end
+            -- ESC soll das Fenster schließen
+            if not tContains(UISpecialFrames, "WeeklyRewardsFrame") then
+                tinsert(UISpecialFrames, "WeeklyRewardsFrame")
+            end
         end,
     },
     {   -- unten-mitte: Instances
