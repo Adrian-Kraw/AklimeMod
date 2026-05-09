@@ -68,6 +68,7 @@ function AklimeMod_InitDB()
 
     db.damageMeterCollapseDown = db.damageMeterCollapseDown or {}
     def(db.damageMeterCollapseDown, "enabled", false)
+    db.damageMeterCollapseDown.windows = db.damageMeterCollapseDown.windows or {}
 
     db.minimapCollector = db.minimapCollector or {}
     def(db.minimapCollector, "enabled",     false)

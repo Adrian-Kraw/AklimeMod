@@ -12,6 +12,14 @@ local function IsEnabled()
     return db and db.enabled
 end
 
+local function GetWindowDB(idx)
+    local db = AklimeModDB and AklimeModDB.damageMeterCollapseDown
+    if not db then return nil end
+    db.windows = db.windows or {}
+    db.windows[idx] = db.windows[idx] or {}
+    return db.windows[idx]
+end
+
 local function PatchWindow(sw)
     if not sw or sw._dmcd_patched then return end
     sw._dmcd_patched = true
@@ -20,6 +28,20 @@ local function PatchWindow(sw)
     if not mb then return end
 
     local header = sw.Header
+    local idx    = sw.sessionWindowIndex or 1
+    local wdb    = GetWindowDB(idx)
+
+    -- Beim Login: Falls minimiert und Position gespeichert, sofort korrigieren
+    C_Timer.After(0.5, function()
+        wdb = GetWindowDB(idx)
+        if sw.isMinimized and wdb and wdb.absLeft and wdb.fullH then
+            local headerH = header and math.ceil(header:GetHeight()) or 32
+            sw:ClearAllPoints()
+            sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", wdb.absLeft, wdb.absBottom)
+            if wdb.fullW then sw:SetWidth(wdb.fullW) end
+            sw:SetHeight(headerH)
+        end
+    end)
 
     mb:HookScript("OnClick", function()
         if not IsEnabled() then return end
@@ -30,9 +52,16 @@ local function PatchWindow(sw)
             sw._dmcd_origPoint = { p1, relTo, p2, x, y }
             sw._dmcd_fullH = sw:GetHeight()
             sw._dmcd_fullW = sw:GetWidth()
-            -- Absolute Position jetzt merken (vor Blizzards Änderung)
             sw._dmcd_absLeft   = sw:GetLeft()
             sw._dmcd_absBottom = sw:GetBottom()
+            -- In DB speichern für Reload
+            wdb = GetWindowDB(idx)
+            if wdb then
+                wdb.absLeft   = sw._dmcd_absLeft
+                wdb.absBottom = sw._dmcd_absBottom
+                wdb.fullH     = sw._dmcd_fullH
+                wdb.fullW     = sw._dmcd_fullW
+            end
         end
 
         C_Timer.After(0, function()
