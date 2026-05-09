@@ -63,6 +63,11 @@ function AklimeMod_InitDB()
     db.clock24h = db.clock24h or {}
     def(db.clock24h, "enabled", false)
 
+    db.preyPercent = db.preyPercent or {}
+    def(db.preyPercent, "enabled", false)
+    def(db.preyPercent, "x", 0)
+    def(db.preyPercent, "y", 120)
+
     db.hideMacroNames = db.hideMacroNames or {}
     def(db.hideMacroNames, "enabled", false)
 

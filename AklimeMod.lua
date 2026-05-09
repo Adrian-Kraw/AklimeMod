@@ -187,6 +187,7 @@ SlashCmdList["AKLIMEMOD"] = function() AklimeMod_OpenSettings() end
 -- ============================================================
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function(_, event, arg1)
@@ -204,6 +205,10 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         for _, item in ipairs(MENU_ITEMS) do
             table.insert(menuButtons, CreateMenuButton(item))
         end
+
+    elseif event == "PLAYER_LOGIN" then
+        -- SavedVariables sind jetzt garantiert geladen
+        if AklimeMod_PreyPercent then AklimeMod_PreyPercent.Init() end
 
     elseif event == "PLAYER_TARGET_CHANGED" then
         AklimeMod_UpdateRareFrame()

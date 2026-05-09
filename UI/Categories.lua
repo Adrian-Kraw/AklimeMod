@@ -732,6 +732,22 @@ local function BuildQoLContent()
     )
     addInfo(leaveServiceNode, "Verlaesst automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer aendert sich — wird immer per Name gesucht.")
 
+    -- ============================================================
+    -- NEU: Jagd % Anzeige
+    -- ============================================================
+    local preyPctNode = addModule(dp, "Jagd % Anzeige (statt Kristall)",
+        function() return AklimeMod_PreyPercent and AklimeMod_PreyPercent.IsEnabled() end,
+        function(v)
+            if AklimeMod_PreyPercent then AklimeMod_PreyPercent.SetEnabled(v) end
+        end
+    )
+    addInfo(preyPctNode,
+        "Versteckt den Blizzard-Kristall bei aktiver Jagd und zeigt\n" ..
+        "stattdessen den Fortschritt als % Text an.\n\n" ..
+        "Die Farbe wechselt automatisch:\n" ..
+        "Rot < 25%  \183  Orange < 50%  \183  Gold < 75%  \183  Gruen >= 75%"
+    )
+
     local manaNode = addModule(dp, "Mana Warnung",
         function() return AklimeMod_ManaWarning.IsEnabled() end,
         function(v) AklimeMod_ManaWarning.SetEnabled(v) end
