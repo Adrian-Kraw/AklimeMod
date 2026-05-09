@@ -68,6 +68,9 @@ function AklimeMod_InitDB()
     def(db.preyPercent, "x", 0)
     def(db.preyPercent, "y", 120)
 
+    db.pvpChatBlock = db.pvpChatBlock or {}
+    def(db.pvpChatBlock, "enabled", false)
+
     db.hideMacroNames = db.hideMacroNames or {}
     def(db.hideMacroNames, "enabled", false)
 

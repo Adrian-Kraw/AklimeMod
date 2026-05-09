@@ -80,19 +80,55 @@ end
 -- ============================================================
 local function IsAddonButton(frame)
     if not frame then return false end
-    local ok, isObj = pcall(function()
-        return frame:IsObjectType("Frame") or frame:IsObjectType("Button")
-    end)
-    if not ok or not isObj then return false end
+
+    -- Muss Button sein
+    local ok, isBtn = pcall(function() return frame:IsObjectType("Button") end)
+    if not ok or not isBtn then return false end
+
+    -- Muss einen Namen haben
     local name = frame:GetName()
-    if not name then return false end
+    if not name or name == "" then return false end
+
+    -- Bekannte Ignore-Liste
     if IGNORE[name] then return false end
-    -- Collector-Button immer ignorieren (auch wenn IGNORE noch nicht gegriffen hat)
     if frame == collectorBtn then return false end
-    if name:match("^HandyNotes") then return false end
+
+    -- Bekannte Nicht-Addon-Button-Patterns rausfiltern
+    local lname = name:lower()
+    if lname:find("handynotes", 1, true) then return false end
+    if lname:find("tomtom",     1, true) then return false end
+    if lname:find("arrow",      1, true) then return false end
+    if lname:find("waypoint",   1, true) then return false end
+    if lname:find("marker",     1, true) then return false end
+    if lname:find("pin",        1, true) then return false end
+    if lname:find("mappin",     1, true) then return false end
+
+    -- AklimeMod eigener Button
     if name == "AklimeModMinimapBtn" and not IncludeOwn() then return false end
+
+    -- Größe muss passen (echte Addon-Buttons sind 15-45px)
     local ok2, w = pcall(function() return frame:GetWidth() end)
-    if not ok2 or not w or w < 10 or w > 60 then return false end
+    local ok3, h = pcall(function() return frame:GetHeight() end)
+    if not ok2 or not w or w < 15 or w > 50 then return false end
+    if not ok3 or not h or h < 15 or h > 50 then return false end
+
+    -- Muss eine Textur haben (sonst ist es ein unsichtbarer Hilfsframe)
+    local ok4, regions = pcall(function() return { frame:GetRegions() } end)
+    if ok4 and type(regions) == "table" then
+        local hasTexture = false
+        for _, r in ipairs(regions) do
+            local ok5, t = pcall(function() return r:GetObjectType() end)
+            if ok5 and t == "Texture" then
+                local ok6, shown = pcall(function() return r:IsShown() end)
+                if ok6 and shown then
+                    hasTexture = true
+                    break
+                end
+            end
+        end
+        if not hasTexture then return false end
+    end
+
     return true
 end
 
@@ -164,39 +200,75 @@ end
 -- Aufklappen / Einklappen
 -- ============================================================
 local CollectorClose  -- forward declaration
+local closeDetector = CreateFrame("Frame")
+local mouseWasDown = false
+
+local function PositionBtn(btn, i)
+    -- Original-Parent und Position speichern (nur einmal)
+    if not btn._mmc_openParent then
+        btn._mmc_openParent = btn:GetParent()
+    end
+    btn:SetParent(UIParent)
+    btn:SetFrameStrata("HIGH")
+    btn:ClearAllPoints()
+    btn:SetPoint("RIGHT", collectorBtn, "LEFT", -(SPACING * (i - 1)), 0)
+end
+
+local function RestoreBtn(btn)
+    -- Parent und Anchor wiederherstellen
+    local origParent = btn._mmc_openParent or btn._mmc_origParent or Minimap
+    btn:SetParent(origParent)
+    local p = btn._mmc_origPoint
+    if p and p[1] then
+        btn:ClearAllPoints()
+        btn:SetPoint(p[1], p[2], p[3], p[4] or 0, p[5] or 0)
+    end
+    btn._mmc_openParent = nil
+end
 
 local function CollectorOpen()
     if not collectorBtn then return end
     isOpen = true
     expandedButtons = {}
-    local function PositionBtn(btn, i)
-        btn:SetParent(UIParent)
-        btn:SetFrameStrata("HIGH")
-        btn:ClearAllPoints()
-        btn:SetPoint("RIGHT", collectorBtn, "LEFT", -(SPACING * (i - 1)), 0)
-    end
     for i, btn in ipairs(storedButtons) do
         PositionBtn(btn, i)
         btn:Show()
-        -- Nochmal nach Show erzwingen (manche Addons re-anchern beim Show)
         C_Timer.After(0, function()
             if isOpen then PositionBtn(btn, i) end
         end)
-        if not btn._mmc_clickhooked then
-            btn._mmc_clickhooked = true
-            btn:HookScript("OnClick", function()
-                C_Timer.After(0.05, function() if CollectorClose then CollectorClose() end end)
-            end)
-        end
         expandedButtons[#expandedButtons + 1] = btn
     end
+
+    -- Klick irgendwo → zuklappen
+    -- Warten bis Maustaste gedrückt UND wieder losgelassen → dann schließen
+    C_Timer.After(0.15, function()
+        if not isOpen then return end
+        mouseWasDown = false
+        closeDetector:SetScript("OnUpdate", function()
+            if not isOpen then
+                closeDetector:SetScript("OnUpdate", nil)
+                return
+            end
+            local down = IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton")
+            if down then
+                mouseWasDown = true
+            elseif mouseWasDown then
+                mouseWasDown = false
+                closeDetector:SetScript("OnUpdate", nil)
+                if CollectorClose then CollectorClose() end
+            end
+        end)
+    end)
 end
 
 CollectorClose = function()
     if not collectorBtn then return end
     isOpen = false
+    mouseWasDown = false
+    closeDetector:SetScript("OnUpdate", nil)
     suppressHook = true
     for _, btn in ipairs(expandedButtons) do
+        RestoreBtn(btn)
         btn:Hide()
     end
     suppressHook = false
@@ -290,6 +362,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
     elseif event == "PLAYER_ENTERING_WORLD" then
         if IsEnabled() then
             C_Timer.After(3.0, function()
+                if isOpen then CollectorClose() end
                 if not collectorBtn then CreateCollector() end
                 StoreAndHideAll()
             end)

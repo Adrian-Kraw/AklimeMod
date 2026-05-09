@@ -35,6 +35,7 @@ Modules\QoL\DrinkReminder.lua
 Modules\QoL\Clock24h.lua
 Modules\QoL\MapCoords.lua
 Modules\QoL\PreyPercent.lua
+Modules\QoL\PvPChatBlock.lua
 
 UI\MainWindow.lua
 UI\ColorizerUI.lua

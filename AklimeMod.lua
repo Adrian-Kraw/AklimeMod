@@ -75,10 +75,18 @@ end)
 -- Radialmenü
 -- ============================================================
 local MENU_ITEMS = {
-    {   -- oben: PvP
+    {   -- oben: PvP Chat Block
         icon    = "Interface\\Icons\\achievement_pvp_a_14",
-        tooltip = "PvP Chat blockieren\n(kommt bald)",
-        onClick = function() print("|cFFFFD100AklimeMod:|r PvP Chat Block – kommt bald!") end,
+        tooltip = "PvP Chat blockieren",
+        onClick = function()
+            if not AklimeMod_PvPChatBlock then return end
+            local now = AklimeMod_PvPChatBlock.Toggle()
+            if now then
+                print("|cFFFFD100AklimeMod:|r PvP Chat Block |cFF00FF00aktiviert|r")
+            else
+                print("|cFFFFD100AklimeMod:|r PvP Chat Block |cFFFF4444deaktiviert|r")
+            end
+        end,
     },
     {   -- oben-mitte: Vault
         icon    = "Interface\\Icons\\inv_cape_special_treasure_c_01",
@@ -209,6 +217,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
     elseif event == "PLAYER_LOGIN" then
         -- SavedVariables sind jetzt garantiert geladen
         if AklimeMod_PreyPercent then AklimeMod_PreyPercent.Init() end
+        if AklimeMod_PvPChatBlock then AklimeMod_PvPChatBlock.Init() end
 
     elseif event == "PLAYER_TARGET_CHANGED" then
         AklimeMod_UpdateRareFrame()
