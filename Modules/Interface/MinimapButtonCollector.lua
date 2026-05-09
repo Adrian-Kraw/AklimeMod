@@ -163,19 +163,36 @@ end
 -- ============================================================
 -- Aufklappen / Einklappen
 -- ============================================================
+local CollectorClose  -- forward declaration
+
 local function CollectorOpen()
     if not collectorBtn then return end
     isOpen = true
     expandedButtons = {}
-    for i, btn in ipairs(storedButtons) do
-        btn:Show()
+    local function PositionBtn(btn, i)
+        btn:SetParent(UIParent)
+        btn:SetFrameStrata("HIGH")
         btn:ClearAllPoints()
         btn:SetPoint("RIGHT", collectorBtn, "LEFT", -(SPACING * (i - 1)), 0)
+    end
+    for i, btn in ipairs(storedButtons) do
+        PositionBtn(btn, i)
+        btn:Show()
+        -- Nochmal nach Show erzwingen (manche Addons re-anchern beim Show)
+        C_Timer.After(0, function()
+            if isOpen then PositionBtn(btn, i) end
+        end)
+        if not btn._mmc_clickhooked then
+            btn._mmc_clickhooked = true
+            btn:HookScript("OnClick", function()
+                C_Timer.After(0.05, function() if CollectorClose then CollectorClose() end end)
+            end)
+        end
         expandedButtons[#expandedButtons + 1] = btn
     end
 end
 
-local function CollectorClose()
+CollectorClose = function()
     if not collectorBtn then return end
     isOpen = false
     suppressHook = true
