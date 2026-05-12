@@ -10,6 +10,7 @@
 Templates\AklimeMod_Templates.xml
 
 Core\DB.lua
+Core\DataCollector.lua
 
 Modules\Interface\EliteFrame.lua
 Modules\Interface\RareFrame.lua
@@ -36,7 +37,8 @@ Modules\QoL\Clock24h.lua
 Modules\QoL\MapCoords.lua
 Modules\QoL\PreyPercent.lua
 Modules\QoL\PvPChatBlock.lua
-Modules\CharacterTracker.lua
+
+Modules\Collecting\CharacterTracker.lua
 
 UI\MainWindow.lua
 UI\ColorizerUI.lua

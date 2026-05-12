@@ -90,6 +90,18 @@ local function IsCurrencyEnabled(id)
     return not (db and db.currencies and db.currencies[id] == false)
 end
 
+-- Daten-Quelle: eigene DB primär, SI als Fallback
+local function GetDataDB()
+    if AklimeModDB and AklimeModDB.tracker
+    and AklimeModDB.tracker.Toons and next(AklimeModDB.tracker.Toons) then
+        return AklimeModDB.tracker
+    end
+    if _G.SavedInstancesDB and _G.SavedInstancesDB.Toons then
+        return _G.SavedInstancesDB
+    end
+    return nil
+end
+
 -- ============================================================
 -- Hilfsfunktionen
 -- ============================================================
@@ -132,6 +144,44 @@ local function GetBossTotal(lfdid)
     return (ok and n) or 0
 end
 
+-- Boss-Total aus Link-Scan zählen (zuverlässigste Methode wie SI)
+local bossTotalCache = {}
+local function GetBossTotalFromLink(link)
+    if not link or link == "" then return 0 end
+    if bossTotalCache[link] then return bossTotalCache[link] end
+
+    -- Methode 1: Scan-Tooltip Zeilen zählen (wie SI)
+    local scanTip = _G["SavedInstancesScanTooltip"]
+    if scanTip then
+        scanTip:SetOwner(UIParent, "ANCHOR_NONE")
+        scanTip:SetHyperlink(link)
+        local count = 0
+        local tipName = scanTip:GetName()
+        for i = 2, scanTip:NumLines() do
+            local right = _G[tipName .. "TextRight" .. i]
+            if right and right:GetText() and right:GetText() ~= "" then
+                count = count + 1
+            end
+        end
+        if count > 0 then
+            bossTotalCache[link] = count
+            return count
+        end
+    end
+
+    -- Methode 2: GetLFGDungeonNumEncounters mit LFDID aus Link
+    local lfdid = link:match("|Hinstancelock:[^:]+:(%d+):")
+    lfdid = lfdid and tonumber(lfdid)
+    if lfdid and lfdid > 0 then
+        local ok, n = pcall(GetLFGDungeonNumEncounters, lfdid)
+        if ok and n and n > 0 then
+            bossTotalCache[link] = n
+            return n
+        end
+    end
+    return 0
+end
+
 local currInfoCache = {}
 local function GetCurrInfo(id)
     if currInfoCache[id] then return currInfoCache[id] end
@@ -157,8 +207,8 @@ end
 -- ============================================================
 local function GetSelectedChars()
     local db   = GetDB()
-    local siDB = _G.SavedInstancesDB
-    if not siDB or not siDB.Toons then return {} end
+    local siDB = GetDataDB()
+    if not siDB then return {} end
     local sel = {}
     if db and db.chars then
         for name, on in pairs(db.chars) do
@@ -170,7 +220,7 @@ local function GetSelectedChars()
 end
 
 local function BuildRaids(sel)
-    local siDB = _G.SavedInstancesDB
+    local siDB = GetDataDB()
     if not siDB or not siDB.Instances then return {} end
     local byExp = {}
     for instName, inst in pairs(siDB.Instances) do
@@ -206,8 +256,8 @@ local function BuildRaids(sel)
 end
 
 local function BuildCurrencies(sel)
-    local siDB = _G.SavedInstancesDB
-    if not siDB or not siDB.Toons then return {} end
+    local siDB = GetDataDB()
+    if not siDB then return {} end
 
     -- IDs die mind. 1 Char > 0 hat
     local present = {}
@@ -313,8 +363,8 @@ local function CreateUI()
     mainFrame.goldLabel = goldLabel
 
     goldBtn:SetScript("OnEnter", function(self)
-        local siDB = _G.SavedInstancesDB
-        if not siDB or not siDB.Toons then return end
+        local siDB = GetDataDB()
+        if not siDB then return end
 
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
         GameTooltip:ClearLines()
@@ -507,8 +557,8 @@ function AklimeMod_CT_Refresh()
     ClearContent()
     view = "main"
 
-    local siDB = _G.SavedInstancesDB
-    if not siDB or not siDB.Toons then
+    local siDB = GetDataDB()
+    if not siDB then
         local fs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fs:SetPoint("CENTER", contentFrame, "CENTER")
         fs:SetText("SavedInstances Addon nicht gefunden.")
@@ -600,14 +650,102 @@ function AklimeMod_CT_Refresh()
                         local save = raid.diffs[diff] and raid.diffs[diff][ch]
                         local txt  = ""
                         if save then
-                            local killed = GetBossKills(save)
-                            if total > 0 then
-                                txt = dcHex .. killed .. "/" .. total .. FONT_COLOR_CODE_CLOSE
+                            local killed   = GetBossKills(save)
+                            local linkTotal = GetBossTotalFromLink(save.Link)
+                            -- Fallback auf raid.lfdid
+                            if linkTotal == 0 then linkTotal = total end
+
+                            if linkTotal > 0 then
+                                txt = dcHex .. killed .. "/" .. linkTotal .. FONT_COLOR_CODE_CLOSE
                             else
                                 txt = dcHex .. (killed > 0 and tostring(killed) or "L") .. FONT_COLOR_CODE_CLOSE
                             end
+
+                            -- Hover-Button für Boss-Liste
+                            local btn = CreateFrame("Button", nil, row)
+                            btn:SetSize(COL_W, ROW_H)
+                            btn:SetPoint("LEFT", row, "LEFT", colX + (ci-1)*COL_W, 0)
+                            local fs = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                            fs:SetAllPoints(btn)
+                            fs:SetJustifyH("CENTER")
+                            fs:SetText(txt)
+
+                            local saveRef = save
+                            local raidName = raid.name
+                            local charName = ch
+                            local diffLabel2 = diffLabel
+                            local dc2 = dc
+                            btn:SetScript("OnEnter", function(self)
+                                if not saveRef or not saveRef.Link then return end
+                                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                                GameTooltip:ClearLines()
+                                -- Header
+                                GameTooltip:AddLine(NORMAL_FONT_COLOR_CODE .. raidName .. FONT_COLOR_CODE_CLOSE
+                                    .. "  " .. string.format("|cFF%02x%02x%02x%s|r",
+                                        dc2.r*255, dc2.g*255, dc2.b*255, diffLabel2))
+                                local toon = siDB and siDB.Toons and siDB.Toons[charName]
+                                if toon then
+                                    local r, g, b = ClassCol(toon.LClass)
+                                    GameTooltip:AddLine(string.format("|cFF%02x%02x%02x%s|r",
+                                        r*255, g*255, b*255, ShortName(charName)))
+                                end
+                                -- Verbleibende Zeit
+                                if saveRef.Expires and saveRef.Expires > time() then
+                                    local secs = saveRef.Expires - time()
+                                    local h = math.floor(secs / 3600)
+                                    local m = math.floor((secs % 3600) / 60)
+                                    GameTooltip:AddDoubleLine("Verbleibende Zeit:",
+                                        string.format("%d Std. %d Min.", h, m),
+                                        0.8,0.8,0.8, 1,0.82,0)
+                                end
+                                GameTooltip:AddLine(" ")
+                                -- Boss-Liste aus Hyperlink scannen (wie SI)
+                                local scanTip = _G["SavedInstancesScanTooltip"] or GameTooltip
+                                if _G["SavedInstancesScanTooltip"] then
+                                    scanTip:SetOwner(UIParent, "ANCHOR_NONE")
+                                    scanTip:SetHyperlink(saveRef.Link)
+                                    local tipName = scanTip:GetName()
+                                    for i = 2, scanTip:NumLines() do
+                                        local left  = _G[tipName .. "TextLeft"  .. i]
+                                        local right = _G[tipName .. "TextRight" .. i]
+                                        local lTxt  = left  and left:GetText()  or ""
+                                        local rTxt  = right and right:GetText() or ""
+                                        if rTxt ~= "" then
+                                            GameTooltip:AddDoubleLine(lTxt, rTxt, 1,1,1, 1,0.2,0.2)
+                                        elseif lTxt ~= "" then
+                                            GameTooltip:AddLine(lTxt, 0.9,0.9,0.9)
+                                        end
+                                    end
+                                else
+                                    -- Fallback: Boss-Namen per GetLFGDungeonEncounterInfo
+                                    local linkLFDID2 = saveRef.Link:match("|Hinstancelock:[^:]+:(%d+):")
+                                    linkLFDID2 = linkLFDID2 and tonumber(linkLFDID2)
+                                    if linkLFDID2 then
+                                        local ok2, bossCount = pcall(GetLFGDungeonNumEncounters, linkLFDID2)
+                                        if ok2 and bossCount and bossCount > 0 then
+                                            local bits = saveRef.Link:match(":(%d+)\124h")
+                                            bits = bits and tonumber(bits) or 0
+                                            for bi = 1, bossCount do
+                                                local bossName = GetLFGDungeonEncounterInfo(linkLFDID2, bi)
+                                                local killed2 = bit.band(bits, 1) > 0
+                                                bits = bit.rshift(bits, 1)
+                                                if bossName then
+                                                    if killed2 then
+                                                        GameTooltip:AddDoubleLine(bossName, "Bezwungen", 1,1,1, 1,0.2,0.2)
+                                                    else
+                                                        GameTooltip:AddDoubleLine(bossName, "Verfügbar", 1,1,1, 0.2,1,0.2)
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                                GameTooltip:Show()
+                            end)
+                            btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                        else
+                            MkTxt(row, txt, colX + (ci-1)*COL_W, COL_W, "GameFontNormalSmall", "CENTER")
                         end
-                        MkTxt(row, txt, colX + (ci-1)*COL_W, COL_W, "GameFontNormalSmall", "CENTER")
                     end
                     y = y + ROW_H
                 end
@@ -678,7 +816,7 @@ function AklimeMod_CT_ShowChars()
     ClearContent()
     view = "chars"
 
-    local siDB = _G.SavedInstancesDB
+    local siDB = GetDataDB()
     local myDB = GetDB()
     if not siDB or not siDB.Toons or not myDB then
         contentFrame:Show(); return
@@ -744,7 +882,29 @@ function AklimeMod_CT_ShowChars()
         MkTxt(row, data.Class or "-",  210, 130, "GameFontNormalSmall")
         MkTxt(row, tostring(data.Level or "-"), 345, 50, "GameFontNormalSmall")
         MkTxt(row, data.IL and string.format("%.0f", data.IL) or "-", 400, 55, "GameFontNormalSmall")
-        MkTxt(row, realm, 460, 200, "GameFontNormalSmall")
+        MkTxt(row, realm, 460, 180, "GameFontNormalSmall")
+
+        -- Löschen-Button
+        local delBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+        delBtn:SetSize(60, 16)
+        delBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        delBtn:SetText("Löschen")
+        delBtn:GetFontString():SetTextColor(1, 0.3, 0.3)
+        local delName = name
+        delBtn:SetScript("OnClick", function()
+            -- Aus Auswahl und aus Tracker-DB entfernen
+            if myDB.chars then myDB.chars[delName] = nil end
+            local tdb = AklimeModDB and AklimeModDB.tracker
+            if tdb then
+                if tdb.Toons then tdb.Toons[delName] = nil end
+                if tdb.Instances then
+                    for _, inst in pairs(tdb.Instances) do
+                        inst[delName] = nil
+                    end
+                end
+            end
+            AklimeMod_CT_ShowChars()
+        end)
         y = y + ROW_H
     end
 
