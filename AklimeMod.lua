@@ -82,9 +82,9 @@ local MENU_ITEMS = {
             if not AklimeMod_PvPChatBlock then return end
             local now = AklimeMod_PvPChatBlock.Toggle()
             if now then
-                print("|cFFFFD100AklimeMod:|r PvP Chat Block |cFF00FF00aktiviert|r")
+                print("|cFFFFD100AklimeMod:|r |cFF00FF00Chatblockade aktiviert|r")
             else
-                print("|cFFFFD100AklimeMod:|r PvP Chat Block |cFFFF4444deaktiviert|r")
+                print("|cFFFFD100AklimeMod:|r |cFFFF4444Chatblockade deaktiviert|r")
             end
         end,
     },
@@ -103,8 +103,8 @@ local MENU_ITEMS = {
     },
     {   -- unten-mitte: Instances
         icon    = "Interface\\GossipFrame\\DailyActiveQuestIcon",
-        tooltip = "Gespeicherte Instanzen\n(kommt bald)",
-        onClick = function() print("|cFFFFD100AklimeMod:|r Saved Instances – kommt bald!") end,
+        tooltip = "Charakter-Tracker",
+        onClick = function() AklimeMod_CT_Toggle() end,
     },
     {   -- unten: Settings
         icon    = "Interface\\Icons\\trade_engineering",

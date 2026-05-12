@@ -827,13 +827,198 @@ local function BuildEmpty(header)
 end
 
 -- ============================================================
+-- Collecting
+-- ============================================================
+local function BuildCollectingContent()
+    currentBuildFn = nil
+    if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
+    AklimeMod_SetRightHeader("Collecting")
+    ShowScrollView()
+    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
+    local dp = newDP()
+
+    -- ── Charakter-Tracker öffnen ──────────────────────────────
+    local trackerNode = dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Charakter-Tracker",
+        centered = false,
+    })
+
+    dp:Insert({
+        Template = "AklimeMod_ActionButtonTemplate",
+        label    = "Tracker öffnen",
+        onClick  = function() AklimeMod_CT_Toggle() end,
+    })
+
+    -- ── Charaktere ───────────────────────────────────────────
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Charaktere",
+        centered = false,
+    })
+
+    -- Alle bekannten Chars als Toggles
+    local function BuildCharToggles(dpTarget)
+        local siDB = _G.SavedInstancesDB
+        if not siDB or not siDB.Toons then return end
+        local myDB = AklimeModDB and AklimeModDB.savedInstances
+        if not myDB then return end
+        myDB.chars = myDB.chars or {}
+
+        local toons = {}
+        for name in pairs(siDB.Toons) do toons[#toons+1] = name end
+        table.sort(toons)
+
+        for _, name in ipairs(toons) do
+            local n = name
+            dpTarget:Insert({
+                Template = "AklimeMod_ToggleTemplate",
+                name     = name,
+                getVal   = function() return AklimeModDB.savedInstances.chars[n] == true end,
+                setVal   = function(v) AklimeModDB.savedInstances.chars[n] = v and true or nil end,
+            })
+        end
+    end
+    BuildCharToggles(dp)
+
+    -- ── Raids nach Erweiterung ────────────────────────────────
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Schlachtzüge",
+        centered = false,
+    })
+
+    local EXP_NAMES_SHORT = {
+        [0]="Classic", [1]="TBC", [2]="WotLK", [3]="Cata", [4]="MoP",
+        [5]="WoD", [6]="Legion", [7]="BfA", [8]="SL", [9]="DF",
+        [10]="TWW", [11]="Midnight",
+    }
+
+    -- Master-Toggle pro Erweiterung
+    local function BuildExpRaidToggles(dpTarget)
+        local siDB = _G.SavedInstancesDB
+        if not siDB or not siDB.Instances then return end
+
+        -- Alle Expansions mit Raids sammeln
+        local exps = {}
+        for _, inst in pairs(siDB.Instances) do
+            if inst.Raid and inst.Expansion then
+                exps[inst.Expansion] = true
+            end
+        end
+        local expList = {}
+        for e in pairs(exps) do expList[#expList+1] = e end
+        table.sort(expList, function(a,b) return a > b end)
+
+        for _, exp in ipairs(expList) do
+            local e = exp
+            local label = EXP_NAMES_SHORT[e] or ("Exp "..e)
+            dpTarget:Insert({
+                Template = "AklimeMod_ToggleTemplate",
+                name     = label,
+                getVal   = function()
+                    local db = AklimeModDB and AklimeModDB.savedInstances
+                    return not (db and db.raidExps and db.raidExps[e] == false)
+                end,
+                setVal   = function(v)
+                    local db = AklimeModDB and AklimeModDB.savedInstances
+                    if db then
+                        db.raidExps = db.raidExps or {}
+                        db.raidExps[e] = v and nil or false
+                    end
+                end,
+            })
+        end
+    end
+    BuildExpRaidToggles(dp)
+
+    -- ── Währungen nach Erweiterung ────────────────────────────
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Währungen",
+        centered = false,
+    })
+
+    local ALL_CURR_EXP = {
+        {11,"Midnight"},{10,"The War Within"},{9,"Dragonflight"},
+        {8,"Shadowlands"},{7,"Battle for Azeroth"},{6,"Legion"},
+        {5,"Warlords"},{4,"Mists"},{3,"Cataclysm"},{2,"WotLK"},
+        {1,"TBC"},{0,"Classic"},
+    }
+    local CURR_BY_EXP = {}
+    for _, ce in ipairs({
+        {id=3392,exp=11},{id=3373,exp=11},{id=3376,exp=11},{id=3379,exp=11},
+        {id=3385,exp=11},{id=3383,exp=11},{id=3319,exp=11},{id=3316,exp=11},
+        {id=3377,exp=11},{id=3378,exp=11},{id=3028,exp=11},{id=3310,exp=11},
+        {id=3400,exp=11},{id=3341,exp=11},{id=3343,exp=11},{id=3345,exp=11},
+        {id=3347,exp=11},
+        {id=3056,exp=10},{id=2806,exp=10},{id=2803,exp=10},{id=2807,exp=10},
+        {id=2912,exp=10},{id=2914,exp=10},{id=2650,exp=10},
+        {id=2245,exp=9},{id=2123,exp=9},{id=2118,exp=9},
+        {id=1191,exp=8},{id=1602,exp=8},{id=1792,exp=8},
+        {id=1710,exp=7},{id=1718,exp=7},{id=1560,exp=7},
+        {id=1754,exp=6},{id=1220,exp=6},
+        {id=994,exp=5},{id=823,exp=5},
+        {id=738,exp=4},{id=752,exp=4},
+        {id=391,exp=3},{id=241,exp=2},
+    }) do
+        if not CURR_BY_EXP[ce.exp] then CURR_BY_EXP[ce.exp] = {} end
+        CURR_BY_EXP[ce.exp][#CURR_BY_EXP[ce.exp]+1] = ce.id
+    end
+
+    local function GetCurrNameLocal(id)
+        if C_CurrencyInfo then
+            local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
+            if ok and info and info.name ~= "" then
+                local icon = info.iconFileID
+                local iconStr = icon and ("|T" .. icon .. ":14:14:0:0|t ") or ""
+                return iconStr .. info.name
+            end
+        end
+        return "ID:" .. id
+    end
+
+    for _, pair in ipairs(ALL_CURR_EXP) do
+        local exp, expLabel = pair[1], pair[2]
+        local ids = CURR_BY_EXP[exp]
+        if ids then
+            -- Exp-Label
+            dp:Insert({
+                Template = "AklimeMod_InfoTextTemplate",
+                text     = "|cFF888888" .. expLabel .. "|r",
+            })
+            for _, id in ipairs(ids) do
+                local cid = id
+                dp:Insert({
+                    Template = "AklimeMod_ToggleTemplate",
+                    name     = GetCurrNameLocal(cid),
+                    getVal   = function()
+                        local db = AklimeModDB and AklimeModDB.savedInstances
+                        return not (db and db.currencies and db.currencies[cid] == false)
+                    end,
+                    setVal   = function(v)
+                        local db = AklimeModDB and AklimeModDB.savedInstances
+                        if db then
+                            db.currencies = db.currencies or {}
+                            db.currencies[cid] = v and nil or false
+                        end
+                    end,
+                })
+            end
+        end
+    end
+
+    RSV():SetDataProvider(dp)
+end
+
+-- ============================================================
 -- Linke Kategorie-Buttons
 -- ============================================================
 local categories = {
     { order=1, name="Dashboard",       callback=BuildDashboardContent                   },
     { order=2, name="Interface",       callback=BuildInterfaceContent                   },
     { order=3, name="Quality of Life", callback=BuildQoLContent                         },
-    { order=4, name="Collecting",      callback=function() BuildEmpty("Collecting") end },
+    { order=4, name="Collecting",      callback=BuildCollectingContent              },
     { order=5, name="PvP",             callback=function() BuildEmpty("PvP")        end },
     { order=6, name="Profile",         callback=function() BuildEmpty("Profile")    end },
 }

@@ -68,8 +68,11 @@ function AklimeMod_InitDB()
     def(db.preyPercent, "x", 0)
     def(db.preyPercent, "y", 120)
 
-    db.pvpChatBlock = db.pvpChatBlock or {}
-    def(db.pvpChatBlock, "enabled", false)
+    db.savedInstances = db.savedInstances or {}
+    db.savedInstances.chars      = db.savedInstances.chars      or {}
+    db.savedInstances.raids      = db.savedInstances.raids      or {}
+    db.savedInstances.currencies = db.savedInstances.currencies or {}
+    db.savedInstances.raidExps   = db.savedInstances.raidExps   or {}
 
     db.hideMacroNames = db.hideMacroNames or {}
     def(db.hideMacroNames, "enabled", false)
@@ -83,6 +86,12 @@ function AklimeMod_InitDB()
     def(db.minimapCollector, "includeOwn",  false)
     def(db.minimapCollector, "angle",       143)
     def(db.minimapCollector, "locked",      false)
+
+    db.pvpChatBlock = db.pvpChatBlock or {}
+    def(db.pvpChatBlock, "enabled", false)
+
+    db.savedInstances = db.savedInstances or {}
+    db.savedInstances.chars = db.savedInstances.chars or {}
 
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}

@@ -27,6 +27,7 @@ C:Register("buffFrame", {
                     local b = CreateFrame("Frame",nil,widget,"BackdropTemplate")
                     b:SetPoint("TOPLEFT",widget.Icon,"TOPLEFT",-2,2)
                     b:SetPoint("BOTTOMRIGHT",widget.Icon,"BOTTOMRIGHT",2,-2)
+                    b:SetSize(36, 36)  -- explizit damit kein Secret-Number GetWidth Taint
                     b:SetBackdrop({ edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", edgeSize=10, insets={left=2,right=2,top=2,bottom=2} })
                     b:SetBackdropBorderColor(mr,mg,mb,ma)
                     widget.border = b
