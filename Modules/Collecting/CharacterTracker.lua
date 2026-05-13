@@ -73,6 +73,7 @@ local EXP_NAMES = {
     [3]="Cataclysm",[4]="Mists of Pandaria",[5]="Warlords of Draenor",
     [6]="Legion",[7]="Battle for Azeroth",[8]="Shadowlands",
     [9]="Dragonflight",[10]="The War Within",[11]="Midnight",
+    [-1]="Sonstige",
 }
 
 -- ============================================================
@@ -111,8 +112,25 @@ end
 
 local function ClassCol(lclass)
     if not lclass then return 1, 0.82, 0 end
+    -- RAID_CLASS_COLORS braucht englischen Großbuchstaben-Key (z.B. "WARRIOR")
     local ci = RAID_CLASS_COLORS and RAID_CLASS_COLORS[lclass:upper()]
     if ci then return ci.r, ci.g, ci.b end
+    return 1, 0.82, 0
+end
+
+-- Klassenfarbe aus Toon-Daten holen (Class = englisch groß, LClass = lokalisiert)
+local function ToonClassCol(toon)
+    if not toon then return 1, 0.82, 0 end
+    -- Class ist englisch großgeschrieben (WARRIOR, EVOKER etc.) → direkt für RAID_CLASS_COLORS
+    if toon.Class then
+        local ci = RAID_CLASS_COLORS and RAID_CLASS_COLORS[toon.Class:upper()]
+        if ci then return ci.r, ci.g, ci.b end
+    end
+    -- Fallback LClass (funktioniert auf englischen Clients)
+    if toon.LClass then
+        local ci = RAID_CLASS_COLORS and RAID_CLASS_COLORS[toon.LClass:upper()]
+        if ci then return ci.r, ci.g, ci.b end
+    end
     return 1, 0.82, 0
 end
 
@@ -182,13 +200,58 @@ local function GetBossTotalFromLink(link)
     return 0
 end
 
+-- Manuelle Expansion-Zuweisung (da C_CurrencyInfo.expansionID oft nil)
+-- 1:1 aus SI Currency.lua Struktur — ALLE IDs müssen hier gemappt sein
+local CURRENCY_EXP = {}
+local function SetExp(exp, ids)
+    for _, id in ipairs(ids) do CURRENCY_EXP[id] = exp end
+end
+-- Midnight (11)
+SetExp(11, {3319,3316,3376,3377,3379,3385,3392,3400,3373,3393,3405,
+            3256,3257,3258,3259,3260,3261,3262,3263,3264,3265,3266,
+            3028,3310,3212,3378,3383,3341,3343,3345,3347,3418})
+-- The War Within (10)
+SetExp(10, {3056,2806,2807,2809,2812,2803,2815,2914,2915,2916,
+            2917,3100,3090,3218,3220,3226,3116,3107,3108,3109,3110,
+            3149,3278,3303,3356,3269,3284,3286,3288,3290,3141,2650,
+            2657,2912,2778,3089,3008,2813})
+-- Dragonflight (9)
+SetExp(9,  {2245,2123,2797,2118,2122,2533,2594,2651,2777,2796,
+            2706,2707,2708,2709,2009,1931})
+-- Shadowlands (8)
+SetExp(8,  {1191,1602,1792,1822,1767,1828,1810,1813,1816,
+            1819,1820,1885,1906,1977,1979})
+-- Battle for Azeroth (7)
+SetExp(7,  {1710,1580,1560,1587,1716,1717,1718,1721,1719,1755,1803})
+-- Legion (6)
+SetExp(6,  {1754,1220,1226,1273,1275,1299,1314,1342,1501,1508,1533,1149,1155,1166})
+-- Warlords of Draenor (5)
+SetExp(5,  {994,823,824,1101,1129})
+-- Mists of Pandaria (4)
+SetExp(4,  {738,752,776,777,789,697})
+-- Cataclysm (3)
+SetExp(3,  {391,416,402})
+-- Wrath of the Lich King (2)
+SetExp(2,  {241})
+-- The Burning Crusade (1)
+SetExp(1,  {515,2588,3363})
+-- Classic (0)
+SetExp(0,  {81})
+
 local currInfoCache = {}
 local function GetCurrInfo(id)
     if currInfoCache[id] then return currInfoCache[id] end
     if C_CurrencyInfo then
         local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
         if ok and info and info.name and info.name ~= "" then
-            currInfoCache[id] = { name=info.name, exp=info.expansionID or 0, icon=info.iconFileID }
+            -- Expansion aus manueller Tabelle, -1 = nicht gemappt → "Sonstige"
+            local exp = CURRENCY_EXP[id]
+            if exp == nil then exp = -1 end
+            currInfoCache[id] = {
+                name = info.name,
+                exp  = exp,
+                icon = info.iconFileID,
+            }
             return currInfoCache[id]
         end
     end
@@ -278,14 +341,13 @@ local function BuildCurrencies(sel)
 
     local result = {}
     for id in pairs(present) do
-        if siSet[id] and IsCurrencyEnabled(id) then
+        if IsCurrencyEnabled(id) then
             local info = GetCurrInfo(id)
             if info then
-                -- Zusätzlich: Namen die "Hidden" oder "DNT" enthalten herausfiltern
                 local nameLower = info.name:lower()
-                if not nameLower:find("hidden") and not nameLower:find("dnt")
-                and not nameLower:find("personal tracker")
-                and not nameLower:find("loot ") then
+                -- Nur offensichtlich interne/hidden rausfiltern
+                if not nameLower:find("%(hidden%)") and not nameLower:find("dnt")
+                and not nameLower:find("personal tracker") then
                     result[#result+1] = { id=id, exp=info.exp, name=info.name, icon=info.icon }
                 end
             end
@@ -293,7 +355,10 @@ local function BuildCurrencies(sel)
     end
 
     table.sort(result, function(a, b)
-        if a.exp ~= b.exp then return a.exp > b.exp end
+        -- -1 (Sonstige) ganz unten
+        local ae = a.exp == -1 and -999 or a.exp
+        local be = b.exp == -1 and -999 or b.exp
+        if ae ~= be then return ae > be end
         return a.name < b.name
     end)
     return result
@@ -396,7 +461,7 @@ local function CreateUI()
             -- Chars sortiert
             table.sort(data.chars, function(a,b) return a.name < b.name end)
             for _, entry in ipairs(data.chars) do
-                local r, g, b = ClassCol(entry.toon.LClass)
+                local r, g, b = ToonClassCol(entry.toon)
                 local nameStr = string.format("|cFF%02x%02x%02x%s|r", r*255, g*255, b*255, ShortName(entry.name))
                 GameTooltip:AddDoubleLine(
                     nameStr,
@@ -496,7 +561,7 @@ local function MkCharHeader(parent, y, colX, sel, siDB)
     for i, name in ipairs(sel) do
         local toon = siDB.Toons[name]
         local label = ShortName(name)
-        local r, g, b = ClassCol(toon and toon.LClass)
+        local r, g, b = ToonClassCol(toon)
 
         -- Unsichtbarer Button über der Spalte für Hover-Tooltip
         local btn = CreateFrame("Button", nil, hRow)
@@ -515,7 +580,7 @@ local function MkCharHeader(parent, y, colX, sel, siDB)
             if not t then return end
             GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
             GameTooltip:ClearLines()
-            local tr, tg, tb = ClassCol(t.LClass)
+            local tr, tg, tb = ToonClassCol(t)
             GameTooltip:AddLine(string.format("|cFF%02x%02x%02x%s|r", tr*255, tg*255, tb*255, n))
             if t.Class then
                 -- Erste Buchstabe groß, Rest klein
@@ -595,26 +660,26 @@ function AklimeMod_CT_Refresh()
 
     if #expIDs > 0 then
         y = y + 4
-        MkHdr(contentFrame, y)
-        local secFs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        secFs:SetPoint("LEFT", contentFrame, "LEFT", 4, -(y + ROW_H/2))
+        local raidHdr = MkHdr(contentFrame, y)
+        local secFs = raidHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        secFs:SetPoint("LEFT", raidHdr, "LEFT", 8, 0)
         secFs:SetText(NORMAL_FONT_COLOR_CODE .. "Schlachtzüge" .. FONT_COLOR_CODE_CLOSE)
         y = y + ROW_H
 
         for _, exp in ipairs(expIDs) do
-            -- Trennlinie + Erweiterungs-Label
+            -- Trennlinie + Erweiterungs-Header (gleicher Style wie Realm)
             y = y + 4
             local sep = contentFrame:CreateTexture(nil, "ARTWORK")
             sep:SetHeight(1)
-            sep:SetPoint("TOPLEFT",  contentFrame, "TOPLEFT",  0, -(y))
-            sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -(y))
-            sep:SetColorTexture(0.3, 0.3, 0.3, 0.6)
+            sep:SetPoint("TOPLEFT",  contentFrame, "TOPLEFT",  0, -y)
+            sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -y)
+            sep:SetColorTexture(0.4, 0.35, 0.1, 0.7)
             y = y + 2
-            local expFs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            expFs:SetPoint("LEFT", contentFrame, "LEFT", 4, -(y + ROW_H/2))
-            expFs:SetTextColor(0.7, 0.65, 0.4, 1)
-            expFs:SetText(EXP_NAMES[exp] or ("Expansion "..exp))
-            y = y + ROW_H
+            local expHdr = MkHdr(contentFrame, y)
+            local expFs  = expHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            expFs:SetPoint("LEFT", expHdr, "LEFT", 8, 0)
+            expFs:SetText(NORMAL_FONT_COLOR_CODE .. (EXP_NAMES[exp] or ("Expansion "..exp)) .. FONT_COLOR_CODE_CLOSE)
+            y = y + ROW_H + 2
 
             for ri, raid in ipairs(raidsByExp[exp]) do
                 local activeDiffs = {}
@@ -685,7 +750,7 @@ function AklimeMod_CT_Refresh()
                                         dc2.r*255, dc2.g*255, dc2.b*255, diffLabel2))
                                 local toon = siDB and siDB.Toons and siDB.Toons[charName]
                                 if toon then
-                                    local r, g, b = ClassCol(toon.LClass)
+                                    local r, g, b = ToonClassCol(toon)
                                     GameTooltip:AddLine(string.format("|cFF%02x%02x%02x%s|r",
                                         r*255, g*255, b*255, ShortName(charName)))
                                 end
@@ -757,28 +822,30 @@ function AklimeMod_CT_Refresh()
     local currencies = BuildCurrencies(sel)
     if #currencies > 0 then
         y = y + 4
-        MkHdr(contentFrame, y)
-        local wFs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        wFs:SetPoint("LEFT", contentFrame, "LEFT", 4, -(y + ROW_H/2))
+        local wHdr = MkHdr(contentFrame, y)
+        local wFs  = wHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        wFs:SetPoint("LEFT", wHdr, "LEFT", 8, 0)
         wFs:SetText(NORMAL_FONT_COLOR_CODE .. "Währungen" .. FONT_COLOR_CODE_CLOSE)
         y = y + ROW_H
 
-        local lastExp = -1
+        local lastExp = -999  -- Sentinel der nie matcht
         for ri, ce in ipairs(currencies) do
             if ce.exp ~= lastExp then
                 lastExp = ce.exp
+                -- Trennlinie
                 y = y + 4
                 local sep = contentFrame:CreateTexture(nil, "ARTWORK")
                 sep:SetHeight(1)
-                sep:SetPoint("TOPLEFT",  contentFrame, "TOPLEFT",  0, -(y))
-                sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -(y))
-                sep:SetColorTexture(0.3, 0.3, 0.3, 0.6)
+                sep:SetPoint("TOPLEFT",  contentFrame, "TOPLEFT",  0, -y)
+                sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -y)
+                sep:SetColorTexture(0.4, 0.35, 0.1, 0.7)
                 y = y + 2
-                local eFs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                eFs:SetPoint("LEFT", contentFrame, "LEFT", 4, -(y + ROW_H/2))
-                eFs:SetTextColor(0.7, 0.65, 0.4, 1)
-                eFs:SetText(EXP_NAMES[ce.exp] or ("Expansion "..ce.exp))
-                y = y + ROW_H
+                -- Expansion-Header (gleicher Style wie Realm-Header)
+                local eHdr = MkHdr(contentFrame, y)
+                local eFs  = eHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                eFs:SetPoint("LEFT", eHdr, "LEFT", 8, 0)
+                eFs:SetText(NORMAL_FONT_COLOR_CODE .. (EXP_NAMES[ce.exp] or ("Expansion "..ce.exp)) .. FONT_COLOR_CODE_CLOSE)
+                y = y + ROW_H + 2
             end
 
             local row = MkRow(contentFrame, y, ri%2==0)
@@ -842,11 +909,10 @@ function AklimeMod_CT_ShowChars()
     y = y + 24
 
     local chdr = MkHdr(contentFrame, y)
-    MkTxt(chdr, "Charakter", 36, 170, "GameFontNormal")
-    MkTxt(chdr, "Klasse",   210, 130, "GameFontNormal")
-    MkTxt(chdr, "Level",    345,  50, "GameFontNormal")
-    MkTxt(chdr, "iLvl",     400,  55, "GameFontNormal")
-    MkTxt(chdr, "Realm",    460, 200, "GameFontNormal")
+    MkTxt(chdr, "Charakter", 36, 200, "GameFontNormal")
+    MkTxt(chdr, "Klasse",   240, 130, "GameFontNormal")
+    MkTxt(chdr, "Level",    375,  50, "GameFontNormal")
+    MkTxt(chdr, "iLvl",     430,  55, "GameFontNormal")
     y = y + ROW_H + 2
 
     local lastRealm = nil
@@ -855,13 +921,23 @@ function AklimeMod_CT_ShowChars()
         local data  = entry.data
         local realm = name:match("%-(.+)$") or ""
 
+        -- Realm-Header VOR den Chars dieses Realms
         if realm ~= lastRealm then
             lastRealm = realm
+            -- Trennlinie
+            y = y + 4
+            local sep = contentFrame:CreateTexture(nil, "ARTWORK")
+            sep:SetHeight(1)
+            sep:SetPoint("TOPLEFT",  contentFrame, "TOPLEFT",  0, -y)
+            sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -y)
+            sep:SetColorTexture(0.4, 0.35, 0.1, 0.7)
             y = y + 2
-            local rFs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            rFs:SetPoint("LEFT", contentFrame, "LEFT", 8, -(y + ROW_H/2))
+            -- Realm-Name
+            local rHdr = MkHdr(contentFrame, y)
+            local rFs = rHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            rFs:SetPoint("LEFT", rHdr, "LEFT", 8, 0)
             rFs:SetText(NORMAL_FONT_COLOR_CODE .. (realm ~= "" and realm or "?") .. FONT_COLOR_CODE_CLOSE)
-            y = y + ROW_H
+            y = y + ROW_H + 2
         end
 
         local row = MkRow(contentFrame, y, ri%2==0)
@@ -876,13 +952,14 @@ function AklimeMod_CT_ShowChars()
         end)
 
         local dispName = ShortName(name)
-        local r, g, b = ClassCol(data.LClass)
+        local r, g, b = ToonClassCol(data)
         MkTxt(row, string.format("|cFF%02x%02x%02x%s|r", r*255, g*255, b*255, dispName),
-            36, 170, "GameFontNormalSmall")
-        MkTxt(row, data.Class or "-",  210, 130, "GameFontNormalSmall")
-        MkTxt(row, tostring(data.Level or "-"), 345, 50, "GameFontNormalSmall")
-        MkTxt(row, data.IL and string.format("%.0f", data.IL) or "-", 400, 55, "GameFontNormalSmall")
-        MkTxt(row, realm, 460, 180, "GameFontNormalSmall")
+            36, 200, "GameFontNormalSmall")
+        -- Klasse: erste Buchstabe groß
+        local classDisp = data.Class and (data.Class:sub(1,1):upper() .. data.Class:sub(2):lower()) or "-"
+        MkTxt(row, classDisp, 240, 130, "GameFontNormalSmall")
+        MkTxt(row, tostring(data.Level or "-"), 375, 50, "GameFontNormalSmall")
+        MkTxt(row, data.IL and string.format("%.0f", data.IL) or "-", 430, 55, "GameFontNormalSmall")
 
         -- Löschen-Button
         local delBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")

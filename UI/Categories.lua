@@ -837,49 +837,16 @@ local function BuildCollectingContent()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     local dp = newDP()
 
-    -- ── Charakter-Tracker öffnen ──────────────────────────────
-    local trackerNode = dp:Insert({
+    -- ── Charakter-Tracker ─────────────────────────────────────
+    dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
         label    = "Charakter-Tracker",
         centered = false,
     })
-
     dp:Insert({
-        Template = "AklimeMod_ActionButtonTemplate",
-        label    = "Tracker öffnen",
-        onClick  = function() AklimeMod_CT_Toggle() end,
+        Template = "AklimeMod_InfoTextTemplate",
+        text     = "Charaktere im Tracker auswählen: Tracker öffnen → 'Charaktere' Button.",
     })
-
-    -- ── Charaktere ───────────────────────────────────────────
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Charaktere",
-        centered = false,
-    })
-
-    -- Alle bekannten Chars als Toggles
-    local function BuildCharToggles(dpTarget)
-        local siDB = _G.SavedInstancesDB
-        if not siDB or not siDB.Toons then return end
-        local myDB = AklimeModDB and AklimeModDB.savedInstances
-        if not myDB then return end
-        myDB.chars = myDB.chars or {}
-
-        local toons = {}
-        for name in pairs(siDB.Toons) do toons[#toons+1] = name end
-        table.sort(toons)
-
-        for _, name in ipairs(toons) do
-            local n = name
-            dpTarget:Insert({
-                Template = "AklimeMod_ToggleTemplate",
-                name     = name,
-                getVal   = function() return AklimeModDB.savedInstances.chars[n] == true end,
-                setVal   = function(v) AklimeModDB.savedInstances.chars[n] = v and true or nil end,
-            })
-        end
-    end
-    BuildCharToggles(dp)
 
     -- ── Raids nach Erweiterung ────────────────────────────────
     dp:Insert({
@@ -896,12 +863,14 @@ local function BuildCollectingContent()
 
     -- Master-Toggle pro Erweiterung
     local function BuildExpRaidToggles(dpTarget)
-        local siDB = _G.SavedInstancesDB
-        if not siDB or not siDB.Instances then return end
+        -- Aus eigener DB oder SI
+        local dataDB = (AklimeModDB and AklimeModDB.tracker and next(AklimeModDB.tracker.Instances))
+            and AklimeModDB.tracker
+            or _G.SavedInstancesDB
+        if not dataDB or not dataDB.Instances then return end
 
-        -- Alle Expansions mit Raids sammeln
         local exps = {}
-        for _, inst in pairs(siDB.Instances) do
+        for _, inst in pairs(dataDB.Instances) do
             if inst.Raid and inst.Expansion then
                 exps[inst.Expansion] = true
             end
