@@ -622,8 +622,15 @@ local function CreateUI()
     charBtn:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -28, -8)
     charBtn:SetText("Charaktere")
     charBtn:SetScript("OnClick", function()
-        if view == "main" then view = "chars"; AklimeMod_CT_ShowChars()
-        else view = "main"; AklimeMod_CT_Refresh() end
+        if view == "main" then
+            view = "chars"
+            charBtn:SetText("Übersicht")
+            AklimeMod_CT_ShowChars()
+        else
+            view = "main"
+            charBtn:SetText("Charaktere")
+            AklimeMod_CT_Refresh()
+        end
     end)
 
     local scroll = CreateFrame("ScrollFrame", nil, mainFrame, "UIPanelScrollFrameTemplate")
@@ -734,6 +741,7 @@ function AklimeMod_CT_Refresh()
     CreateUI()
     ClearContent()
     view = "main"
+    if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText("Charaktere") end
 
     local siDB = GetDataDB()
     if not siDB then
@@ -1028,6 +1036,7 @@ function AklimeMod_CT_ShowChars()
     CreateUI()
     ClearContent()
     view = "chars"
+    if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText("Übersicht") end
 
     local siDB = GetDataDB()
     local myDB = GetDB()

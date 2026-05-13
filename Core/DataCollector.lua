@@ -201,6 +201,29 @@ local function CollectToonData()
 end
 
 -- ============================================================
+-- Weekly Reset: abgelaufene Instanzen aus DB entfernen
+-- ============================================================
+local function CleanExpiredInstances()
+    local db = GetTrackerDB()
+    if not db or not db.Instances then return end
+    local now = time()
+    for instName, inst in pairs(db.Instances) do
+        for key, val in pairs(inst) do
+            if type(val) == "table" and type(key) == "string" and key:find(" - ") then
+                -- Char-Eintrag
+                for diff, save in pairs(val) do
+                    if type(diff) == "number" and save.Expires and save.Expires > 0
+                    and save.Expires < now then
+                        val[diff] = nil
+                    end
+                end
+                if not next(val) then inst[key] = nil end
+            end
+        end
+    end
+end
+
+-- ============================================================
 -- Event-Frame
 -- ============================================================
 local eventFrame = CreateFrame("Frame")
@@ -211,11 +234,12 @@ eventFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 
 eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" then
+        -- Abgelaufene Instanzen bereinigen (Weekly Reset)
+        CleanExpiredInstances()
         -- Kurzer Delay damit alle APIs bereit sind
         C_Timer.After(3, CollectToonData)
 
     elseif event == "PLAYER_MONEY" then
-        -- Gold sofort aktualisieren
         local db = GetTrackerDB()
         if not db then return end
         local toonKey = GetToonKey()
@@ -224,12 +248,13 @@ eventFrame:SetScript("OnEvent", function(self, event)
         end
 
     elseif event == "UPDATE_INSTANCE_INFO" then
-        -- Instanzen aktualisieren wenn sich was ändert
+        -- Instanzen aktualisieren + abgelaufene bereinigen
         local db = GetTrackerDB()
         if not db then return end
         local toonKey = GetToonKey()
         if toonKey then
             CollectInstances(db, toonKey)
         end
+        CleanExpiredInstances()
     end
 end)
