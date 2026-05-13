@@ -460,7 +460,7 @@ local function CreateUI()
 
     -- Gold-Summary oben links
     local goldBtn = CreateFrame("Button", nil, mainFrame)
-    goldBtn:SetSize(140, 28)
+    goldBtn:SetSize(120, 28)
     goldBtn:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 8, -4)
     local goldLabel = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldLabel:SetAllPoints(goldBtn)
@@ -469,6 +469,76 @@ local function CreateUI()
 
     mainFrame.goldBtn   = goldBtn
     mainFrame.goldLabel = goldLabel
+
+    -- Instanz-Timer rechts vom Gold-Label
+    local instBtn = CreateFrame("Button", nil, mainFrame)
+    instBtn:SetSize(150, 28)
+    instBtn:SetPoint("LEFT", goldBtn, "RIGHT", 4, 0)
+    local instLabel = instBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    instLabel:SetAllPoints(instBtn)
+    instLabel:SetJustifyH("LEFT")
+
+    -- Label dynamisch: zeigt Anzahl kürzlicher Instanzen
+    local function UpdateInstLabel()
+        local siDB2 = _G.SavedInstancesDB
+        local cnt = 0
+        if siDB2 and siDB2.History then
+            for _ in pairs(siDB2.History) do cnt = cnt + 1 end
+        end
+        if cnt > 0 then
+            local color = cnt >= 8 and "|cFFFF4444" or cnt >= 5 and "|cFFFFD100" or "|cFF00FF00"
+            instLabel:SetText(color .. cnt .. "/10|r Instanzen")
+        else
+            instLabel:SetText("|cFFAAAAAA0/10 Instanzen|r")
+        end
+    end
+    UpdateInstLabel()
+    mainFrame.UpdateInstLabel = UpdateInstLabel
+
+    instBtn:SetScript("OnEnter", function(self)
+        UpdateInstLabel()
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+        GameTooltip:ClearLines()
+        GameTooltip:AddLine("|cFFFFD100Kürzliche Instanzen|r")
+        GameTooltip:AddLine(" ")
+
+        local siDB2 = _G.SavedInstancesDB
+        if siDB2 and siDB2.History and next(siDB2.History) then
+            local histReapTime = 3600
+            local tmp = {}
+            for _, ii in pairs(siDB2.History) do tmp[#tmp+1] = ii end
+            table.sort(tmp, function(a,b) return a.last < b.last end)
+
+            for _, ii in ipairs(tmp) do
+                local remaining = ii.last + histReapTime - time()
+                if remaining > 0 then
+                    local m = math.floor(remaining / 60)
+                    local s = remaining % 60
+                    local timeStr = string.format("|cFFFF4444%d Min. %d Sek.|r", m, s)
+                    GameTooltip:AddDoubleLine(timeStr, ii.desc or "", 1,1,1, 0.8,0.8,0.8)
+                end
+            end
+
+            GameTooltip:AddLine(" ")
+            if #tmp > 0 then
+                local oldest = tmp[1]
+                local freeIn = oldest.last + histReapTime - time()
+                if #tmp >= 10 and freeIn > 0 then
+                    local m = math.floor(freeIn / 60)
+                    GameTooltip:AddLine(string.format("Nächster Slot frei in: |cFF00FF00%d Min.|r", m))
+                else
+                    GameTooltip:AddLine(string.format("Noch |cFF00FF00%d|r Slots verfügbar", 10 - #tmp))
+                end
+            end
+        else
+            GameTooltip:AddLine("Keine kürzlichen Instanzen.", 0.6,0.6,0.6)
+        end
+
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Limit: 10 Instanzen pro Stunde (Account)", 0.5,0.5,0.5)
+        GameTooltip:Show()
+    end)
+    instBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     goldBtn:SetScript("OnEnter", function(self)
         local siDB = GetDataDB()
@@ -907,7 +977,40 @@ function AklimeMod_CT_Refresh()
                 else
                     txt = GRAY_FONT_COLOR_CODE .. "-" .. FONT_COLOR_CODE_CLOSE
                 end
-                MkTxt(row, txt, colX + (ci-1)*COL_W, COL_W, "GameFontNormalSmall", "CENTER")
+
+                -- Hover-Button: alle Chars für diese Währung anzeigen
+                local btn = CreateFrame("Button", nil, row)
+                btn:SetSize(COL_W, ROW_H)
+                btn:SetPoint("LEFT", row, "LEFT", colX + (ci-1)*COL_W, 0)
+                local fs = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                fs:SetAllPoints(btn); fs:SetJustifyH("CENTER"); fs:SetText(txt)
+
+                local ceid = ce.id
+                local ceicon = ce.icon
+                local cename = ce.name
+                local allSel = sel
+                btn:SetScript("OnEnter", function(self)
+                    local db2 = GetDataDB()
+                    if not db2 then return end
+                    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                    GameTooltip:ClearLines()
+                    local iStr = ceicon and ("|T"..ceicon..":14:14|t ") or ""
+                    GameTooltip:AddLine(iStr .. NORMAL_FONT_COLOR_CODE .. cename .. FONT_COLOR_CODE_CLOSE)
+                    GameTooltip:AddLine(" ")
+                    for _, charName in ipairs(allSel) do
+                        local t = db2.Toons[charName]
+                        local a = t and t.currency and t.currency[ceid] and t.currency[ceid].amount
+                        if a and a > 0 then
+                            local r2,g2,b2 = ToonClassCol(t)
+                            local nameStr = string.format("|cFF%02x%02x%02x%s|r", r2*255,g2*255,b2*255, ShortName(charName))
+                            GameTooltip:AddDoubleLine(nameStr,
+                                GREEN_FONT_COLOR_CODE .. FormatAmount(a) .. FONT_COLOR_CODE_CLOSE,
+                                1,1,1, 1,1,1)
+                        end
+                    end
+                    GameTooltip:Show()
+                end)
+                btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             end
             y = y + ROW_H
         end
