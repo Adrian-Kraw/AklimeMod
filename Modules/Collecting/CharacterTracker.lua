@@ -69,12 +69,27 @@ local DIFF_COLOR = {
 }
 
 local EXP_NAMES = {
-    [0]="Classic",[1]="The Burning Crusade",[2]="Wrath of the Lich King",
-    [3]="Cataclysm",[4]="Mists of Pandaria",[5]="Warlords of Draenor",
-    [6]="Legion",[7]="Battle for Azeroth",[8]="Shadowlands",
-    [9]="Dragonflight",[10]="The War Within",[11]="Midnight",
-    [-1]="Sonstige",
+    [0]  = "Classic",
+    [1]  = "The Burning Crusade",
+    [2]  = "Wrath of the Lich King",
+    [3]  = "Cataclysm",
+    [4]  = "Mists of Pandaria",
+    [5]  = "Warlords of Draenor",
+    [6]  = "Legion",
+    [7]  = "Battle for Azeroth",
+    [8]  = "Shadowlands",
+    [9]  = "Dragonflight",
+    [10] = "The War Within",
+    [11] = "Midnight",
 }
+
+-- SI speichert expansionLevel direkt als 0-11 — kein Mapping nötig
+-- Nur als Sicherheitsnetz falls alte/fehlerhafte Werte vorkommen
+local function NormalizeExpansion(exp)
+    if not exp then return 0 end
+    if exp >= 0 and exp <= 11 then return exp end
+    return 0
+end
 
 -- ============================================================
 -- DB
@@ -91,16 +106,36 @@ local function IsCurrencyEnabled(id)
     return not (db and db.currencies and db.currencies[id] == false)
 end
 
--- Daten-Quelle: eigene DB primär, SI als Fallback
-local function GetDataDB()
+-- Toon-Daten: eigene DB primär, SI als Fallback
+local function GetToonDB()
     if AklimeModDB and AklimeModDB.tracker
     and AklimeModDB.tracker.Toons and next(AklimeModDB.tracker.Toons) then
-        return AklimeModDB.tracker
+        return AklimeModDB.tracker.Toons
     end
     if _G.SavedInstancesDB and _G.SavedInstancesDB.Toons then
-        return _G.SavedInstancesDB
+        return _G.SavedInstancesDB.Toons
     end
     return nil
+end
+
+-- Instanz-Daten: SI bevorzugen (hat korrekte expansionLevel 0-11)
+-- eigene DB als Fallback wenn SI nicht installiert
+local function GetInstanceDB()
+    if _G.SavedInstancesDB and _G.SavedInstancesDB.Instances then
+        return _G.SavedInstancesDB.Instances
+    end
+    if AklimeModDB and AklimeModDB.tracker and AklimeModDB.tracker.Instances then
+        return AklimeModDB.tracker.Instances
+    end
+    return nil
+end
+
+-- Kombinierte DB für Abwärtskompatibilität
+local function GetDataDB()
+    local toons = GetToonDB()
+    local instances = GetInstanceDB()
+    if not toons then return nil end
+    return { Toons = toons, Instances = instances or {} }
 end
 
 -- ============================================================
@@ -240,13 +275,18 @@ SetExp(0,  {81})
 
 local currInfoCache = {}
 local function GetCurrInfo(id)
-    if currInfoCache[id] then return currInfoCache[id] end
+    local cached = currInfoCache[id]
+    if cached ~= nil then return cached or nil end
     if C_CurrencyInfo then
         local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
         if ok and info and info.name and info.name ~= "" then
-            -- Expansion aus manueller Tabelle, -1 = nicht gemappt → "Sonstige"
+            -- Expansion aus manueller Tabelle
+            -- Wenn nicht gemappt → nil zurückgeben (nicht anzeigen)
             local exp = CURRENCY_EXP[id]
-            if exp == nil then exp = -1 end
+            if exp == nil then
+                currInfoCache[id] = false  -- false = bekannt aber nicht anzeigen
+                return nil
+            end
             currInfoCache[id] = {
                 name = info.name,
                 exp  = exp,
@@ -265,9 +305,6 @@ local function FormatAmount(a)
     return tostring(a)
 end
 
--- ============================================================
--- Daten
--- ============================================================
 local function GetSelectedChars()
     local db   = GetDB()
     local siDB = GetDataDB()
@@ -287,8 +324,10 @@ local function BuildRaids(sel)
     if not siDB or not siDB.Instances then return {} end
     local byExp = {}
     for instName, inst in pairs(siDB.Instances) do
-        if inst.Raid and inst.Show ~= "never" and IsRaidExpEnabled(inst.Expansion or 0) then
-            local exp   = inst.Expansion or 0
+        -- Nur echte Raids (maxPlayers > 5), keine Dungeons, keine zufälligen
+        if inst.Raid and not inst.Random and inst.Show ~= "never"
+        and IsRaidExpEnabled(NormalizeExpansion(inst.Expansion or 0)) then
+            local exp   = NormalizeExpansion(inst.Expansion or 0)
             local diffs = {}
             local hasSave = false
             for _, ch in ipairs(sel) do
@@ -305,15 +344,22 @@ local function BuildRaids(sel)
             if hasSave then
                 if not byExp[exp] then byExp[exp] = {} end
                 byExp[exp][#byExp[exp]+1] = {
-                    name=instName, lfdid=inst.LFDID,
-                    recLevel=inst.RecLevel or 0,
-                    diffs=diffs, inst=inst,
+                    name      = instName,
+                    lfdid     = inst.LFDID,
+                    recLevel  = inst.RecLevel or 0,
+                    diffs     = diffs,
+                    inst      = inst,
+                    worldBoss = inst.WorldBoss ~= nil,
                 }
             end
         end
     end
     for _, raids in pairs(byExp) do
-        table.sort(raids, function(a,b) return (a.recLevel or 0) > (b.recLevel or 0) end)
+        table.sort(raids, function(a,b)
+            -- Weltbosse ans Ende
+            if a.worldBoss ~= b.worldBoss then return not a.worldBoss end
+            return (a.recLevel or 0) > (b.recLevel or 0)
+        end)
     end
     return byExp
 end
@@ -355,10 +401,7 @@ local function BuildCurrencies(sel)
     end
 
     table.sort(result, function(a, b)
-        -- -1 (Sonstige) ganz unten
-        local ae = a.exp == -1 and -999 or a.exp
-        local be = b.exp == -1 and -999 or b.exp
-        if ae ~= be then return ae > be end
+        if a.exp ~= b.exp then return a.exp > b.exp end
         return a.name < b.name
     end)
     return result

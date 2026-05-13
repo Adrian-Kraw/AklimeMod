@@ -103,10 +103,12 @@ local function CollectInstances(db, toonKey)
                 inst.LFDID = tonumber(lid)
             end
 
-            -- Expansion aus LFGDungeonInfo
+            -- Expansion direkt aus GetLFGDungeonInfo (expansionLevel = Index 9, Wert 0-11)
             if inst.LFDID and (inst.Expansion == 0 or not inst.Expansion) then
-                local ok, _, _, _, _, _, _, _, expLevel = pcall(GetLFGDungeonInfo, inst.LFDID)
-                if ok and expLevel then inst.Expansion = expLevel end
+                local ok, _,_,_,_,_,_,_,_, expLevel = pcall(GetLFGDungeonInfo, inst.LFDID)
+                if ok and type(expLevel) == "number" and expLevel >= 0 and expLevel <= 11 then
+                    inst.Expansion = expLevel
+                end
             end
 
             -- RecLevel

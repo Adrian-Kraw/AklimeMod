@@ -872,7 +872,10 @@ local function BuildCollectingContent()
         local exps = {}
         for _, inst in pairs(dataDB.Instances) do
             if inst.Raid and inst.Expansion then
-                exps[inst.Expansion] = true
+                local exp = inst.Expansion
+                if exp >= 0 and exp <= 11 then
+                    exps[exp] = true
+                end
             end
         end
         local expList = {}
