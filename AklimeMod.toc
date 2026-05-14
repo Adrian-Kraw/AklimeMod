@@ -38,6 +38,8 @@ Modules\QoL\MapCoords.lua
 Modules\QoL\PreyPercent.lua
 Modules\QoL\PvPChatBlock.lua
 
+Modules\PvP\NameplateColorizer.lua
+
 Modules\Collecting\CharacterTracker.lua
 
 UI\MainWindow.lua

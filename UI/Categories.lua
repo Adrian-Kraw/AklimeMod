@@ -817,6 +817,54 @@ local function BuildQoLContent()
 end
 AklimeMod_BuildQoLContent = BuildQoLContent  -- global fuer Module
 
+-- ============================================================
+-- PvP
+-- ============================================================
+local function BuildPvPContent()
+    currentBuildFn = nil
+    if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
+    AklimeMod_SetRightHeader("PvP")
+    ShowScrollView()
+    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
+    local dp = newDP()
+
+    -- ── Namensplaketten-Farben ────────────────────────────────
+    local npNode = addModule(dp, "Namensplaketten einfärben",
+        function() return AklimeMod_PvPNameplateColor and AklimeMod_PvPNameplateColor.IsEnabled() end,
+        function(v)
+            if AklimeMod_PvPNameplateColor then AklimeMod_PvPNameplateColor.SetEnabled(v) end
+        end
+    )
+    addInfo(npNode,
+        "Färbt Namensplaketten in PvP-Instanzen (Arena & Schlachtfeld):\n" ..
+        "|cFF00FF00Grün|r  = eigene Gruppe / Team\n" ..
+        "|cFFFF3333Rot|r   = Gegner\n\n" ..
+        "Nur aktiv innerhalb einer PvP-Instanz.\n" ..
+        "Außerhalb werden die Blizzard-Standardfarben wiederhergestellt."
+    )
+
+    -- ── Chat-Block ────────────────────────────────────────────
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Sonstiges",
+        centered = false,
+    })
+
+    local chatBlockNode = addModule(dp, "Chat im PvP blockieren",
+        function() return AklimeMod_PvPChatBlock and AklimeMod_PvPChatBlock.IsEnabled() end,
+        function(v)
+            if AklimeMod_PvPChatBlock then AklimeMod_PvPChatBlock.SetEnabled(v) end
+        end
+    )
+    addInfo(chatBlockNode,
+        "Verhindert das Öffnen der Chat-Eingabe (Enter) in Arenen und\n" ..
+        "Schlachtfeldern — verhindert versehentliches Tippen mitten im Kampf."
+    )
+
+    RSV():SetDataProvider(dp)
+end
+AklimeMod_BuildPvPContent = BuildPvPContent
+
 local function BuildEmpty(header)
     currentBuildFn = nil
     if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
@@ -987,12 +1035,12 @@ end
 -- Linke Kategorie-Buttons
 -- ============================================================
 local categories = {
-    { order=1, name="Dashboard",       callback=BuildDashboardContent                   },
-    { order=2, name="Interface",       callback=BuildInterfaceContent                   },
-    { order=3, name="Quality of Life", callback=BuildQoLContent                         },
-    { order=4, name="Collecting",      callback=BuildCollectingContent              },
-    { order=5, name="PvP",             callback=function() BuildEmpty("PvP")        end },
-    { order=6, name="Profile",         callback=function() BuildEmpty("Profile")    end },
+    { order=1, name="Dashboard",       callback=BuildDashboardContent                        },
+    { order=2, name="Interface",       callback=BuildInterfaceContent                        },
+    { order=3, name="Quality of Life", callback=BuildQoLContent                              },
+    { order=4, name="Collecting",      callback=BuildCollectingContent                       },
+    { order=5, name="PvP",             callback=function() AklimeMod_BuildPvPContent() end   },
+    { order=6, name="Profile",         callback=function() BuildEmpty("Profile")         end },
 }
 
 local function SetSelected(clickedButton)

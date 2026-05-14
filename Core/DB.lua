@@ -90,6 +90,9 @@ function AklimeMod_InitDB()
     db.pvpChatBlock = db.pvpChatBlock or {}
     def(db.pvpChatBlock, "enabled", false)
 
+    db.pvpNameplateColor = db.pvpNameplateColor or {}
+    def(db.pvpNameplateColor, "enabled", false)
+
     db.savedInstances = db.savedInstances or {}
     db.savedInstances.chars = db.savedInstances.chars or {}
 

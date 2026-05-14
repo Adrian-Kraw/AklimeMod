@@ -218,6 +218,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         -- SavedVariables sind jetzt garantiert geladen
         if AklimeMod_PreyPercent then AklimeMod_PreyPercent.Init() end
         if AklimeMod_PvPChatBlock then AklimeMod_PvPChatBlock.Init() end
+        if AklimeMod_PvPNameplateColor then AklimeMod_PvPNameplateColor.Init() end
 
     elseif event == "PLAYER_TARGET_CHANGED" then
         AklimeMod_UpdateRareFrame()
