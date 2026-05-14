@@ -85,9 +85,15 @@ local function ApplyColor(nameplate)
 end
 
 local function ResetNameplate(nameplate)
-    local hpBar = GetHealthBar(nameplate)
-    if hpBar then hpBar:SetStatusBarColor(0.0, 1.0, 0.0) end
-    -- Blizzard darf den Namen wieder selbst färben → nichts tun
+    if not nameplate or not nameplate.UnitFrame then return end
+    local uf = nameplate.UnitFrame
+    -- Blizzards eigene Funktionen aufrufen → setzt korrekte Originalfarben
+    if CompactUnitFrame_UpdateHealthColor then
+        pcall(CompactUnitFrame_UpdateHealthColor, uf)
+    end
+    if CompactUnitFrame_UpdateName then
+        pcall(CompactUnitFrame_UpdateName, uf)
+    end
 end
 
 local function ResetAll()
@@ -234,7 +240,10 @@ function AklimeMod_PvPNameplateColor.SetEnabled(v)
     else
         UnregisterEvents()
         inPvP = false
+        -- Sofort + nach kurzem Delay resetten: Blizzard braucht
+        -- einen Frame um seine eigenen Updates abzuschließen
         ResetAll()
+        C_Timer.After(0.1, ResetAll)
     end
 end
 
