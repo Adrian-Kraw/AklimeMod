@@ -32,14 +32,23 @@ local function PatchWindow(sw)
     local wdb    = GetWindowDB(idx)
 
     -- Beim Login: Falls minimiert und Position gespeichert, sofort korrigieren
+    -- und _dmcd_* Variablen aus DB wiederherstellen damit der Click-Handler funktioniert
     C_Timer.After(0.5, function()
         wdb = GetWindowDB(idx)
-        if sw.isMinimized and wdb and wdb.absLeft and wdb.fullH then
-            local headerH = header and math.ceil(header:GetHeight()) or 32
-            sw:ClearAllPoints()
-            sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", wdb.absLeft, wdb.absBottom)
-            if wdb.fullW then sw:SetWidth(wdb.fullW) end
-            sw:SetHeight(headerH)
+        if wdb and wdb.absLeft and wdb.fullH then
+            -- Immer wiederherstellen, egal ob minimiert oder nicht
+            sw._dmcd_absLeft   = wdb.absLeft
+            sw._dmcd_absBottom = wdb.absBottom
+            sw._dmcd_fullH     = wdb.fullH
+            sw._dmcd_fullW     = wdb.fullW
+            sw._dmcd_origPoint = { "BOTTOMLEFT", UIParent, "BOTTOMLEFT", wdb.absLeft, wdb.absBottom - wdb.fullH }
+            if sw.isMinimized then
+                local headerH = header and math.ceil(header:GetHeight()) or 32
+                sw:ClearAllPoints()
+                sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", wdb.absLeft, wdb.absBottom)
+                if wdb.fullW then sw:SetWidth(wdb.fullW) end
+                sw:SetHeight(headerH)
+            end
         end
     end)
 
@@ -66,21 +75,23 @@ local function PatchWindow(sw)
 
         C_Timer.After(0, function()
             local headerH = header and math.ceil(header:GetHeight()) or 32
+            local left   = sw._dmcd_absLeft   or sw:GetLeft()
+            local bottom = sw._dmcd_absBottom or sw:GetBottom()
+            local fullH  = sw._dmcd_fullH     or sw:GetHeight()
+            local fullW  = sw._dmcd_fullW     or sw:GetWidth()
 
             if sw.isMinimized then
-                -- Eingeklappt: gespeicherte absolute Bottom-Position verwenden
+                -- Eingeklappt: Header-Hoehe, absolute Bottom-Position
                 sw:ClearAllPoints()
-                sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT",
-                    sw._dmcd_absLeft, sw._dmcd_absBottom)
-                sw:SetWidth(sw._dmcd_fullW)
+                sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
+                sw:SetWidth(fullW)
                 sw:SetHeight(headerH)
             else
-                -- Aufgeklappt: originale GetPoint Daten wiederherstellen
-                local p = sw._dmcd_origPoint
+                -- Aufgeklappt: volle Hoehe, gleiche Bottom-Position
                 sw:ClearAllPoints()
-                sw:SetPoint(p[1], p[2], p[3], p[4], p[5])
-                sw:SetWidth(sw._dmcd_fullW)
-                sw:SetHeight(sw._dmcd_fullH)
+                sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
+                sw:SetWidth(fullW)
+                sw:SetHeight(fullH)
             end
         end)
     end)
