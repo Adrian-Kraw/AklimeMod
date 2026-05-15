@@ -102,6 +102,7 @@ f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+f:RegisterEvent("RAID_ROSTER_UPDATE")
 
 f:SetScript("OnEvent", function(_, event)
     if IsInEditMode() then return end
@@ -154,6 +155,14 @@ AklimeMod_RaidFrameCenter = {
     GetOffsetX = function() return GetDB().offsetX or 0 end,
     Update     = function() lastCount = 0; lastMtOffset = 0; hasModified = false; RepositionContainer() end,
 }
+
+-- SetMainTank/ClearMainTank direkt hooken
+if SetMainTank then
+    hooksecurefunc("SetMainTank", function() RequestReposition() end)
+end
+if ClearMainTank then
+    hooksecurefunc("ClearMainTank", function() RequestReposition() end)
+end
 
 C_Timer.After(3.0, function()
     if IsInEditMode() then return end
