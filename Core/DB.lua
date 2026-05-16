@@ -87,6 +87,29 @@ function AklimeMod_InitDB()
     def(db.minimapCollector, "angle",       143)
     def(db.minimapCollector, "locked",      false)
 
+    db.minimapHider = db.minimapHider or {}
+    def(db.minimapHider, "enabled", false)
+    def(db.minimapHider, "tracking", false)
+    def(db.minimapHider, "zoneInfo", false)
+    def(db.minimapHider, "clock", false)
+    def(db.minimapHider, "calendar", false)
+    def(db.minimapHider, "mail", false)
+    def(db.minimapHider, "addonCompartment", false)
+
+    db.mouseEffects = db.mouseEffects or {}
+    def(db.mouseEffects, "enabled", false)
+    def(db.mouseEffects, "trail", false)
+    def(db.mouseEffects, "classColor", true)
+    db.mouseEffects.customColor = db.mouseEffects.customColor or { r = 1, g = 0.82, b = 0, a = 0.9 }
+    def(db.mouseEffects, "trailClassColor", true)
+    db.mouseEffects.customTrailColor = db.mouseEffects.customTrailColor or { r = 1, g = 0.82, b = 0, a = 0.85 }
+    def(db.mouseEffects, "hideDot", false)
+    def(db.mouseEffects, "onlyCombat", false)
+    def(db.mouseEffects, "onlyRightClick", false)
+    def(db.mouseEffects, "trailOnlyCombat", false)
+    def(db.mouseEffects, "size", 76)
+    def(db.mouseEffects, "trailPreset", "medium")
+
     db.pvpChatBlock = db.pvpChatBlock or {}
     def(db.pvpChatBlock, "enabled", false)
 

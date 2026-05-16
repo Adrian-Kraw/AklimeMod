@@ -177,6 +177,85 @@ local function toggleInitializer(button, node)
     end)
 end
 
+local function ColorToHex(r, g, b)
+    local function byte(v)
+        v = tonumber(v) or 0
+        if v < 0 then v = 0 elseif v > 1 then v = 1 end
+        return math.floor(v * 255 + 0.5)
+    end
+    return string.format("#%02X%02X%02X", byte(r), byte(g), byte(b))
+end
+
+local function mouseColorInitializer(button, node)
+    if not AklimeMod_MouseEffects then return end
+    local data = node:GetData()
+    local isTrail = data.mouseTrailColor == true
+    local label = isTrail and "Spurfarbe" or "Ringfarbe"
+    local classKey = isTrail and "trailClassColor" or "classColor"
+    local getColor = isTrail and AklimeMod_MouseEffects.GetTrailColor or AklimeMod_MouseEffects.GetCustomColor
+    local setColor = isTrail and AklimeMod_MouseEffects.SetTrailColor or AklimeMod_MouseEffects.SetCustomColor
+
+    local function refresh()
+        local r, g, b = getColor()
+        local hex = ColorToHex(r, g, b)
+        if button.name then button.name:SetText(label .. "  |cFFAAAAAA" .. hex .. "|r") end
+        if button.colorPicker and button.colorPicker.swatch then
+            button.colorPicker.swatch:SetAtlas(nil)
+            button.colorPicker.swatch:SetColorTexture(r, g, b, 1)
+        end
+        if button.followClassColor then
+            button.followClassColor:SetChecked(AklimeMod_MouseEffects.Get(classKey))
+        end
+    end
+
+    refresh()
+
+    if button.followClassColor then
+        button.followClassColor:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine("Klassenfarbe verwenden", 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        button.followClassColor:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        button.followClassColor:SetScript("OnClick", function(self)
+            AklimeMod_MouseEffects.Set(classKey, self:GetChecked())
+            refresh()
+        end)
+    end
+
+    if button.colorPicker then
+        button.colorPicker:SetScript("OnEnter", function(self)
+            local r, g, b = getColor()
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine("Farbe waehlen", 1, 1, 1)
+            GameTooltip:AddLine(ColorToHex(r, g, b), 0.7, 0.7, 0.7)
+            GameTooltip:Show()
+        end)
+        button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        button.colorPicker:SetScript("OnClick", function()
+            local oldR, oldG, oldB, oldA = getColor()
+            local function onChange()
+                local r, g, b = ColorPickerFrame:GetColorRGB()
+                local a = ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha() or oldA
+                setColor(r, g, b, a)
+                refresh()
+            end
+            ColorPickerFrame:Hide()
+            ColorPickerFrame:SetupColorPickerAndShow({
+                swatchFunc = onChange,
+                opacityFunc = onChange,
+                cancelFunc = function()
+                    setColor(oldR, oldG, oldB, oldA)
+                    refresh()
+                end,
+                hasOpacity = true,
+                opacity = oldA or 0.9,
+                r = oldR, g = oldG, b = oldB,
+            })
+        end)
+    end
+end
+
 -- Standard-Factory fuer QoL und andere Kategorien
 function AklimeMod_RightFactory(factory, node)
     local d = node:GetData()
@@ -186,6 +265,8 @@ function AklimeMod_RightFactory(factory, node)
     elseif t == "AklimeMod_ToggleTemplate" and d.name then
         -- normaler Toggle (QoL etc.) — hat .name statt .toggleLabel
         factory(t, toggleInitializer)
+    elseif t == "AklimeMod_SubColorTemplate" and (d.mouseRingColor or d.mouseTrailColor) then
+        factory(t, mouseColorInitializer)
     elseif t == "AklimeMod_InfoTextTemplate" then
         factory(t, function(frame, nd)
             local data = nd:GetData()
@@ -338,6 +419,8 @@ local function BuildInterfaceContent(filter)
             factory(d.Template, moduleHeaderInitializer)
         elseif d.Template == "AklimeMod_ToggleTemplate" and d.name then
             factory(d.Template, toggleInitializer)
+        elseif d.Template == "AklimeMod_SubColorTemplate" and (d.mouseRingColor or d.mouseTrailColor) then
+            factory(d.Template, mouseColorInitializer)
         else
             -- Alle Colorizer-Templates
             AklimeMod_ColorizerRightFactory(factory, node)
@@ -442,6 +525,105 @@ local function BuildInterfaceContent(filter)
         )
     end
 
+    if AklimeMod_MinimapElementHider then
+        local hideNode = addModule(dp3, "Minimap-Elemente ausblenden",
+            function() return AklimeMod_MinimapElementHider.IsEnabled() end,
+            function(v) AklimeMod_MinimapElementHider.SetEnabled(v) end
+        )
+        addToggle(hideNode, "Verfolgungssymbol",
+            function() return AklimeMod_MinimapElementHider.Get("tracking") end,
+            function(v) AklimeMod_MinimapElementHider.Set("tracking", v) end
+        )
+        addToggle(hideNode, "Zoneninfo",
+            function() return AklimeMod_MinimapElementHider.Get("zoneInfo") end,
+            function(v) AklimeMod_MinimapElementHider.Set("zoneInfo", v) end
+        )
+        addToggle(hideNode, "Uhr",
+            function() return AklimeMod_MinimapElementHider.Get("clock") end,
+            function(v) AklimeMod_MinimapElementHider.Set("clock", v) end
+        )
+        addToggle(hideNode, "Kalender",
+            function() return AklimeMod_MinimapElementHider.Get("calendar") end,
+            function(v) AklimeMod_MinimapElementHider.Set("calendar", v) end
+        )
+        addToggle(hideNode, "Post-Symbol",
+            function() return AklimeMod_MinimapElementHider.Get("mail") end,
+            function(v) AklimeMod_MinimapElementHider.Set("mail", v) end
+        )
+        addToggle(hideNode, "Addonfach",
+            function() return AklimeMod_MinimapElementHider.Get("addonCompartment") end,
+            function(v) AklimeMod_MinimapElementHider.Set("addonCompartment", v) end
+        )
+    end
+
+    if AklimeMod_MouseEffects then
+        local mouseNode = addModule(dp3, "Mausring und Mausspur",
+            function() return AklimeMod_MouseEffects.IsEnabled() end,
+            function(v) AklimeMod_MouseEffects.SetEnabled(v) end
+        )
+        addToggle(mouseNode, "Mausspur aktivieren",
+            function() return AklimeMod_MouseEffects.Get("trail") end,
+            function(v) AklimeMod_MouseEffects.Set("trail", v) end
+        )
+        addToggle(mouseNode, "Klassenfarbe verwenden",
+            function() return AklimeMod_MouseEffects.Get("classColor") end,
+            function(v) AklimeMod_MouseEffects.Set("classColor", v) end
+        )
+        addToggle(mouseNode, "Mausspur in Klassenfarbe",
+            function() return AklimeMod_MouseEffects.Get("trailClassColor") end,
+            function(v) AklimeMod_MouseEffects.Set("trailClassColor", v) end
+        )
+        addToggle(mouseNode, "Punkt in der Mitte ausblenden",
+            function() return AklimeMod_MouseEffects.Get("hideDot") end,
+            function(v) AklimeMod_MouseEffects.Set("hideDot", v) end
+        )
+        addToggle(mouseNode, "Ring nur im Kampf",
+            function() return AklimeMod_MouseEffects.Get("onlyCombat") end,
+            function(v) AklimeMod_MouseEffects.Set("onlyCombat", v) end
+        )
+        addToggle(mouseNode, "Ring nur bei Rechtsklick",
+            function() return AklimeMod_MouseEffects.Get("onlyRightClick") end,
+            function(v) AklimeMod_MouseEffects.Set("onlyRightClick", v) end
+        )
+        addToggle(mouseNode, "Mausspur nur im Kampf",
+            function() return AklimeMod_MouseEffects.Get("trailOnlyCombat") end,
+            function(v) AklimeMod_MouseEffects.Set("trailOnlyCombat", v) end
+        )
+        addInfo(mouseNode, "Ringgroesse:")
+        for _, opt in ipairs({
+            { label = "Klein", size = 56 },
+            { label = "Mittel", size = 76 },
+            { label = "Gross", size = 96 },
+            { label = "Sehr gross", size = 120 },
+        }) do
+            local size = opt.size
+            addToggle(mouseNode, opt.label,
+                function() return AklimeMod_MouseEffects.GetSize() == size end,
+                function(v) if v then AklimeMod_MouseEffects.SetSize(size) end end
+            )
+        end
+        mouseNode:Insert({
+            Template = "AklimeMod_SubColorTemplate",
+            mouseRingColor = true,
+        })
+        mouseNode:Insert({
+            Template = "AklimeMod_SubColorTemplate",
+            mouseTrailColor = true,
+        })
+        addInfo(mouseNode, "Mausspur-Dichte:")
+        for _, opt in ipairs({
+            { label = "Niedrig", preset = "low" },
+            { label = "Mittel", preset = "medium" },
+            { label = "Hoch", preset = "high" },
+            { label = "Ultra", preset = "ultra" },
+        }) do
+            local preset = opt.preset
+            addToggle(mouseNode, opt.label,
+                function() return AklimeMod_MouseEffects.GetTrailPreset() == preset end,
+                function(v) if v then AklimeMod_MouseEffects.SetTrailPreset(preset) end end
+            )
+        end
+    end
     -- Colorizer-Nodes direkt in dp3 einfügen
     local function insertColorizerNodes(targetDP, searchFilter)
         local C = AklimeMod_Colorizer
@@ -725,7 +907,6 @@ local function BuildQoLContent()
         function(v) AklimeMod_AutoSellJunk.SetEnabled(v) end
     )
     addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Haendler oeffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
-
     local leaveServiceNode = addModule(dp, "Dienste-Channel verlassen",
         function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
         function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
