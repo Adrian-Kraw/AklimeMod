@@ -110,6 +110,21 @@ local function GetOrCreateCopyFrame()
     return f
 end
 
+local function CleanChatMessage(msg)
+    if type(msg) ~= "string" then return nil end
+
+    local ok, clean = pcall(function()
+        return msg:gsub("|c%x%x%x%x%x%x%x%x","")
+                  :gsub("|r","")
+                  :gsub("|H[^|]+|h%[([^%]]+)%]|h","%1")
+                  :gsub("|T[^|]+|t","")
+                  :gsub("|4[^;]+;","")
+    end)
+
+    if ok then return clean end
+    return nil
+end
+
 local function OpenChatCopy(chatIdx, url)
     local f = GetOrCreateCopyFrame()
     f.editBox:SetText("")
@@ -127,16 +142,13 @@ local function OpenChatCopy(chatIdx, url)
         if not cf then return end
         local maxLines = cf:GetNumMessages() or 0
         local startLine = math.max(1, maxLines - 300)
+        local inserted = false
         for i = startLine, maxLines do
-            local msg = cf:GetMessageInfo(i)
-            if msg then
-                -- Escape-Sequenzen bereinigen
-                msg = msg:gsub("|c%x%x%x%x%x%x%x%x","")
-                         :gsub("|r","")
-                         :gsub("|H[^|]+|h%[([^%]]+)%]|h","%1")
-                         :gsub("|T[^|]+|t","")
-                         :gsub("|4[^;]+;","")
-                f.editBox:Insert((i == startLine and "" or "\n") .. msg)
+            local ok, msg = pcall(cf.GetMessageInfo, cf, i)
+            msg = ok and CleanChatMessage(msg) or nil
+            if msg and msg ~= "" then
+                f.editBox:Insert((inserted and "\n" or "") .. msg)
+                inserted = true
             end
         end
         f.editBox:SetWidth(f.scrollFrame:GetWidth())
@@ -258,10 +270,19 @@ end
 
 local function MakeClickable(_, _, msg, ...)
     if not GetDB().clickLinks then return false, msg, ... end
-    for _, p in ipairs(URL_PATTERNS) do
-        if msg:find(p) then
-            msg = msg:gsub(p, FormatURL("%1"))
+
+    local ok, newMsg = pcall(function()
+        if type(msg) ~= "string" then return msg end
+        for _, p in ipairs(URL_PATTERNS) do
+            if msg:find(p) then
+                msg = msg:gsub(p, FormatURL("%1"))
+            end
         end
+        return msg
+    end)
+
+    if ok then
+        msg = newMsg
     end
     return false, msg, ...
 end
