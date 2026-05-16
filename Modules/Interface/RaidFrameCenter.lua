@@ -124,11 +124,7 @@ f:SetScript("OnEvent", function(_, event)
         return
     end
 
-    if not IsInRaid() then
-        C_Timer.After(0.5, function()
-            if not IsInRaid() then RestorePosition() end
-        end)
-    else
+    if IsInRaid() then
         RequestReposition()
     end
 end)
