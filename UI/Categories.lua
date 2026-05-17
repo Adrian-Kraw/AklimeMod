@@ -1072,6 +1072,40 @@ local function BuildQoLContent()
         addInfo(blockPetNode, "Lehnt eingehende Haustierkampf-Duellanfragen automatisch ab.")
     end
 
+    if AklimeMod_GroupInvites then
+        local blockInviteNode = addModule(dp, "Gruppeneinladungen blockieren",
+            function() return AklimeMod_GroupInvites:IsBlockEnabled() end,
+            function(v) AklimeMod_GroupInvites:SetBlock(v) end
+        )
+        addInfo(blockInviteNode, "Lehnt alle eingehenden Gruppeneinladungen automatisch ab.\nKann nicht gleichzeitig mit Auto-Annehmen aktiv sein.")
+
+        local autoAcceptNode = addModule(dp, "Gruppeneinladungen automatisch annehmen",
+            function() return AklimeMod_GroupInvites:IsAutoAcceptEnabled() end,
+            function(v) AklimeMod_GroupInvites:SetAutoAccept(v) end
+        )
+        addToggle(autoAcceptNode, "Nur von Gildenmitgliedern",
+            function() return AklimeMod_GroupInvites:IsGuildOnly() end,
+            function(v)
+                AklimeMod_GroupInvites:SetGuildOnly(v)
+                if v then AklimeMod_GroupInvites:SetFriendOnly(false) end
+                autoAcceptNode:SetCollapsed(true); autoAcceptNode:SetCollapsed(false)
+            end
+        )
+        addToggle(autoAcceptNode, "Nur von Freunden (BNet + Freundesliste)",
+            function() return AklimeMod_GroupInvites:IsFriendOnly() end,
+            function(v)
+                AklimeMod_GroupInvites:SetFriendOnly(v)
+                if v then AklimeMod_GroupInvites:SetGuildOnly(false) end
+                autoAcceptNode:SetCollapsed(true); autoAcceptNode:SetCollapsed(false)
+            end
+        )
+        addInfo(autoAcceptNode,
+            "Nimmt Gruppeneinladungen automatisch an.\n" ..
+            "Kein Filter: jede Einladung wird angenommen.\n" ..
+            "Nur Gilde oder Nur Freunde: alle anderen werden ignoriert."
+        )
+    end
+
     if AklimeMod_ChatLearnFilter then
         local learnNode = addModule(dp, "Lernen-/Vergessen-Meldungen ausblenden",
             function() return AklimeMod_ChatLearnFilter:IsEnabled() end,

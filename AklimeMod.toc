@@ -46,6 +46,7 @@ Modules\QoL\ChatIcons.lua
 Modules\QoL\ChatFade.lua
 Modules\QoL\FriendsListDecor.lua
 Modules\QoL\BlockRequests.lua
+Modules\QoL\GroupInvites.lua
 Modules\QoL\Mailbox.lua
 
 Modules\Mouse\MouseEffects.lua

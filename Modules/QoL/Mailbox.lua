@@ -96,7 +96,7 @@ local function BuildFiltered()
             av, bv = a.name:lower(), b.name:lower()
             if av == bv then av, bv = a.realm:lower(), b.realm:lower() end
         end
-        return M.sortAsc and (av < bv) or (av > bv)
+        if M.sortAsc then return av < bv else return av > bv end
     end)
 end
 
@@ -133,11 +133,15 @@ local function UpdateRows()
         end
     end
 
-    if M.scrollBar then
+    if M.scrollUp and M.scrollDown then
         local maxOff = math.max(0, total - visible)
-        M.scrollBar:SetMinMaxValues(0, maxOff)
-        M.scrollBar:SetValue(M.offset)
-        if maxOff > 0 then M.scrollBar:Show() else M.scrollBar:Hide() end
+        if maxOff > 0 then
+            M.scrollUp:Show();   M.scrollDown:Show()
+            M.scrollUp:SetEnabled(M.offset > 0)
+            M.scrollDown:SetEnabled(M.offset < maxOff)
+        else
+            M.scrollUp:Hide();   M.scrollDown:Hide()
+        end
     end
 end
 
@@ -221,29 +225,51 @@ local function EnsureFrame()
     line:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -75)
     line:SetColorTexture(0.4, 0.4, 0.4, 0.8)
 
-    -- Scrollbar
-    local sb = CreateFrame("Slider", nil, f, "UIPanelScrollBarTemplate")
-    sb:SetPoint("TOPRIGHT",    f, "TOPRIGHT",  -3, ROW_AREA_TOP - 16)
-    sb:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, ROW_AREA_BOT + 14)
-    sb:SetMinMaxValues(0, 0)
-    sb:SetValue(0)
-    sb:SetValueStep(1)
-    sb:SetScript("OnValueChanged", function(self, val)
-        local newOff = math.floor(val + 0.5)
-        if newOff ~= M.offset then
-            M.offset = newOff
+    -- Scroll: Pfeil-Buttons (kein Template, kein SecureScrollBar)
+    local function MakeArrowBtn(isUp)
+        local btn = CreateFrame("Button", nil, f)
+        btn:SetSize(16, 16)
+        local tex = btn:CreateTexture(nil, "ARTWORK")
+        tex:SetTexture("Interface/Buttons/UI-ScrollBar-ScrollUpButton-Up")
+        if not isUp then
+            tex:SetTexCoord(0, 1, 1, 0)  -- vertikal spiegeln fuer unten
+        end
+        tex:SetAllPoints()
+        btn:SetNormalTexture(tex)
+        local hl = btn:CreateTexture(nil, "HIGHLIGHT")
+        hl:SetTexture("Interface/Buttons/UI-ScrollBar-ScrollUpButton-Highlight")
+        if not isUp then hl:SetTexCoord(0, 1, 1, 0) end
+        hl:SetAllPoints()
+        btn:SetHighlightTexture(hl)
+        return btn
+    end
+
+    local upBtn   = MakeArrowBtn(true)
+    local downBtn = MakeArrowBtn(false)
+    upBtn:SetPoint("TOPRIGHT",    f, "TOPRIGHT", -3, ROW_AREA_TOP)
+    downBtn:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, ROW_AREA_BOT)
+    upBtn:SetScript("OnClick", function()
+        if M.offset > 0 then
+            M.offset = M.offset - 1
             UpdateRows()
         end
     end)
-    sb:Hide()
-    M.scrollBar = sb
+    downBtn:SetScript("OnClick", function()
+        local maxOff = math.max(0, #M.filtered - CalcVisibleRows())
+        if M.offset < maxOff then
+            M.offset = M.offset + 1
+            UpdateRows()
+        end
+    end)
+    upBtn:Hide();  downBtn:Hide()
+    M.scrollUp   = upBtn
+    M.scrollDown = downBtn
 
     -- Mausrad
     f:EnableMouseWheel(true)
     f:SetScript("OnMouseWheel", function(_, delta)
         local maxOff = math.max(0, #M.filtered - CalcVisibleRows())
         M.offset = math.max(0, math.min(maxOff, M.offset - delta))
-        if M.scrollBar then M.scrollBar:SetValue(M.offset) end
         UpdateRows()
     end)
 
@@ -252,7 +278,7 @@ local function EnsureFrame()
         local row = CreateFrame("Button", nil, f)
         row:SetHeight(ROW_H)
         row:SetPoint("TOPLEFT",  f, "TOPLEFT",  6,  ROW_AREA_TOP - (i - 1) * ROW_H)
-        row:SetPoint("TOPRIGHT", f, "TOPRIGHT", -20, ROW_AREA_TOP - (i - 1) * ROW_H)
+        row:SetPoint("TOPRIGHT", f, "TOPRIGHT", -22, ROW_AREA_TOP - (i - 1) * ROW_H)
         row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         row:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight", "ADD")
 

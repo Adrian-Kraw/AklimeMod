@@ -162,6 +162,12 @@ function AklimeMod_InitDB()
     def(db.questAutomation, "wowheadLink",    false)
     db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
 
+    db.groupInvites = db.groupInvites or {}
+    def(db.groupInvites, "block",       false)
+    def(db.groupInvites, "autoAccept",  false)
+    def(db.groupInvites, "guildOnly",   false)
+    def(db.groupInvites, "friendOnly",  false)
+
     db.mailbox = db.mailbox or {}
     def(db.mailbox, "enabled",                false)
     def(db.mailbox, "rememberLastRecipient",  false)
