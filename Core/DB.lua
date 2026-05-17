@@ -149,6 +149,10 @@ function AklimeMod_InitDB()
     def(db.questTracker, "rememberState",       false)
     -- questTracker.collapsed: kein Default, wird beim ersten Zustandswechsel gesetzt
 
+    db.blockRequests = db.blockRequests or {}
+    def(db.blockRequests, "blockDuels",      false)
+    def(db.blockRequests, "blockPetBattles", false)
+
     db.questAutomation = db.questAutomation or {}
     def(db.questAutomation, "enabled",        false)
     def(db.questAutomation, "modifier",       "NONE")
@@ -157,6 +161,11 @@ function AklimeMod_InitDB()
     def(db.questAutomation, "ignoreWarband",  false)
     def(db.questAutomation, "wowheadLink",    false)
     db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
+
+    db.mailbox = db.mailbox or {}
+    def(db.mailbox, "enabled",                false)
+    def(db.mailbox, "rememberLastRecipient",  false)
+    db.mailbox.contacts = db.mailbox.contacts or {}
 
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}

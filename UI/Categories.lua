@@ -1058,6 +1058,20 @@ local function BuildQoLContent()
         centered = false,
     })
 
+    if AklimeMod_BlockRequests then
+        local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
+            function() return AklimeMod_BlockRequests:IsDuelBlocked() end,
+            function(v) AklimeMod_BlockRequests:SetBlockDuels(v) end
+        )
+        addInfo(blockDuelNode, "Lehnt eingehende Duellanfragen automatisch ab.")
+
+        local blockPetNode = addModule(dp, "Haustierkampf-Duelle blockieren",
+            function() return AklimeMod_BlockRequests:IsPetBattleBlocked() end,
+            function(v) AklimeMod_BlockRequests:SetBlockPetBattles(v) end
+        )
+        addInfo(blockPetNode, "Lehnt eingehende Haustierkampf-Duellanfragen automatisch ab.")
+    end
+
     if AklimeMod_ChatLearnFilter then
         local learnNode = addModule(dp, "Lernen-/Vergessen-Meldungen ausblenden",
             function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
@@ -1146,6 +1160,38 @@ local function BuildQoLContent()
             "Zeigt Level, Zone und Status (AFK/DND/Offline).\n" ..
             "BNet-Freunde: Spiel-Icon und Fraktionsflagge."
         )
+    end
+
+    -- ============================================================
+    -- Post
+    -- ============================================================
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Post",
+        centered = false,
+    })
+
+    if AklimeMod_Mailbox then
+        local mailboxNode = addModule(dp, "Adressbuch",
+            function() return AklimeMod_Mailbox:IsEnabled() end,
+            function(v) AklimeMod_Mailbox:SetEnabled(v) end
+        )
+        addToggle(mailboxNode, "Letzten Empfänger merken",
+            function() return AklimeMod_Mailbox:IsRememberLastRecipient() end,
+            function(v) AklimeMod_Mailbox:SetRememberLastRecipient(v) end
+        )
+        addInfo(mailboxNode,
+            "Zeigt ein Adressbuch neben dem Schreibfenster.\n" ..
+            "Klick auf einen Eintrag setzt den Empfänger.\n" ..
+            "Rechtsklick auf einen Eintrag: Entfernen.\n\n" ..
+            "Empfänger werden automatisch gespeichert\n" ..
+            "wenn du eine Mail sendest.\n\n" ..
+            "Letzter Empfänger: wird beim nächsten Öffnen\n" ..
+            "des Postfachs automatisch eingetragen."
+        )
+        addAction(mailboxNode, "Kontakte leeren", function()
+            AklimeMod_Mailbox:ClearContacts()
+        end)
     end
 
     -- ============================================================
