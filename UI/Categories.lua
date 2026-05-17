@@ -963,6 +963,18 @@ local function BuildQoLContent()
         centered = false,
     })
 
+    if AklimeMod_DeathSound then
+        local deathNode = addModule(dp, "Todessound",
+            function() return AklimeMod_DeathSound:IsEnabled() end,
+            function(v) AklimeMod_DeathSound:SetEnabled(v) end
+        )
+        addInfo(deathNode,
+            "Spielt einen Sound ab wenn der Charakter stirbt.\n" ..
+            "Wird pro Tod nur einmal abgespielt.\n\n" ..
+            "Datei: Assets\\death.mp3"
+        )
+    end
+
     if AklimeMod_TalentReminder then
         local talentNode = addModule(dp, "Talent-Erinnerung beim Dungeon-Eintritt",
             function() return AklimeMod_TalentReminder:IsEnabled() end,

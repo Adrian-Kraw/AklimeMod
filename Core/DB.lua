@@ -162,6 +162,9 @@ function AklimeMod_InitDB()
     def(db.questAutomation, "wowheadLink",    false)
     db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
 
+    db.deathSound = db.deathSound or {}
+    def(db.deathSound, "enabled", false)
+
     db.talentReminder = db.talentReminder or {}
     def(db.talentReminder, "enabled", false)
 
