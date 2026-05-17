@@ -1251,6 +1251,17 @@ local function addQoLNodes(dp)
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Kontakte", centered = false })
     end
 
+    if AklimeMod_Summons then
+        local summonsNode = addModule(dp, "Beschwörungen automatisch annehmen",
+            function() return AklimeMod_Summons:IsEnabled() end,
+            function(v) AklimeMod_Summons:SetEnabled(v) end
+        )
+        addInfo(summonsNode,
+            "Nimmt eingehende Beschwörungsanfragen automatisch an.\n" ..
+            "Eine Meldung im Chat zeigt wer beschworen hat und wohin."
+        )
+    end
+
     if AklimeMod_BlockRequests then
         local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
             function() return AklimeMod_BlockRequests:IsDuelBlocked() end,

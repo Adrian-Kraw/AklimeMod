@@ -173,6 +173,9 @@ function AklimeMod_InitDB()
     db.talentReminder = db.talentReminder or {}
     def(db.talentReminder, "enabled", false)
 
+    db.summons = db.summons or {}
+    def(db.summons, "enabled", false)
+
     db.groupInvites = db.groupInvites or {}
     def(db.groupInvites, "block",             false)
     def(db.groupInvites, "blockExceptGuild",  false)

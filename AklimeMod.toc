@@ -49,6 +49,7 @@ Modules\QoL\HeroismTracker.lua
 Modules\QoL\DeathSound.lua
 Modules\QoL\TalentReminder.lua
 Modules\QoL\BlockRequests.lua
+Modules\QoL\Summons.lua
 Modules\QoL\GroupInvites.lua
 Modules\QoL\Mailbox.lua
 
