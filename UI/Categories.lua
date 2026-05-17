@@ -1077,7 +1077,15 @@ local function BuildQoLContent()
             function() return AklimeMod_GroupInvites:IsBlockEnabled() end,
             function(v) AklimeMod_GroupInvites:SetBlock(v) end
         )
-        addInfo(blockInviteNode, "Lehnt alle eingehenden Gruppeneinladungen automatisch ab.\nKann nicht gleichzeitig mit Auto-Annehmen aktiv sein.")
+        addToggle(blockInviteNode, "Ausnahme: Gildenmitglieder durchlassen",
+            function() return AklimeMod_GroupInvites:IsBlockExceptGuild() end,
+            function(v) AklimeMod_GroupInvites:SetBlockExceptGuild(v) end
+        )
+        addToggle(blockInviteNode, "Ausnahme: BNet-Freunde durchlassen",
+            function() return AklimeMod_GroupInvites:IsBlockExceptFriend() end,
+            function(v) AklimeMod_GroupInvites:SetBlockExceptFriend(v) end
+        )
+        addInfo(blockInviteNode, "Lehnt alle Gruppeneinladungen automatisch ab.\nAusnahmen erlauben Einladungen von Gilde oder Freunden\ntrotz aktivem Block.")
 
         local autoAcceptNode = addModule(dp, "Gruppeneinladungen automatisch annehmen",
             function() return AklimeMod_GroupInvites:IsAutoAcceptEnabled() end,

@@ -39,15 +39,20 @@ end
 local M = {}
 AklimeMod_GroupInvites = M
 
-function M:IsBlockEnabled()      return GetDB().block       == true end
-function M:IsAutoAcceptEnabled() return GetDB().autoAccept  == true end
-function M:IsGuildOnly()         return GetDB().guildOnly   == true end
-function M:IsFriendOnly()        return GetDB().friendOnly  == true end
+function M:IsBlockEnabled()        return GetDB().block             == true end
+function M:IsBlockExceptGuild()    return GetDB().blockExceptGuild  == true end
+function M:IsBlockExceptFriend()   return GetDB().blockExceptFriend == true end
+function M:IsAutoAcceptEnabled()   return GetDB().autoAccept        == true end
+function M:IsGuildOnly()           return GetDB().guildOnly         == true end
+function M:IsFriendOnly()          return GetDB().friendOnly        == true end
 
 function M:SetBlock(v)
     GetDB().block = v and true or false
     if v then GetDB().autoAccept = false end
 end
+
+function M:SetBlockExceptGuild(v)  GetDB().blockExceptGuild  = v and true or false end
+function M:SetBlockExceptFriend(v) GetDB().blockExceptFriend = v and true or false end
 
 function M:SetAutoAccept(v)
     GetDB().autoAccept = v and true or false
@@ -92,6 +97,9 @@ eventFrame:SetScript("OnEvent", function(_, _, unitName, _, _, _, _, unitID)
     end
 
     if db.block then
+        -- Ausnahmen prüfen: Einladung trotz Block annehmen
+        if db.blockExceptGuild and IsGuildMember(unitName) then return end
+        if db.blockExceptFriend and IsFriend(unitID) then return end
         DeclineGroup()
         StaticPopup_Hide("PARTY_INVITE")
     end
