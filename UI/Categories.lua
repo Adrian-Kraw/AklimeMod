@@ -1747,8 +1747,14 @@ function AklimeMod_InitSearch()
     local sb = _G["AklimeModSearchBox"]
     if not sb then return end
     sb:SetScript("OnTextChanged", function(self, userInput)
-        if not userInput then return end
         local text = self:GetText()
+        if not userInput then
+            -- X-Button oder programmatisches Leeren: Kategorie wiederherstellen
+            if text == "" and lastCategoryFn then
+                lastCategoryFn()
+            end
+            return
+        end
         if text ~= "" then
             BuildGlobalSearch(text)
         elseif lastCategoryFn then
