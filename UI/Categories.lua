@@ -8,14 +8,23 @@ local function newDP() return CreateTreeDataProvider() end
 -- ============================================================
 -- Shared Helfer
 -- ============================================================
+-- Suchfilter-Zustand (globale Suche ueber alle Kategorien)
+local currentSearchFilter = ""
+local dummyNode = setmetatable({}, { __index = function() return function() end end })
+local lastCategoryFn = nil
+
 local function addModule(dp, name, getEnabled, setEnabled)
+    if currentSearchFilter ~= "" and not name:lower():find(currentSearchFilter, 1, true) then
+        return dummyNode
+    end
     local node = dp:Insert({
         Template   = "AklimeMod_ModuleHeaderTemplate",
         name       = name,
         getEnabled = getEnabled,
         setEnabled = setEnabled,
     })
-    node:SetCollapsed(true)
+    -- Im Suchmodus aufgeklappt damit Untereintraege direkt sichtbar sind
+    node:SetCollapsed(currentSearchFilter == "")
     return node
 end
 
@@ -379,6 +388,7 @@ local function GetOrCreateDashboard(parent)
 end
 
 local function BuildDashboardContent()
+    lastCategoryFn = BuildDashboardContent
     currentBuildFn = nil
     if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
     AklimeMod_SetRightHeader("Dashboard")
@@ -395,23 +405,119 @@ end
 -- Suche
 -- ============================================================
 local currentBuildFn = nil
-
-function AklimeMod_InitSearch()
-    local sb = _G["AklimeModSearchBox"]
-    if not sb then return end
-    sb:SetScript("OnTextChanged", function(self, userInput)
-        if userInput and currentBuildFn then currentBuildFn(self:GetText():lower()) end
-    end)
-    sb:SetScript("OnEscapePressed", function(self)
-        self:SetText(""); self:ClearFocus()
-        if currentBuildFn then currentBuildFn("") end
-    end)
-end
+-- BuildGlobalSearch und AklimeMod_InitSearch folgen nach den add*Nodes-Definitionen
 
 -- ============================================================
 -- Interface-Tab — Elite/Rare + Colorizer-Baum
 -- ============================================================
+
+-- Nur die nicht-Colorizer-Module (fuer globale Suche nutzbar)
+local function addInterfaceNodes(dp)
+    local eliteNode = addModule(dp, "Elite Frame",
+        function() return AklimeModDB.eliteFrame.enabled end,
+        function(v)
+            AklimeModDB.eliteFrame.enabled = v
+            if v and AklimeModDB.eliteFrame.style then AklimeMod_ApplyEliteFrame()
+            else AklimeMod_RemoveEliteFrame() end
+        end
+    )
+    local eliteStyles = {
+        { key="silver",     label="Silberner Drachen"             },
+        { key="silverWing", label="Silberner Drachen mit Flügeln" },
+        { key="gold",       label="Goldener Drachen"              },
+        { key="goldWing",   label="Goldener Drachen mit Flügeln"  },
+    }
+    for _, s in ipairs(eliteStyles) do
+        local key = s.key
+        addToggle(eliteNode, s.label,
+            function() return AklimeModDB.eliteFrame.style == key end,
+            function(v)
+                if v then
+                    AklimeModDB.eliteFrame.style = key
+                    if AklimeModDB.eliteFrame.enabled then AklimeMod_ApplyEliteFrame(key) end
+                else
+                    AklimeModDB.eliteFrame.style = nil; AklimeMod_RemoveEliteFrame()
+                end
+            end
+        )
+    end
+
+    local rareNode = addModule(dp, "Seltene Gegner",
+        function() return AklimeModDB.rareFrame.enabled end,
+        function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
+    )
+    addToggle(rareNode, "Stern durch Silbernen Drachen ergänzen",
+        function() return AklimeModDB.rareFrame.enabled end,
+        function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
+    )
+
+    local dungeonEyeNode = addModule(dp, "Dungeon Eye",
+        function() return AklimeMod_DungeonEye.IsEnabled() end,
+        function(v) AklimeMod_DungeonEye.SetEnabled(v) end
+    )
+    addToggle(dungeonEyeNode, "An Minimap-Rand fixieren",
+        function() return AklimeMod_DungeonEye.IsLocked() end,
+        function(v) AklimeMod_DungeonEye.SetLocked(v) end
+    )
+
+    local raidCenterNode = addModule(dp, "Raid Frame Zentrierung",
+        function() return AklimeMod_RaidFrameCenter.IsEnabled() end,
+        function(v) AklimeMod_RaidFrameCenter.SetEnabled(v) end
+    )
+    addInfo(raidCenterNode, "Zentriert Raid-Frames dynamisch.")
+
+    local hideMacroNode = addModule(dp, "Makro-Namen ausblenden",
+        function() return AklimeMod_HideMacroNames.IsEnabled() end,
+        function(v) AklimeMod_HideMacroNames.SetEnabled(v) end
+    )
+    addInfo(hideMacroNode, "Versteckt die Makro-Namen auf allen Action Buttons.")
+
+    local dmCollapseNode = addModule(dp, "Schadensanzeige: nach unten klappen",
+        function() return AklimeMod_DamageMeterCollapseDown.IsEnabled() end,
+        function(v) AklimeMod_DamageMeterCollapseDown.SetEnabled(v) end
+    )
+    addInfo(dmCollapseNode, "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.")
+
+    if AklimeMod_MinimapCollector then
+        local mmNode = addModule(dp, "Minimap Button Sammler",
+            function() return AklimeMod_MinimapCollector.IsEnabled() end,
+            function(v) AklimeMod_MinimapCollector.SetEnabled(v) end
+        )
+        addToggle(mmNode, "Eigenen AklimeMod-Button einschließen",
+            function() return AklimeMod_MinimapCollector.IncludeOwn() end,
+            function(v) AklimeMod_MinimapCollector.SetIncludeOwn(v) end
+        )
+    end
+
+    if AklimeMod_MinimapElementHider then
+        local hideNode = addModule(dp, "Minimap-Elemente ausblenden",
+            function() return AklimeMod_MinimapElementHider.IsEnabled() end,
+            function(v) AklimeMod_MinimapElementHider.SetEnabled(v) end
+        )
+        for _, kv in ipairs({
+            { "Verfolgungssymbol", "tracking" }, { "Zoneninfo", "zoneInfo" },
+            { "Uhr", "clock" }, { "Kalender", "calendar" },
+            { "Post-Symbol", "mail" }, { "Addonfach", "addonCompartment" },
+        }) do
+            local lbl, key = kv[1], kv[2]
+            addToggle(hideNode, lbl,
+                function() return AklimeMod_MinimapElementHider.Get(key) end,
+                function(v) AklimeMod_MinimapElementHider.Set(key, v) end
+            )
+        end
+    end
+
+    if AklimeMod_MouseEffects then
+        local mouseNode = addModule(dp, "Mausring und Mausspur",
+            function() return AklimeMod_MouseEffects.IsEnabled() end,
+            function(v) AklimeMod_MouseEffects.SetEnabled(v) end
+        )
+        addInfo(mouseNode, "Ring und Spur um den Mauszeiger.")
+    end
+end
+
 local function BuildInterfaceContent(filter)
+    lastCategoryFn = BuildInterfaceContent
     AklimeMod_SetRightHeader("Interface")
     ShowScrollView()
     currentBuildFn = BuildInterfaceContent
@@ -808,13 +914,7 @@ AklimeMod_BuildInterfaceContent = BuildInterfaceContent
 -- ============================================================
 -- Quality of Life
 -- ============================================================
-local function BuildQoLContent()
-    currentBuildFn = nil
-    if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
-    AklimeMod_SetRightHeader("Quality of Life")
-    ShowScrollView()
-    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
-    local dp = newDP()
+local function addQoLNodes(dp)
 
     local chatNode = addModule(dp, "Chat Interaktion",
         function()
@@ -990,11 +1090,9 @@ local function BuildQoLContent()
     -- ============================================================
     -- Gameplay
     -- ============================================================
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Gameplay",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gameplay", centered = false })
+    end
 
     if AklimeMod_HeroismTracker then
         local htNode = addModule(dp, "HT-Anzeige (Heldentum / Trommeln)",
@@ -1056,11 +1154,9 @@ local function BuildQoLContent()
     -- ============================================================
     -- Quest
     -- ============================================================
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Quest",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quest", centered = false })
+    end
 
     if AklimeMod_QuestAutomation then
         local autoQuestNode = addModule(dp, "Quest automatisch annehmen / abgeben",
@@ -1151,11 +1247,9 @@ local function BuildQoLContent()
     -- ============================================================
     -- Kontakte
     -- ============================================================
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Kontakte",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Kontakte", centered = false })
+    end
 
     if AklimeMod_BlockRequests then
         local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
@@ -1306,11 +1400,9 @@ local function BuildQoLContent()
     -- ============================================================
     -- Post
     -- ============================================================
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Post",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Post", centered = false })
+    end
 
     if AklimeMod_Mailbox then
         local mailboxNode = addModule(dp, "Adressbuch",
@@ -1338,11 +1430,9 @@ local function BuildQoLContent()
     -- ============================================================
     -- Haendler
     -- ============================================================
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Händler",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Händler", centered = false })
+    end
 
     if AklimeMod_Merchant then
         local merchantNode = addModule(dp, "20 Gegenstände pro Seite",
@@ -1365,13 +1455,11 @@ local function BuildQoLContent()
     end
 
     -- ============================================================
-    -- Trennlinie: Gesundheit
+    -- Gesundheit
     -- ============================================================
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Gesundheit",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gesundheit", centered = false })
+    end
 
     local drinkNode = addModule(dp, "Trinkerinnerung",
         function() return AklimeMod_DrinkReminder.IsEnabled() end,
@@ -1404,6 +1492,17 @@ local function BuildQoLContent()
         AklimeMod_DrinkReminder.ShowNow()
     end)
 
+end  -- addQoLNodes
+
+local function BuildQoLContent()
+    lastCategoryFn = BuildQoLContent
+    currentBuildFn = nil
+    if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
+    AklimeMod_SetRightHeader("Quality of Life")
+    ShowScrollView()
+    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
+    local dp = newDP()
+    addQoLNodes(dp)
     RSV():SetDataProvider(dp)
 end
 AklimeMod_BuildQoLContent = BuildQoLContent  -- global fuer Module
@@ -1411,15 +1510,7 @@ AklimeMod_BuildQoLContent = BuildQoLContent  -- global fuer Module
 -- ============================================================
 -- PvP
 -- ============================================================
-local function BuildPvPContent()
-    currentBuildFn = nil
-    if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
-    AklimeMod_SetRightHeader("PvP")
-    ShowScrollView()
-    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
-    local dp = newDP()
-
-    -- ── Namensplaketten-Farben ────────────────────────────────
+local function addPvPNodes(dp)
     local npNode = addModule(dp, "Namensplaketten einfärben",
         function() return AklimeMod_PvPNameplateColor and AklimeMod_PvPNameplateColor.IsEnabled() end,
         function(v)
@@ -1429,17 +1520,12 @@ local function BuildPvPContent()
     addInfo(npNode,
         "Färbt Namensplaketten in PvP-Instanzen (Arena & Schlachtfeld):\n" ..
         "|cFF00FF00Grün|r  = eigene Gruppe / Team\n" ..
-        "|cFFFF3333Rot|r   = Gegner\n\n" ..
-        "Nur aktiv innerhalb einer PvP-Instanz.\n" ..
-        "Außerhalb werden die Blizzard-Standardfarben wiederhergestellt."
+        "|cFFFF3333Rot|r   = Gegner"
     )
 
-    -- ── Chat-Block ────────────────────────────────────────────
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Sonstiges",
-        centered = false,
-    })
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Sonstiges", centered = false })
+    end
 
     local chatBlockNode = addModule(dp, "Chat im PvP blockieren",
         function() return AklimeMod_PvPChatBlock and AklimeMod_PvPChatBlock.IsEnabled() end,
@@ -1448,10 +1534,19 @@ local function BuildPvPContent()
         end
     )
     addInfo(chatBlockNode,
-        "Verhindert das Öffnen der Chat-Eingabe (Enter) in Arenen und\n" ..
-        "Schlachtfeldern — verhindert versehentliches Tippen mitten im Kampf."
+        "Verhindert das Öffnen der Chat-Eingabe (Enter) in Arenen und Schlachtfeldern."
     )
+end
 
+local function BuildPvPContent()
+    lastCategoryFn = BuildPvPContent
+    currentBuildFn = nil
+    if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
+    AklimeMod_SetRightHeader("PvP")
+    ShowScrollView()
+    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
+    local dp = newDP()
+    addPvPNodes(dp)
     RSV():SetDataProvider(dp)
 end
 AklimeMod_BuildPvPContent = BuildPvPContent
@@ -1469,6 +1564,7 @@ end
 -- Collecting
 -- ============================================================
 local function BuildCollectingContent()
+    lastCategoryFn = BuildCollectingContent
     currentBuildFn = nil
     if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
     AklimeMod_SetRightHeader("Collecting")
@@ -1620,6 +1716,49 @@ local function BuildCollectingContent()
     end
 
     RSV():SetDataProvider(dp)
+end
+
+-- ============================================================
+-- Globale Suche (muss nach allen add*Nodes-Funktionen stehen)
+-- ============================================================
+local function BuildGlobalSearch(filter)
+    currentBuildFn = nil
+    AklimeMod_SetRightHeader("Suche: \"" .. filter .. "\"")
+    ShowScrollView()
+    RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
+
+    local dp = newDP()
+    currentSearchFilter = filter:lower()
+
+    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quality of Life", centered = false })
+    addQoLNodes(dp)
+
+    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface", centered = false })
+    addInterfaceNodes(dp)
+
+    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "PvP", centered = false })
+    addPvPNodes(dp)
+
+    currentSearchFilter = ""
+    RSV():SetDataProvider(dp)
+end
+
+function AklimeMod_InitSearch()
+    local sb = _G["AklimeModSearchBox"]
+    if not sb then return end
+    sb:SetScript("OnTextChanged", function(self, userInput)
+        if not userInput then return end
+        local text = self:GetText()
+        if text ~= "" then
+            BuildGlobalSearch(text)
+        elseif lastCategoryFn then
+            lastCategoryFn()
+        end
+    end)
+    sb:SetScript("OnEscapePressed", function(self)
+        self:SetText(""); self:ClearFocus()
+        if lastCategoryFn then lastCategoryFn() end
+    end)
 end
 
 -- ============================================================
