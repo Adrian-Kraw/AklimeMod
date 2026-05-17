@@ -162,6 +162,9 @@ function AklimeMod_InitDB()
     def(db.questAutomation, "wowheadLink",    false)
     db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
 
+    db.talentReminder = db.talentReminder or {}
+    def(db.talentReminder, "enabled", false)
+
     db.groupInvites = db.groupInvites or {}
     def(db.groupInvites, "block",             false)
     def(db.groupInvites, "blockExceptGuild",  false)

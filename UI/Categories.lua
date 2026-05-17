@@ -955,6 +955,28 @@ local function BuildQoLContent()
     addInfo(mapCoordsNode, "Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.\nFormat: Maus: X / Y  -  Spieler: X / Y")
 
     -- ============================================================
+    -- Gameplay
+    -- ============================================================
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Gameplay",
+        centered = false,
+    })
+
+    if AklimeMod_TalentReminder then
+        local talentNode = addModule(dp, "Talent-Erinnerung beim Dungeon-Eintritt",
+            function() return AklimeMod_TalentReminder:IsEnabled() end,
+            function(v) AklimeMod_TalentReminder:SetEnabled(v) end
+        )
+        addInfo(talentNode,
+            "Zeigt beim Betreten einer Instanz ein Popup:\n" ..
+            "\"Passen die Talente für diese Instanz?\"\n\n" ..
+            "Schaltfläche \"Talente öffnen\" öffnet direkt das Talentfenster.\n" ..
+            "Erscheint nicht beim Login oder Interface-Neuladen."
+        )
+    end
+
+    -- ============================================================
     -- Quest
     -- ============================================================
     dp:Insert({
