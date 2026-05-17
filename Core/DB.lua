@@ -110,6 +110,9 @@ function AklimeMod_InitDB()
     def(db.mouseEffects, "size", 76)
     def(db.mouseEffects, "trailPreset", "medium")
 
+    db.chatIcons = db.chatIcons or {}
+    def(db.chatIcons, "enabled", false)
+
     db.chatFade = db.chatFade or {}
     def(db.chatFade, "enabled",      false)
     def(db.chatFade, "timeVisible",  30)

@@ -963,6 +963,17 @@ local function BuildQoLContent()
         centered = false,
     })
 
+    if AklimeMod_ChatIcons then
+        local chatIconsNode = addModule(dp, "Item- und Waehrungssymbole im Chat",
+            function() return AklimeMod_ChatIcons:IsEnabled() end,
+            function(v) AklimeMod_ChatIcons:SetEnabled(v) end
+        )
+        addInfo(chatIconsNode,
+            "Zeigt vor jedem Item-Link das Item-Icon.\n" ..
+            "Bei Beute- und Waehrungsnachrichten auch das Waehrungs-Icon."
+        )
+    end
+
     if AklimeMod_ChatFade then
         local chatFadeNode = addModule(dp, "Chat verblassen",
             function() return AklimeMod_ChatFade.IsEnabled() end,
