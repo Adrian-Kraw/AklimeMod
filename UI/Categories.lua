@@ -955,6 +955,101 @@ local function BuildQoLContent()
     addInfo(mapCoordsNode, "Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.\nFormat: Maus: X / Y  -  Spieler: X / Y")
 
     -- ============================================================
+    -- Quest
+    -- ============================================================
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Quest",
+        centered = false,
+    })
+
+    if AklimeMod_QuestAutomation then
+        local autoQuestNode = addModule(dp, "Quest automatisch annehmen / abgeben",
+            function() return AklimeMod_QuestAutomation:IsEnabled() end,
+            function(v) AklimeMod_QuestAutomation:SetEnabled(v) end
+        )
+        addToggle(autoQuestNode, "Tagesquests überspringen",
+            function() return AklimeMod_QuestAutomation:IsIgnoreDailies() end,
+            function(v) AklimeMod_QuestAutomation:SetIgnoreDailies(v) end
+        )
+        addToggle(autoQuestNode, "Triviale Quests überspringen",
+            function() return AklimeMod_QuestAutomation:IsIgnoreTrivial() end,
+            function(v) AklimeMod_QuestAutomation:SetIgnoreTrivial(v) end
+        )
+        addToggle(autoQuestNode, "Warband-abgeschlossene Quests überspringen",
+            function() return AklimeMod_QuestAutomation:IsIgnoreWarband() end,
+            function(v) AklimeMod_QuestAutomation:SetIgnoreWarband(v) end
+        )
+        addInfo(autoQuestNode,
+            "Nimmt verfügbare Quests beim NPC automatisch an und gibt\n" ..
+            "abgeschlossene Quests ab.\n\n" ..
+            "Modifier zum Unterbrechen:\n" ..
+            "NONE = Shift gedrückt hält an\n" ..
+            "SHIFT / CTRL / ALT = Taste muss gehalten werden zum Auslösen\n\n" ..
+            "NPCs ignorieren: Ziel rechtsklicken > \"NPC zu Ignoreliste hinzufügen\""
+        )
+        addInfo(autoQuestNode, "Modifier:")
+        for _, opt in ipairs({
+            { label = "Kein Modifier (Shift hält an)", val = "NONE"  },
+            { label = "Shift",                         val = "SHIFT" },
+            { label = "Strg",                          val = "CTRL"  },
+            { label = "Alt",                           val = "ALT"   },
+        }) do
+            local v = opt.val
+            addToggle(autoQuestNode, opt.label,
+                function() return AklimeMod_QuestAutomation:GetModifier() == v end,
+                function(on) if on then AklimeMod_QuestAutomation:SetModifier(v) end end
+            )
+        end
+        addAction(autoQuestNode, "Ignoreliste leeren", function()
+            AklimeMod_QuestAutomation:ClearIgnoredNPCs()
+        end)
+    end
+
+    if AklimeMod_QuestAutomation then
+        local wowheadNode = addModule(dp, "Wowhead-URL im Quest-Menü",
+            function() return AklimeMod_QuestAutomation:IsWowheadLink() end,
+            function(v) AklimeMod_QuestAutomation:SetWowheadLink(v) end
+        )
+        addInfo(wowheadNode,
+            "Fügt \"Wowhead-URL kopieren\" zum Rechtsklick-Menü\n" ..
+            "auf Quests im Tracker und auf der Karte hinzu."
+        )
+    end
+
+    if AklimeMod_QuestTracker then
+        local trackerNode = addModule(dp, "Quest-Tracker Erweiterungen",
+            function()
+                return AklimeMod_QuestTracker:IsShowQuestCountEnabled()
+                    or AklimeMod_QuestTracker:IsMinimizeButtonOnly()
+                    or AklimeMod_QuestTracker:IsRememberStateEnabled()
+            end,
+            function(v)
+                AklimeMod_QuestTracker:SetShowQuestCount(v)
+                AklimeMod_QuestTracker:SetMinimizeButtonOnly(v)
+                AklimeMod_QuestTracker:SetRememberState(v)
+            end
+        )
+        addToggle(trackerNode, "Quest-Anzahl im Header anzeigen (z.B. 15/25)",
+            function() return AklimeMod_QuestTracker:IsShowQuestCountEnabled() end,
+            function(v) AklimeMod_QuestTracker:SetShowQuestCount(v) end
+        )
+        addToggle(trackerNode, "Nur Minimieren-Button wenn zugeklappt",
+            function() return AklimeMod_QuestTracker:IsMinimizeButtonOnly() end,
+            function(v) AklimeMod_QuestTracker:SetMinimizeButtonOnly(v) end
+        )
+        addToggle(trackerNode, "Zugeklappten Zustand merken",
+            function() return AklimeMod_QuestTracker:IsRememberStateEnabled() end,
+            function(v) AklimeMod_QuestTracker:SetRememberState(v) end
+        )
+        addInfo(trackerNode,
+            "Quest-Anzahl: goldene Zahl im Tracker-Header.\n" ..
+            "Nur Button: Header-Text/Hintergrund verschwinden wenn zugeklappt.\n" ..
+            "Zustand merken: der Tracker bleibt zwischen Sessions ein- oder ausgeklappt."
+        )
+    end
+
+    -- ============================================================
     -- Kontakte
     -- ============================================================
     dp:Insert({

@@ -38,6 +38,8 @@ Modules\QoL\Clock24h.lua
 Modules\QoL\MapCoords.lua
 Modules\QoL\PreyPercent.lua
 Modules\QoL\Merchant.lua
+Modules\QoL\QuestTracker.lua
+Modules\QoL\QuestAutomation.lua
 Modules\QoL\PvPChatBlock.lua
 Modules\QoL\ChatLearnFilter.lua
 Modules\QoL\ChatIcons.lua

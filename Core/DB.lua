@@ -140,6 +140,24 @@ function AklimeMod_InitDB()
     db.savedInstances = db.savedInstances or {}
     db.savedInstances.chars = db.savedInstances.chars or {}
 
+    db.questTracker = db.questTracker or {}
+    def(db.questTracker, "showQuestCount",      false)
+    def(db.questTracker, "questCountOffsetX",   0)
+    def(db.questTracker, "questCountOffsetY",   0)
+    def(db.questTracker, "minimizeButtonOnly",  false)
+    def(db.questTracker, "minimizeButtonAnchor","TOPRIGHT")
+    def(db.questTracker, "rememberState",       false)
+    -- questTracker.collapsed: kein Default, wird beim ersten Zustandswechsel gesetzt
+
+    db.questAutomation = db.questAutomation or {}
+    def(db.questAutomation, "enabled",        false)
+    def(db.questAutomation, "modifier",       "NONE")
+    def(db.questAutomation, "ignoreDailies",  false)
+    def(db.questAutomation, "ignoreTrivial",  false)
+    def(db.questAutomation, "ignoreWarband",  false)
+    def(db.questAutomation, "wowheadLink",    false)
+    db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end
