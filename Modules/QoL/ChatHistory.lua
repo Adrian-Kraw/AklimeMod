@@ -12,9 +12,10 @@
 local M = {}
 AklimeMod_ChatHistory = M
 
-local MAX_DEFAULT = 100
-local restoring   = false
-local hooked      = {}
+local MAX_DEFAULT    = 100
+local MAX_MSG_LENGTH = 400   -- Einzelne Nachricht wird auf 400 Zeichen gekuerzt
+local restoring      = false
+local hooked         = {}
 
 -- ============================================================
 -- DB
@@ -60,11 +61,16 @@ function M:HookFrames()
                     if restoring then return end
                     local db = GetDB()
                     if not db.enabled then return end
+                    -- Zu lange Nachrichten kuerzen (z.B. Item-Link-Spam im Trade-Chat)
+                    local t = text
+                    if #t > MAX_MSG_LENGTH then
+                        t = t:sub(1, MAX_MSG_LENGTH) .. "..."
+                    end
                     local key  = "f" .. idx
-                    db.messages       = db.messages or {}
-                    db.messages[key]  = db.messages[key] or {}
+                    db.messages      = db.messages or {}
+                    db.messages[key] = db.messages[key] or {}
                     local hist = db.messages[key]
-                    table.insert(hist, { t = text, r = r or 1, g = g or 1, b = b or 1 })
+                    table.insert(hist, { t = t, r = r or 1, g = g or 1, b = b or 1 })
                     local max = db.maxMessages or MAX_DEFAULT
                     while #hist > max do table.remove(hist, 1) end
                 end)

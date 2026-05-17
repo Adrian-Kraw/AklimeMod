@@ -390,6 +390,10 @@ local function CaptureAndSaveRecipient()
     if not name then name = text; realm = "" end
     local key = name .. "-" .. (realm or "")
     if not db.contacts[key] then
+        -- Sicherheitsgrenze: max 500 Kontakte
+        local count = 0
+        for _ in pairs(db.contacts) do count = count + 1 end
+        if count >= 500 then return end
         db.contacts[key] = { name = name, realm = realm or "", class = nil }
     end
 end
