@@ -1027,6 +1027,35 @@ local function BuildQoLContent()
     end
 
     -- ============================================================
+    -- Haendler
+    -- ============================================================
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Händler",
+        centered = false,
+    })
+
+    if AklimeMod_Merchant then
+        local merchantNode = addModule(dp, "20 Gegenstände pro Seite",
+            function() return AklimeMod_Merchant:IsEnabled() end,
+            function(v)
+                if v then
+                    AklimeMod_Merchant:Enable()
+                    AklimeModDB.merchant.enabled = true
+                else
+                    AklimeMod_Merchant:Disable()
+                    AklimeModDB.merchant.enabled = false
+                end
+            end
+        )
+        addInfo(merchantNode,
+            "Zeigt 20 statt 10 Gegenstände pro Händler-Seite.\n" ..
+            "Der Händler-Rahmen wird auf zwei Spalten verbreitert.\n" ..
+            "Kann jederzeit ohne Neustart deaktiviert werden."
+        )
+    end
+
+    -- ============================================================
     -- Trennlinie: Gesundheit
     -- ============================================================
     dp:Insert({

@@ -110,6 +110,9 @@ function AklimeMod_InitDB()
     def(db.mouseEffects, "size", 76)
     def(db.mouseEffects, "trailPreset", "medium")
 
+    db.merchant = db.merchant or {}
+    def(db.merchant, "enabled", false)
+
     db.chatIcons = db.chatIcons or {}
     def(db.chatIcons, "enabled", false)
 
