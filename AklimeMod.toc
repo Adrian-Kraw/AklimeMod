@@ -53,6 +53,7 @@ Modules\QoL\ChatHistory.lua
 Modules\QoL\Summons.lua
 Modules\QoL\GroupInvites.lua
 Modules\QoL\Mailbox.lua
+Modules\QoL\TodoList.lua
 
 Modules\Mouse\MouseEffects.lua
 

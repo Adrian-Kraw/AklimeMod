@@ -194,6 +194,9 @@ function AklimeMod_InitDB()
     def(db.mailbox, "rememberLastRecipient",  false)
     db.mailbox.contacts = db.mailbox.contacts or {}
 
+    db.todoList = db.todoList or {}
+    db.todoList.items = db.todoList.items or {}
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end

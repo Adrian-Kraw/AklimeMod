@@ -5,6 +5,7 @@
 AklimeMod_Commands = {
     { cmd = "/akm",          desc = "Addon öffnen / schließen"                    },
     { cmd = "/akm help",     desc = "Alle Befehle im Chat anzeigen"               },
+    { cmd = "/akm todo",     desc = "ToDo-Liste öffnen / schließen"               },
     { cmd = "/akmana",       desc = "Mana-Warnung Status anzeigen"                },
     { cmd = "/akmana test",  desc = "Mana-Warnung Testnachricht senden"           },
     { cmd = "/akmsell",      desc = "(Fallback) Graue Items manuell verkaufen"    },
@@ -29,6 +30,8 @@ frame:SetScript("OnEvent", function(_, _, arg1)
         local cmd = strtrim(input or ""):lower()
         if cmd == "help" then
             PrintHelp()
+        elseif cmd == "todo" then
+            if AklimeMod_TodoList then AklimeMod_TodoList:Toggle() end
         elseif origSlash then
             origSlash(input)
         end
