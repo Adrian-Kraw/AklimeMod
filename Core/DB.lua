@@ -162,6 +162,11 @@ function AklimeMod_InitDB()
     def(db.questAutomation, "wowheadLink",    false)
     db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
 
+    db.heroismTracker = db.heroismTracker or {}
+    def(db.heroismTracker, "enabled",  false)
+    def(db.heroismTracker, "locked",   false)
+    def(db.heroismTracker, "fontSizeSlider", 20)
+
     db.deathSound = db.deathSound or {}
     def(db.deathSound, "enabled", false)
 

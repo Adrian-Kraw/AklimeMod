@@ -35,6 +35,19 @@ local function addInfo(node, text)
     })
 end
 
+local function addSlider(node, label, min, max, step, getVal, setVal, formatFn)
+    node:Insert({
+        Template = "AklimeMod_SliderTemplate",
+        label    = label,
+        sliderMin  = min,
+        sliderMax  = max,
+        sliderStep = step or 1,
+        getVal   = getVal,
+        setVal   = setVal,
+        formatFn = formatFn,
+    })
+end
+
 local function addAction(node, label, onClick)
     node:Insert({
         Template = "AklimeMod_ActionButtonTemplate",
@@ -273,6 +286,26 @@ function AklimeMod_RightFactory(factory, node)
             local text = data.text
             if type(text) == "function" then text = text() end
             if frame.info then frame.info:SetText(text or "") end
+        end)
+    elseif t == "AklimeMod_SliderTemplate" then
+        factory(t, function(frame, nd)
+            local data = nd:GetData()
+            if frame.label     then frame.label:SetText(data.label or "") end
+            if not frame.slider then return end
+            frame.slider:SetMinMaxValues(data.sliderMin or 0, data.sliderMax or 100)
+            frame.slider:SetValueStep(data.sliderStep or 1)
+            frame.slider:SetObeyStepOnDrag(true)
+            local fmt = data.formatFn or tostring
+            local function refresh(val)
+                if frame.valueText then frame.valueText:SetText(fmt(val)) end
+            end
+            frame.slider:SetValue(data.getVal())
+            refresh(data.getVal())
+            frame.slider:SetScript("OnValueChanged", function(_, val, byUser)
+                if not byUser then return end
+                data.setVal(val)
+                refresh(val)
+            end)
         end)
     elseif t == "AklimeMod_ActionButtonTemplate" then
         factory(t, actionInitializer)
@@ -962,6 +995,38 @@ local function BuildQoLContent()
         label    = "Gameplay",
         centered = false,
     })
+
+    if AklimeMod_HeroismTracker then
+        local htNode = addModule(dp, "HT-Anzeige (Heldentum / Trommeln)",
+            function() return AklimeMod_HeroismTracker:IsEnabled() end,
+            function(v) AklimeMod_HeroismTracker:SetEnabled(v) end
+        )
+        addToggle(htNode, "Position fixieren",
+            function() return AklimeMod_HeroismTracker:IsLocked() end,
+            function(v) AklimeMod_HeroismTracker:SetLocked(v) end
+        )
+        addSlider(htNode, "Schriftgröße", 0, 100, 1,
+            function() return AklimeMod_HeroismTracker:GetFontSizeSlider() end,
+            function(v) AklimeMod_HeroismTracker:SetFontSizeSlider(v) end,
+            function(v) return v == 0 and "Standard" or tostring(v) end
+        )
+        addAction(htNode, "Vorschau ein/aus", function()
+            if AklimeMod_HeroismTracker.previewing then
+                AklimeMod_HeroismTracker.previewing = false
+                AklimeMod_HeroismTracker:HidePreview()
+            else
+                AklimeMod_HeroismTracker.previewing = true
+                AklimeMod_HeroismTracker:ShowPreview()
+            end
+        end)
+        addInfo(htNode,
+            "Zeigt \"HT AKTIV\" auf dem Bildschirm solange Heldentum,\n" ..
+            "Bloodlust, Zeitsprung, Trommeln oder der zugehörige\n" ..
+            "Erschöpfungs-Debuff aktiv ist (bis zu 10 Minuten).\n\n" ..
+            "Frei verschiebbar per Drag. Position wird gespeichert.\n" ..
+            "Festsetzenhaken: verhindert versehentliches Verschieben."
+        )
+    end
 
     if AklimeMod_DeathSound then
         local deathNode = addModule(dp, "Todessound",

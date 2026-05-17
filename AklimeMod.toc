@@ -45,6 +45,7 @@ Modules\QoL\ChatLearnFilter.lua
 Modules\QoL\ChatIcons.lua
 Modules\QoL\ChatFade.lua
 Modules\QoL\FriendsListDecor.lua
+Modules\QoL\HeroismTracker.lua
 Modules\QoL\DeathSound.lua
 Modules\QoL\TalentReminder.lua
 Modules\QoL\BlockRequests.lua

@@ -175,6 +175,50 @@
     </Layers>
   </Button>
 
+  <!-- Slider-Zeile -->
+  <Frame name="AklimeMod_SliderTemplate" virtual="true">
+    <Size y="52"/>
+    <Layers>
+      <Layer level="BACKGROUND">
+        <Texture parentKey="backgroundTexture" file="Interface\BUTTONS\UI-Listbox-Highlight2.blp">
+          <Color r="0.83" g="0.85" b="0.87" a="0.2"/>
+        </Texture>
+      </Layer>
+      <Layer level="OVERLAY">
+        <FontString parentKey="label" inherits="GameFontNormalLeft">
+          <Anchors><Anchor point="TOPLEFT" x="15" y="-5"/></Anchors>
+        </FontString>
+        <FontString parentKey="valueText" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+          <Color r="1" g="0.82" b="0" a="1"/>
+          <Anchors><Anchor point="TOPRIGHT" x="-15" y="-5"/></Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Slider parentKey="slider" orientation="HORIZONTAL" enableMouse="true">
+        <Size y="17"/>
+        <Anchors>
+          <Anchor point="BOTTOMLEFT"  x="15" y="8"/>
+          <Anchor point="BOTTOMRIGHT" x="-15" y="8"/>
+        </Anchors>
+        <ThumbTexture file="Interface\Buttons\UI-SliderBar-Button-Horizontal">
+          <Size x="32" y="18"/>
+        </ThumbTexture>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <Texture file="Interface\Buttons\UI-SliderBar-Background">
+              <Size y="8"/>
+              <Anchors>
+                <Anchor point="LEFT"  x="10" y="0"/>
+                <Anchor point="RIGHT" x="-10" y="0"/>
+              </Anchors>
+            </Texture>
+          </Layer>
+        </Layers>
+      </Slider>
+    </Frames>
+  </Frame>
+
   <!-- Trennstrich -->
   <Button name="AklimeMod_SeparatorTemplate" virtual="true">
     <Size y="30"/>
