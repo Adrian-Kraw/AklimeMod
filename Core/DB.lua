@@ -110,6 +110,11 @@ function AklimeMod_InitDB()
     def(db.mouseEffects, "size", 76)
     def(db.mouseEffects, "trailPreset", "medium")
 
+    db.chatFade = db.chatFade or {}
+    def(db.chatFade, "enabled",      false)
+    def(db.chatFade, "timeVisible",  30)
+    def(db.chatFade, "fadeDuration", 3)
+
     db.friendsListDecor = db.friendsListDecor or {}
     def(db.friendsListDecor, "enabled",      false)
     def(db.friendsListDecor, "showLocation", true)

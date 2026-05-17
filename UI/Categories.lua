@@ -963,6 +963,38 @@ local function BuildQoLContent()
         centered = false,
     })
 
+    if AklimeMod_ChatFade then
+        local chatFadeNode = addModule(dp, "Chat verblassen",
+            function() return AklimeMod_ChatFade.IsEnabled() end,
+            function(v) AklimeMod_ChatFade.SetEnabled(v) end
+        )
+        addInfo(chatFadeNode, "Sichtbar (Sekunden):")
+        for _, opt in ipairs({
+            { label = "15 Sekunden",  val = 15  },
+            { label = "30 Sekunden",  val = 30  },
+            { label = "60 Sekunden",  val = 60  },
+            { label = "120 Sekunden", val = 120 },
+        }) do
+            local v = opt.val
+            addToggle(chatFadeNode, opt.label,
+                function() return AklimeMod_ChatFade.GetTimeVisible() == v end,
+                function(on) if on then AklimeMod_ChatFade.SetTimeVisible(v) end end
+            )
+        end
+        addInfo(chatFadeNode, "Verblassdauer:")
+        for _, opt in ipairs({
+            { label = "1 Sekunde",  val = 1 },
+            { label = "3 Sekunden", val = 3 },
+            { label = "5 Sekunden", val = 5 },
+        }) do
+            local v = opt.val
+            addToggle(chatFadeNode, opt.label,
+                function() return AklimeMod_ChatFade.GetFadeDuration() == v end,
+                function(on) if on then AklimeMod_ChatFade.SetFadeDuration(v) end end
+            )
+        end
+    end
+
     if AklimeMod_FriendsListDecor then
         local friendsNode = addModule(dp, "Verbesserte Freundesliste",
             function() return AklimeMod_FriendsListDecor:IsEnabled() end,
