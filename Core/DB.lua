@@ -110,6 +110,11 @@ function AklimeMod_InitDB()
     def(db.mouseEffects, "size", 76)
     def(db.mouseEffects, "trailPreset", "medium")
 
+    db.friendsListDecor = db.friendsListDecor or {}
+    def(db.friendsListDecor, "enabled",      false)
+    def(db.friendsListDecor, "showLocation", true)
+    def(db.friendsListDecor, "hideOwnRealm", true)
+
     db.pvpChatBlock = db.pvpChatBlock or {}
     def(db.pvpChatBlock, "enabled", false)
 

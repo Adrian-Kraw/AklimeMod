@@ -955,6 +955,35 @@ local function BuildQoLContent()
     addInfo(mapCoordsNode, "Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.\nFormat: Maus: X / Y  -  Spieler: X / Y")
 
     -- ============================================================
+    -- Kontakte
+    -- ============================================================
+    dp:Insert({
+        Template = "AklimeMod_SeparatorTemplate",
+        label    = "Kontakte",
+        centered = false,
+    })
+
+    if AklimeMod_FriendsListDecor then
+        local friendsNode = addModule(dp, "Verbesserte Freundesliste",
+            function() return AklimeMod_FriendsListDecor:IsEnabled() end,
+            function(v) AklimeMod_FriendsListDecor:SetEnabled(v) end
+        )
+        addToggle(friendsNode, "Zone und Realm anzeigen",
+            function() return AklimeMod_FriendsListDecor:Get("showLocation") end,
+            function(v) AklimeMod_FriendsListDecor:Set("showLocation", v) end
+        )
+        addToggle(friendsNode, "Eigenen Realm ausblenden",
+            function() return AklimeMod_FriendsListDecor:Get("hideOwnRealm") end,
+            function(v) AklimeMod_FriendsListDecor:Set("hideOwnRealm", v) end
+        )
+        addInfo(friendsNode,
+            "Faerbt Freundesnamen in Klassenfarbe.\n" ..
+            "Zeigt Level, Zone und Status (AFK/DND/Offline).\n" ..
+            "BNet-Freunde: Spiel-Icon und Fraktionsflagge."
+        )
+    end
+
+    -- ============================================================
     -- Trennlinie: Gesundheit
     -- ============================================================
     dp:Insert({
