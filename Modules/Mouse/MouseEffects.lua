@@ -53,7 +53,12 @@ local function StyleRing()
         local color = db.customColor or {}
         r, g, b = color.r or 1, color.g or 0.82, color.b or 0
     end
-    f.tex:SetVertexColor(r, g, b, db.alpha or 0.9)
+    if db.hideRing then
+        f.tex:Hide()
+    else
+        f.tex:Show()
+        f.tex:SetVertexColor(r, g, b, db.alpha or 0.9)
+    end
     f.dot:SetVertexColor(r, g, b, 1)
     if db.hideDot then f.dot:Hide() else f.dot:Show() end
 end

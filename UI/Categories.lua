@@ -716,6 +716,10 @@ local function BuildInterfaceContent(filter)
             function() return AklimeMod_MouseEffects.Get("hideDot") end,
             function(v) AklimeMod_MouseEffects.Set("hideDot", v) end
         )
+        addToggle(mouseNode, "Kreis ausblenden",
+            function() return AklimeMod_MouseEffects.Get("hideRing") end,
+            function(v) AklimeMod_MouseEffects.Set("hideRing", v) end
+        )
         addToggle(mouseNode, "Ring nur im Kampf",
             function() return AklimeMod_MouseEffects.Get("onlyCombat") end,
             function(v) AklimeMod_MouseEffects.Set("onlyCombat", v) end

@@ -103,7 +103,8 @@ function AklimeMod_InitDB()
     db.mouseEffects.customColor = db.mouseEffects.customColor or { r = 1, g = 0.82, b = 0, a = 0.9 }
     def(db.mouseEffects, "trailClassColor", true)
     db.mouseEffects.customTrailColor = db.mouseEffects.customTrailColor or { r = 1, g = 0.82, b = 0, a = 0.85 }
-    def(db.mouseEffects, "hideDot", false)
+    def(db.mouseEffects, "hideDot",  false)
+    def(db.mouseEffects, "hideRing", false)
     def(db.mouseEffects, "onlyCombat", false)
     def(db.mouseEffects, "onlyRightClick", false)
     def(db.mouseEffects, "trailOnlyCombat", false)
