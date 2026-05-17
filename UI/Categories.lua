@@ -963,8 +963,20 @@ local function BuildQoLContent()
         centered = false,
     })
 
+    if AklimeMod_ChatLearnFilter then
+        local learnNode = addModule(dp, "Lernen-/Vergessen-Meldungen ausblenden",
+            function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
+            function(v) AklimeMod_ChatLearnFilter:SetEnabled(v) end
+        )
+        addInfo(learnNode,
+            "Versteckt Systemmeldungen wie:\n" ..
+            "\"Du hast den Zauber X gelernt.\"\n" ..
+            "\"Du hast X verlernt.\""
+        )
+    end
+
     if AklimeMod_ChatIcons then
-        local chatIconsNode = addModule(dp, "Item- und Waehrungssymbole im Chat",
+        local chatIconsNode = addModule(dp, "Item- und Währungssymbole im Chat",
             function() return AklimeMod_ChatIcons:IsEnabled() end,
             function(v) AklimeMod_ChatIcons:SetEnabled(v) end
         )

@@ -39,6 +39,7 @@ Modules\QoL\MapCoords.lua
 Modules\QoL\PreyPercent.lua
 Modules\QoL\Merchant.lua
 Modules\QoL\PvPChatBlock.lua
+Modules\QoL\ChatLearnFilter.lua
 Modules\QoL\ChatIcons.lua
 Modules\QoL\ChatFade.lua
 Modules\QoL\FriendsListDecor.lua

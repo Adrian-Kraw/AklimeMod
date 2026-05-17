@@ -113,6 +113,9 @@ function AklimeMod_InitDB()
     db.merchant = db.merchant or {}
     def(db.merchant, "enabled", false)
 
+    db.chatLearnFilter = db.chatLearnFilter or {}
+    def(db.chatLearnFilter, "enabled", false)
+
     db.chatIcons = db.chatIcons or {}
     def(db.chatIcons, "enabled",    false)
     def(db.chatIcons, "itemLevel",  false)
