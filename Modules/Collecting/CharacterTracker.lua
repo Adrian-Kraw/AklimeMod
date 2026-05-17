@@ -436,8 +436,8 @@ local function CreateUI()
     end
     local function CountRecentInst()
         local now, cnt = time(), 0
-        for _, e in pairs(GetInstHistory()) do
-            if type(e) == "table" and e.last and now - e.last < 3600 then cnt = cnt + 1 end
+        for _, e in ipairs(GetInstHistory()) do
+            if type(e) == "table" and e.t and now - e.t < 3600 then cnt = cnt + 1 end
         end
         return cnt
     end
@@ -463,17 +463,17 @@ local function CreateUI()
         local history = GetInstHistory()
         local now     = time()
         local recent  = {}
-        for _, e in pairs(history) do
-            if type(e) == "table" and e.last and now - e.last < 3600 then
+        for _, e in ipairs(history) do
+            if type(e) == "table" and e.t and now - e.t < 3600 then
                 recent[#recent+1] = e
             end
         end
-        -- Ältester Eintrag zuerst (nach last sortieren)
-        table.sort(recent, function(a, b) return a.last < b.last end)
+        -- Ältester Eintritt zuerst
+        table.sort(recent, function(a, b) return a.t < b.t end)
 
         if #recent > 0 then
             for _, e in ipairs(recent) do
-                local remaining = e.last + 3600 - now
+                local remaining = e.t + 3600 - now
                 local m = math.floor(remaining / 60)
                 local s = remaining % 60
                 local timeStr = string.format("|cFFFF4444%d Min. %d Sek.|r", m, s)
@@ -481,7 +481,7 @@ local function CreateUI()
             end
             GameTooltip:AddLine(" ")
             if #recent >= 10 then
-                local freeIn = recent[1].last + 3600 - now
+                local freeIn = recent[1].t + 3600 - now
                 local m = math.floor(freeIn / 60)
                 GameTooltip:AddLine(string.format("Nächster Slot frei in: |cFF00FF00%d Min.|r", m))
             else

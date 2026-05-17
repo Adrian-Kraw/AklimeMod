@@ -303,21 +303,17 @@ local function TrackInstanceEntry()
 
     db.instanceHistory = db.instanceHistory or {}
     local now = time()
-    local key = instName .. ":" .. (diff or 0)
 
-    local entry = db.instanceHistory[key]
-    if not entry then
-        db.instanceHistory[key] = { t = now, last = now, name = instName }
-    else
-        entry.last = now
-    end
+    -- Jeden Eintritt einzeln speichern (gleiche Instanz zaehlt mehrfach)
+    db.instanceHistory[#db.instanceHistory + 1] = { t = now, name = instName }
 
     -- Eintraege aelter als 1 Stunde entfernen
-    for k, v in pairs(db.instanceHistory) do
-        if type(v) == "table" and v.last and now - v.last > 3600 then
-            db.instanceHistory[k] = nil
-        end
+    local cutoff  = now - 3600
+    local cleaned = {}
+    for _, e in ipairs(db.instanceHistory) do
+        if e.t >= cutoff then cleaned[#cleaned + 1] = e end
     end
+    db.instanceHistory = cleaned
 end
 
 -- ============================================================
@@ -334,15 +330,15 @@ eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
         if event == "PLAYER_ENTERING_WORLD" then
             CleanExpiredInstances()
-        end
-        -- Delay: GetInstanceInfo() ist beim Zonenwechsel noch nicht stabil
-        C_Timer.After(2, TrackInstanceEntry)
-        if event == "PLAYER_ENTERING_WORLD" then
             -- EJ-Cache + Toon-Daten nach laengerem Delay
             C_Timer.After(3, function()
                 BuildInstanceExpCache()
                 CollectToonData()
             end)
+        else
+            -- ZONE_CHANGED_NEW_AREA: Instanz-Eintritt zaehlen
+            -- Delay: GetInstanceInfo() ist beim Zonenwechsel noch nicht stabil
+            C_Timer.After(2, TrackInstanceEntry)
         end
 
     elseif event == "PLAYER_MONEY" then
