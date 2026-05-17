@@ -176,6 +176,11 @@ function AklimeMod_InitDB()
     db.summons = db.summons or {}
     def(db.summons, "enabled", false)
 
+    db.chatHistory = db.chatHistory or {}
+    def(db.chatHistory, "enabled",     false)
+    def(db.chatHistory, "maxMessages", 100)
+    db.chatHistory.messages = db.chatHistory.messages or {}
+
     db.groupInvites = db.groupInvites or {}
     def(db.groupInvites, "block",             false)
     def(db.groupInvites, "blockExceptGuild",  false)

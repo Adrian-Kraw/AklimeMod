@@ -1251,6 +1251,30 @@ local function addQoLNodes(dp)
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Kontakte", centered = false })
     end
 
+    if AklimeMod_ChatHistory then
+        local chatHistNode = addModule(dp, "Chatverlauf speichern",
+            function() return AklimeMod_ChatHistory:IsEnabled() end,
+            function(v) AklimeMod_ChatHistory:SetEnabled(v) end
+        )
+        addSlider(chatHistNode, "Max. Nachrichten pro Fenster", 50, 500, 50,
+            function() return AklimeMod_ChatHistory:GetMaxMessages() end,
+            function(v) AklimeMod_ChatHistory:SetMaxMessages(v) end,
+            tostring
+        )
+        addInfo(chatHistNode,
+            "Speichert den Chatverlauf sitzungsuebergreifend.\n" ..
+            "Beim Login werden die letzten Nachrichten wiederhergestellt.\n\n" ..
+            "Gespeichert in SavedVariables unter:\n" ..
+            "AklimeModDB.chatHistory.messages"
+        )
+        addAction(chatHistNode, "Alle Fenster leeren", function()
+            AklimeMod_ChatHistory:ClearAll()
+        end)
+        addAction(chatHistNode, "Aktives Fenster leeren", function()
+            AklimeMod_ChatHistory:ClearActive()
+        end)
+    end
+
     if AklimeMod_Summons then
         local summonsNode = addModule(dp, "Beschwörungen automatisch annehmen",
             function() return AklimeMod_Summons:IsEnabled() end,
