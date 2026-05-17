@@ -970,7 +970,22 @@ local function BuildQoLContent()
         )
         addInfo(chatIconsNode,
             "Zeigt vor jedem Item-Link das Item-Icon.\n" ..
-            "Bei Beute- und Waehrungsnachrichten auch das Waehrungs-Icon."
+            "Bei Beute- und Währungsnachrichten auch das Währungs-Icon."
+        )
+    end
+
+    if AklimeMod_ChatIcons then
+        local itemLevelNode = addModule(dp, "Itemlevel in Chat-Links",
+            function() return AklimeMod_ChatIcons:IsItemLevelEnabled() end,
+            function(v) AklimeMod_ChatIcons:SetItemLevelEnabled(v) end
+        )
+        addToggle(itemLevelNode, "Ausrüstungsplatz anzeigen",
+            function() return AklimeMod_ChatIcons:IsShowSlotEnabled() end,
+            function(v) AklimeMod_ChatIcons:SetShowSlotEnabled(v) end
+        )
+        addInfo(itemLevelNode,
+            "Hängt das Itemlevel an jeden ausrüstbaren Link im Chat an.\n" ..
+            "Beispiel: [Schwert des Helden (680)] oder [Schwert des Helden (Einhand 680)]."
         )
     end
 
