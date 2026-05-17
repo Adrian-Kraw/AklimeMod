@@ -15,7 +15,8 @@ end
 
 local function GetNPCIDFromGUID(guid)
     if not guid then return nil end
-    local t, _, _, _, _, npcID = strsplit("-", guid)
+    local ok, t, _, _, _, _, npcID = pcall(strsplit, "-", guid)
+    if not ok then return nil end
     if t == "Creature" or t == "Vehicle" then return tonumber(npcID) end
     return nil
 end
