@@ -28,6 +28,75 @@ local CURRENCY_IDS = {
 }
 
 -- ============================================================
+-- EJ-Cache: Name (normalisiert) + EJ-ID → Expansion (0-11)
+-- Global damit er per /dump AklimeMod_InstExpCache debuggbar ist.
+-- Tier-Name via EJ_GetTierInfo bestimmen (zuverlässiger als Arithmetik).
+-- ============================================================
+
+-- Mapping Tier-Name (lowercase) → Expansion-Index
+-- Als erste Verteidigungslinie wenn EJ_GetTierInfo einen bekannten Namen liefert.
+local TIER_TO_EXP = {
+    ["classic"] = 0, ["klassisch"] = 0,
+    ["the burning crusade"] = 1, ["der brennende kreuzzug"] = 1,
+    ["wrath of the lich king"] = 2, ["zorn des lich-königs"] = 2,
+    ["cataclysm"] = 3,
+    ["mists of pandaria"] = 4, ["nebel von pandaria"] = 4,
+    ["warlords of draenor"] = 5,
+    ["legion"] = 6,
+    ["battle for azeroth"] = 7, ["kampf um azeroth"] = 7,
+    ["shadowlands"] = 8,
+    ["dragonflight"] = 9,
+    ["the war within"] = 10,
+    ["midnight"] = 11, ["mitternacht"] = 11,
+}
+
+local function NormName(name)
+    if not name then return "" end
+    name = name:lower()
+    name = name:gsub("^die ", ""):gsub("^der ", ""):gsub("^das ", "")
+    return name
+end
+
+local function BuildInstanceExpCache()
+    AklimeMod_InstExpCache = {}  -- global, debuggbar per /dump
+    local numTiers  = EJ_GetNumTiers and EJ_GetNumTiers() or 0
+    -- EJ-Tiers sind neueste zuerst (tier 1 = aktuelle Erweiterung).
+    -- GetExpansionLevel() gibt die aktuelle Expansion-ID zurueck (z.B. 11 fuer Midnight).
+    -- Formel: exp = GetExpansionLevel() - (tier - 1)
+    local curExp    = GetExpansionLevel and GetExpansionLevel() or 11
+    for tier = 1, numTiers do
+        -- Tier-Name-Tabelle als erste Option
+        local exp
+        if EJ_GetTierInfo then
+            local tierName = EJ_GetTierInfo(tier)
+            if tierName then exp = TIER_TO_EXP[tierName:lower()] end
+        end
+        -- Fallback: GetExpansionLevel() - (tier - 1) (korrekt fuer neueste-zuerst)
+        if exp == nil then
+            exp = curExp - (tier - 1)
+        end
+        -- Expansion ausserhalb des gueltigen Bereichs: ueberspringen
+        if exp < 0 or exp > 11 then
+            -- continue (kein goto in Lua 5.1, leere if-Klausel)
+        else
+            EJ_SelectTier(tier)
+            for i = 1, 500 do
+                local instID, name = EJ_GetInstanceByIndex(i, true)
+                if not instID then break end
+                if name then AklimeMod_InstExpCache[NormName(name)] = exp end
+                AklimeMod_InstExpCache[instID] = exp
+            end
+            for i = 1, 500 do
+                local instID, name = EJ_GetInstanceByIndex(i, false)
+                if not instID then break end
+                if name then AklimeMod_InstExpCache[NormName(name)] = exp end
+                AklimeMod_InstExpCache[instID] = exp
+            end
+        end
+    end
+end
+
+-- ============================================================
 -- DB-Zugriff
 -- ============================================================
 local function GetTrackerDB()
@@ -82,40 +151,30 @@ local function CollectInstances(db, toonKey)
     if not numSaved or numSaved == 0 then return end
 
     for i = 1, numSaved do
-        local name, id, expires, diff, locked, extended, mostsig, isRaid, players, diffName =
+        local name, id, expires, diff, locked, extended, mostsig, isRaid, players, diffName, numBosses, bossesKilled =
             GetSavedInstanceInfo(i)
         if name and expires and expires > 0 then
             -- Instanz-Eintrag anlegen/aktualisieren
             if not db.Instances[name] then
                 db.Instances[name] = {
-                    Raid      = isRaid,
-                    Show      = "saved",
-                    Expansion = 0,  -- wird unten befüllt
+                    Raid = isRaid,
+                    Show = "saved",
                 }
             end
             local inst = db.Instances[name]
             inst.Raid = isRaid
 
-            -- LFDID aus Link ermitteln
+            -- LFDID aus Link (korrekte Extraktion: GUID ueberspringen)
             local link = GetSavedInstanceChatLink(i) or ""
-            local lid  = link:match(":(%d+):%d+:%d+\124h%[")
+            local lid  = link:match("instancelock:[^:]+:(%d+):")
             if lid then
                 inst.LFDID = tonumber(lid)
             end
 
-            -- Expansion direkt aus GetLFGDungeonInfo (expansionLevel = Index 9, Wert 0-11)
-            if inst.LFDID and (inst.Expansion == 0 or not inst.Expansion) then
-                local ok, _,_,_,_,_,_,_,_, expLevel = pcall(GetLFGDungeonInfo, inst.LFDID)
-                if ok and type(expLevel) == "number" and expLevel >= 0 and expLevel <= 11 then
-                    inst.Expansion = expLevel
-                end
-            end
-
-            -- RecLevel
-            if inst.LFDID and not inst.RecLevel then
-                local ok, _, _, _, _, recLvl = pcall(GetLFGDungeonInfo, inst.LFDID)
-                if ok and recLvl then inst.RecLevel = recLvl end
-            end
+            -- Expansion: Name-Lookup, dann ID-Fallback, dann 0
+            local cachedExp = (name and AklimeMod_InstExpCache and AklimeMod_InstExpCache[NormName(name)])
+                or (inst.LFDID and AklimeMod_InstExpCache and AklimeMod_InstExpCache[inst.LFDID])
+            inst.Expansion = type(cachedExp) == "number" and cachedExp or 0
 
             -- Char-Eintrag
             inst[toonKey]       = inst[toonKey] or {}
@@ -125,13 +184,17 @@ local function CollectInstances(db, toonKey)
             save.Locked   = locked
             save.Extended = extended
             save.Link     = link ~= "" and link or nil
-
-            -- ID aus Link
-            if link ~= "" then
-                local linkID = link:match(":(%d+):%d+:%d+\124h%[")
-                save.ID = linkID and tonumber(linkID) or (id or -1)
-            else
-                save.ID = id or -1
+            save.ID       = id or -1
+            -- Boss-Kills direkt aus API (zuverlässiger als Link-Dekodierung)
+            save.Total    = numBosses    or 0
+            save.Killed   = bossesKilled or 0
+            -- Pro-Boss-Status
+            save.bosses = {}
+            for j = 1, (numBosses or 0) do
+                local bossName, _, isKilled = GetSavedInstanceEncounterInfo(i, j)
+                if bossName then
+                    save.bosses[j] = { name = bossName, killed = isKilled }
+                end
             end
         end
     end
@@ -226,6 +289,32 @@ end
 -- ============================================================
 -- Event-Frame
 -- ============================================================
+-- ============================================================
+-- Instanz-Betreten tracken (fuer 10/h Limit-Anzeige)
+-- ============================================================
+local function TrackInstanceEntry()
+    local db = GetTrackerDB()
+    if not db then return end
+    local inInstance, _, instanceType = IsInInstance()
+    if not inInstance or instanceType == "none" then return end
+
+    db.instanceHistory = db.instanceHistory or {}
+    local now = time()
+
+    -- Nicht doppelt eintragen wenn kurz zuvor schon eingetragen
+    local last = db.instanceHistory[#db.instanceHistory]
+    if last and (now - last.t) < 10 then return end
+
+    local instanceName = GetInstanceInfo and select(1, GetInstanceInfo()) or "?"
+    table.insert(db.instanceHistory, { t = now, name = instanceName or "?" })
+
+    -- Nur Eintraege der letzten Stunde behalten
+    local cutoff = now - 3600
+    while #db.instanceHistory > 0 and db.instanceHistory[1].t < cutoff do
+        table.remove(db.instanceHistory, 1)
+    end
+end
+
 local eventFrame = CreateFrame("Frame")
 
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -236,8 +325,14 @@ eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" then
         -- Abgelaufene Instanzen bereinigen (Weekly Reset)
         CleanExpiredInstances()
-        -- Kurzer Delay damit alle APIs bereit sind
-        C_Timer.After(3, CollectToonData)
+        -- Instanz-Betreten tracken
+        TrackInstanceEntry()
+        -- Delay: EJ-Daten sind beim Login noch nicht vollständig geladen.
+        -- Cache aufbauen und danach sofort Daten sammeln.
+        C_Timer.After(3, function()
+            BuildInstanceExpCache()
+            CollectToonData()
+        end)
 
     elseif event == "PLAYER_MONEY" then
         local db = GetTrackerDB()

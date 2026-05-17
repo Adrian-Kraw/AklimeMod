@@ -47,7 +47,6 @@ local SI_CURRENCY_IDS = {
 -- ============================================================
 local function GetDiffLabel(inst, diff)
     if not inst.Raid then return nil end
-    if inst.Expansion == 0 then return "Classic" end
     if diff == 3  then return "10N"  end
     if diff == 4  then return "25N"  end
     if diff == 5  then return "10H"  end
@@ -106,36 +105,24 @@ local function IsCurrencyEnabled(id)
     return not (db and db.currencies and db.currencies[id] == false)
 end
 
--- Toon-Daten: eigene DB primär, SI als Fallback
 local function GetToonDB()
-    if AklimeModDB and AklimeModDB.tracker
-    and AklimeModDB.tracker.Toons and next(AklimeModDB.tracker.Toons) then
+    if AklimeModDB and AklimeModDB.tracker and AklimeModDB.tracker.Toons then
         return AklimeModDB.tracker.Toons
-    end
-    if _G.SavedInstancesDB and _G.SavedInstancesDB.Toons then
-        return _G.SavedInstancesDB.Toons
     end
     return nil
 end
 
--- Instanz-Daten: SI bevorzugen (hat korrekte expansionLevel 0-11)
--- eigene DB als Fallback wenn SI nicht installiert
 local function GetInstanceDB()
-    if _G.SavedInstancesDB and _G.SavedInstancesDB.Instances then
-        return _G.SavedInstancesDB.Instances
-    end
     if AklimeModDB and AklimeModDB.tracker and AklimeModDB.tracker.Instances then
         return AklimeModDB.tracker.Instances
     end
     return nil
 end
 
--- Kombinierte DB für Abwärtskompatibilität
 local function GetDataDB()
     local toons = GetToonDB()
-    local instances = GetInstanceDB()
     if not toons then return nil end
-    return { Toons = toons, Instances = instances or {} }
+    return { Toons = toons, Instances = GetInstanceDB() or {} }
 end
 
 -- ============================================================
@@ -171,10 +158,13 @@ end
 
 local function GetBossKills(save)
     if not save then return 0 end
+    -- Direkt aus API (DataCollector speichert save.Killed)
+    if save.Killed and save.Killed > 0 then return save.Killed end
+    -- Fallback: Link-Bitmask (aeltere gespeicherte Daten)
     if save.Link then
         local bits = save.Link:match(":(%d+)\124h")
         bits = bits and tonumber(bits)
-        if bits then
+        if bits and bits > 1 then  -- > 1 weil isExtended (0/1) nicht zaehlt
             local k = 0
             while bits > 0 do
                 if bit.band(bits, 1) > 0 then k = k + 1 end
@@ -183,54 +173,16 @@ local function GetBossKills(save)
             return k
         end
     end
-    if save.ID and save.ID < 0 then
-        local k = 0
-        for i = 1, -1 * save.ID do if save[i] then k = k + 1 end end
-        return k
-    end
     return 0
 end
 
-local function GetBossTotal(lfdid)
-    if not lfdid then return 0 end
-    local ok, n = pcall(GetLFGDungeonNumEncounters, lfdid)
-    return (ok and n) or 0
-end
-
--- Boss-Total aus Link-Scan zählen (zuverlässigste Methode wie SI)
-local bossTotalCache = {}
-local function GetBossTotalFromLink(link)
-    if not link or link == "" then return 0 end
-    if bossTotalCache[link] then return bossTotalCache[link] end
-
-    -- Methode 1: Scan-Tooltip Zeilen zählen (wie SI)
-    local scanTip = _G["SavedInstancesScanTooltip"]
-    if scanTip then
-        scanTip:SetOwner(UIParent, "ANCHOR_NONE")
-        scanTip:SetHyperlink(link)
-        local count = 0
-        local tipName = scanTip:GetName()
-        for i = 2, scanTip:NumLines() do
-            local right = _G[tipName .. "TextRight" .. i]
-            if right and right:GetText() and right:GetText() ~= "" then
-                count = count + 1
-            end
-        end
-        if count > 0 then
-            bossTotalCache[link] = count
-            return count
-        end
-    end
-
-    -- Methode 2: GetLFGDungeonNumEncounters mit LFDID aus Link
-    local lfdid = link:match("|Hinstancelock:[^:]+:(%d+):")
-    lfdid = lfdid and tonumber(lfdid)
-    if lfdid and lfdid > 0 then
-        local ok, n = pcall(GetLFGDungeonNumEncounters, lfdid)
-        if ok and n and n > 0 then
-            bossTotalCache[link] = n
-            return n
-        end
+local function GetBossTotal(save)
+    -- Direkt aus API (DataCollector: numBosses aus GetSavedInstanceInfo)
+    if save and save.Total and save.Total > 0 then return save.Total end
+    -- Fallback: Anzahl gespeicherter Bosse
+    if save and save.bosses then
+        local n = #save.bosses
+        if n > 0 then return n end
     end
     return 0
 end
@@ -478,13 +430,19 @@ local function CreateUI()
     instLabel:SetAllPoints(instBtn)
     instLabel:SetJustifyH("LEFT")
 
-    -- Label dynamisch: zeigt Anzahl kürzlicher Instanzen
-    local function UpdateInstLabel()
-        local siDB2 = _G.SavedInstancesDB
-        local cnt = 0
-        if siDB2 and siDB2.History then
-            for _ in pairs(siDB2.History) do cnt = cnt + 1 end
+    -- Label dynamisch: zeigt Anzahl kürzlicher Instanzen (eigenes Tracking)
+    local function GetInstHistory()
+        return AklimeModDB and AklimeModDB.tracker and AklimeModDB.tracker.instanceHistory or {}
+    end
+    local function CountRecentInst()
+        local now, cnt = time(), 0
+        for _, e in ipairs(GetInstHistory()) do
+            if now - e.t < 3600 then cnt = cnt + 1 end
         end
+        return cnt
+    end
+    local function UpdateInstLabel()
+        local cnt = CountRecentInst()
         if cnt > 0 then
             local color = cnt >= 8 and "|cFFFF4444" or cnt >= 5 and "|cFFFFD100" or "|cFF00FF00"
             instLabel:SetText(color .. cnt .. "/10|r Instanzen")
@@ -502,33 +460,29 @@ local function CreateUI()
         GameTooltip:AddLine("|cFFFFD100Kürzliche Instanzen|r")
         GameTooltip:AddLine(" ")
 
-        local siDB2 = _G.SavedInstancesDB
-        if siDB2 and siDB2.History and next(siDB2.History) then
-            local histReapTime = 3600
-            local tmp = {}
-            for _, ii in pairs(siDB2.History) do tmp[#tmp+1] = ii end
-            table.sort(tmp, function(a,b) return a.last < b.last end)
+        local history = GetInstHistory()
+        local now     = time()
+        local recent  = {}
+        for _, e in ipairs(history) do
+            if now - e.t < 3600 then recent[#recent+1] = e end
+        end
 
-            for _, ii in ipairs(tmp) do
-                local remaining = ii.last + histReapTime - time()
-                if remaining > 0 then
-                    local m = math.floor(remaining / 60)
-                    local s = remaining % 60
-                    local timeStr = string.format("|cFFFF4444%d Min. %d Sek.|r", m, s)
-                    GameTooltip:AddDoubleLine(timeStr, ii.desc or "", 1,1,1, 0.8,0.8,0.8)
-                end
+        if #recent > 0 then
+            -- Ältester Eintrag zuerst
+            for _, e in ipairs(recent) do
+                local remaining = e.t + 3600 - now
+                local m = math.floor(remaining / 60)
+                local s = remaining % 60
+                local timeStr = string.format("|cFFFF4444%d Min. %d Sek.|r", m, s)
+                GameTooltip:AddDoubleLine(timeStr, e.name or "?", 1,1,1, 0.8,0.8,0.8)
             end
-
             GameTooltip:AddLine(" ")
-            if #tmp > 0 then
-                local oldest = tmp[1]
-                local freeIn = oldest.last + histReapTime - time()
-                if #tmp >= 10 and freeIn > 0 then
-                    local m = math.floor(freeIn / 60)
-                    GameTooltip:AddLine(string.format("Nächster Slot frei in: |cFF00FF00%d Min.|r", m))
-                else
-                    GameTooltip:AddLine(string.format("Noch |cFF00FF00%d|r Slots verfügbar", 10 - #tmp))
-                end
+            if #recent >= 10 then
+                local freeIn = recent[1].t + 3600 - now
+                local m = math.floor(freeIn / 60)
+                GameTooltip:AddLine(string.format("Nächster Slot frei in: |cFF00FF00%d Min.|r", m))
+            else
+                GameTooltip:AddLine(string.format("Noch |cFF00FF00%d|r Slots verfügbar", 10 - #recent))
             end
         else
             GameTooltip:AddLine("Keine kürzlichen Instanzen.", 0.6,0.6,0.6)
@@ -747,8 +701,8 @@ function AklimeMod_CT_Refresh()
     if not siDB then
         local fs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fs:SetPoint("CENTER", contentFrame, "CENTER")
-        fs:SetText("SavedInstances Addon nicht gefunden.")
-        fs:SetTextColor(1, 0.3, 0.3, 1)
+        fs:SetText("Keine Daten. Logge dich mit deinen Charakteren ein.")
+        fs:SetTextColor(0.7, 0.7, 0.7, 1)
         contentFrame:Show(); return
     end
 
@@ -810,7 +764,6 @@ function AklimeMod_CT_Refresh()
 
                 for _, diff in ipairs(activeDiffs) do
                     local diffLabel = GetDiffLabel(raid.inst, diff) or ("D"..diff)
-                    local total     = GetBossTotal(raid.lfdid)
                     local dc        = DIFF_COLOR[diff] or {r=1,g=1,b=1}
                     local dcHex     = string.format("|cFF%02x%02x%02x", dc.r*255, dc.g*255, dc.b*255)
 
@@ -836,13 +789,11 @@ function AklimeMod_CT_Refresh()
                         local save = raid.diffs[diff] and raid.diffs[diff][ch]
                         local txt  = ""
                         if save then
-                            local killed   = GetBossKills(save)
-                            local linkTotal = GetBossTotalFromLink(save.Link)
-                            -- Fallback auf raid.lfdid
-                            if linkTotal == 0 then linkTotal = total end
+                            local killed = GetBossKills(save)
+                            local total  = GetBossTotal(save)
 
-                            if linkTotal > 0 then
-                                txt = dcHex .. killed .. "/" .. linkTotal .. FONT_COLOR_CODE_CLOSE
+                            if total > 0 then
+                                txt = dcHex .. killed .. "/" .. total .. FONT_COLOR_CODE_CLOSE
                             else
                                 txt = dcHex .. (killed > 0 and tostring(killed) or "L") .. FONT_COLOR_CODE_CLOSE
                             end
@@ -862,7 +813,6 @@ function AklimeMod_CT_Refresh()
                             local diffLabel2 = diffLabel
                             local dc2 = dc
                             btn:SetScript("OnEnter", function(self)
-                                if not saveRef or not saveRef.Link then return end
                                 GameTooltip:SetOwner(self, "ANCHOR_TOP")
                                 GameTooltip:ClearLines()
                                 -- Header
@@ -885,42 +835,26 @@ function AklimeMod_CT_Refresh()
                                         0.8,0.8,0.8, 1,0.82,0)
                                 end
                                 GameTooltip:AddLine(" ")
-                                -- Boss-Liste aus Hyperlink scannen (wie SI)
-                                local scanTip = _G["SavedInstancesScanTooltip"] or GameTooltip
-                                if _G["SavedInstancesScanTooltip"] then
-                                    scanTip:SetOwner(UIParent, "ANCHOR_NONE")
-                                    scanTip:SetHyperlink(saveRef.Link)
-                                    local tipName = scanTip:GetName()
-                                    for i = 2, scanTip:NumLines() do
-                                        local left  = _G[tipName .. "TextLeft"  .. i]
-                                        local right = _G[tipName .. "TextRight" .. i]
-                                        local lTxt  = left  and left:GetText()  or ""
-                                        local rTxt  = right and right:GetText() or ""
-                                        if rTxt ~= "" then
-                                            GameTooltip:AddDoubleLine(lTxt, rTxt, 1,1,1, 1,0.2,0.2)
-                                        elseif lTxt ~= "" then
-                                            GameTooltip:AddLine(lTxt, 0.9,0.9,0.9)
+                                -- Boss-Liste aus gespeichertem save.bosses (von DataCollector)
+                                if saveRef.bosses and #saveRef.bosses > 0 then
+                                    for _, boss in ipairs(saveRef.bosses) do
+                                        if boss.killed then
+                                            GameTooltip:AddDoubleLine(boss.name, "Bezwungen", 1,1,1, 1,0.2,0.2)
+                                        else
+                                            GameTooltip:AddDoubleLine(boss.name, "Verfügbar", 1,1,1, 0.2,1,0.2)
                                         end
                                     end
-                                else
-                                    -- Fallback: Boss-Namen per GetLFGDungeonEncounterInfo
-                                    local linkLFDID2 = saveRef.Link:match("|Hinstancelock:[^:]+:(%d+):")
-                                    linkLFDID2 = linkLFDID2 and tonumber(linkLFDID2)
-                                    if linkLFDID2 then
-                                        local ok2, bossCount = pcall(GetLFGDungeonNumEncounters, linkLFDID2)
+                                elseif saveRef.Link then
+                                    -- Fallback: Boss-Namen per LFG-API
+                                    local lid = saveRef.Link:match("instancelock:[^:]+:(%d+):")
+                                    lid = lid and tonumber(lid)
+                                    if lid then
+                                        local ok2, bossCount = pcall(GetLFGDungeonNumEncounters, lid)
                                         if ok2 and bossCount and bossCount > 0 then
-                                            local bits = saveRef.Link:match(":(%d+)\124h")
-                                            bits = bits and tonumber(bits) or 0
                                             for bi = 1, bossCount do
-                                                local bossName = GetLFGDungeonEncounterInfo(linkLFDID2, bi)
-                                                local killed2 = bit.band(bits, 1) > 0
-                                                bits = bit.rshift(bits, 1)
+                                                local bossName = GetLFGDungeonEncounterInfo(lid, bi)
                                                 if bossName then
-                                                    if killed2 then
-                                                        GameTooltip:AddDoubleLine(bossName, "Bezwungen", 1,1,1, 1,0.2,0.2)
-                                                    else
-                                                        GameTooltip:AddDoubleLine(bossName, "Verfügbar", 1,1,1, 0.2,1,0.2)
-                                                    end
+                                                    GameTooltip:AddLine(bossName, 0.8, 0.8, 0.8)
                                                 end
                                             end
                                         end

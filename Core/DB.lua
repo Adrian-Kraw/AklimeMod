@@ -182,6 +182,10 @@ function AklimeMod_InitDB()
     def(db.chatHistory, "maxMessages", 100)
     db.chatHistory.messages = db.chatHistory.messages or {}
 
+    db.extendedIgnore = db.extendedIgnore or {}
+    def(db.extendedIgnore, "enabled", false)
+    db.extendedIgnore.players = db.extendedIgnore.players or {}
+
     db.groupInvites = db.groupInvites or {}
     def(db.groupInvites, "block",             false)
     def(db.groupInvites, "blockExceptGuild",  false)

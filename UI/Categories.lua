@@ -1290,6 +1290,26 @@ local function addQoLNodes(dp)
         )
     end
 
+    if AklimeMod_ExtendedIgnore then
+        local ignoreNode = addModule(dp, "Erweiterte Ignore-Liste",
+            function() return AklimeMod_ExtendedIgnore:IsEnabled() end,
+            function(v) AklimeMod_ExtendedIgnore:SetEnabled(v) end
+        )
+        addInfo(ignoreNode,
+            "Ignoriert Spieler über WoWs 50er-Limit hinaus.\n" ..
+            "Blendet ihre Chat-Nachrichten vollständig aus.\n\n" ..
+            "Hinzufügen: Rechtsklick auf Spieler im Spiel.\n" ..
+            "Verwaltung: /akm ignore"
+        )
+        addAction(ignoreNode, "Liste öffnen (/akm ignore)", function()
+            AklimeMod_ExtendedIgnore:ToggleWindow()
+        end)
+        addAction(ignoreNode, "Alle entfernen", function()
+            AklimeMod_ExtendedIgnore:ClearAll()
+            print("|cFFFFD100AklimeMod:|r Erweiterte Ignore-Liste geleert.")
+        end)
+    end
+
     if AklimeMod_BlockRequests then
         local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
             function() return AklimeMod_BlockRequests:IsDuelBlocked() end,
