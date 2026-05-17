@@ -287,52 +287,63 @@ local function CleanExpiredInstances()
 end
 
 -- ============================================================
--- Event-Frame
--- ============================================================
--- ============================================================
 -- Instanz-Betreten tracken (fuer 10/h Limit-Anzeige)
+-- Logik nach SavedInstances: Dict statt Array, Key = instName:diff.
+-- Gleiche Instanz zaehlt nur einmal (last-Timestamp wird aktualisiert).
 -- ============================================================
 local function TrackInstanceEntry()
     local db = GetTrackerDB()
     if not db then return end
-    local inInstance, _, instanceType = IsInInstance()
-    if not inInstance or instanceType == "none" then return end
+
+    local instName, instType, diff = GetInstanceInfo()
+    if not instName or not instType
+    or instType == "none" or instType == "pvp" or instType == "arena" then
+        return
+    end
 
     db.instanceHistory = db.instanceHistory or {}
     local now = time()
+    local key = instName .. ":" .. (diff or 0)
 
-    -- Nicht doppelt eintragen wenn kurz zuvor schon eingetragen
-    local last = db.instanceHistory[#db.instanceHistory]
-    if last and (now - last.t) < 10 then return end
+    local entry = db.instanceHistory[key]
+    if not entry then
+        db.instanceHistory[key] = { t = now, last = now, name = instName }
+    else
+        entry.last = now
+    end
 
-    local instanceName = GetInstanceInfo and select(1, GetInstanceInfo()) or "?"
-    table.insert(db.instanceHistory, { t = now, name = instanceName or "?" })
-
-    -- Nur Eintraege der letzten Stunde behalten
-    local cutoff = now - 3600
-    while #db.instanceHistory > 0 and db.instanceHistory[1].t < cutoff do
-        table.remove(db.instanceHistory, 1)
+    -- Eintraege aelter als 1 Stunde entfernen
+    for k, v in pairs(db.instanceHistory) do
+        if type(v) == "table" and v.last and now - v.last > 3600 then
+            db.instanceHistory[k] = nil
+        end
     end
 end
 
+-- ============================================================
+-- Event-Frame
+-- ============================================================
 local eventFrame = CreateFrame("Frame")
 
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 
 eventFrame:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_ENTERING_WORLD" then
-        -- Abgelaufene Instanzen bereinigen (Weekly Reset)
-        CleanExpiredInstances()
-        -- Instanz-Betreten tracken
-        TrackInstanceEntry()
-        -- Delay: EJ-Daten sind beim Login noch nicht vollständig geladen.
-        -- Cache aufbauen und danach sofort Daten sammeln.
-        C_Timer.After(3, function()
-            BuildInstanceExpCache()
-            CollectToonData()
-        end)
+    if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
+        if event == "PLAYER_ENTERING_WORLD" then
+            CleanExpiredInstances()
+        end
+        -- Delay: GetInstanceInfo() ist beim Zonenwechsel noch nicht stabil
+        C_Timer.After(2, TrackInstanceEntry)
+        if event == "PLAYER_ENTERING_WORLD" then
+            -- EJ-Cache + Toon-Daten nach laengerem Delay
+            C_Timer.After(3, function()
+                BuildInstanceExpCache()
+                CollectToonData()
+            end)
+        end
 
     elseif event == "PLAYER_MONEY" then
         local db = GetTrackerDB()
