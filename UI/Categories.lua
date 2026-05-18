@@ -548,9 +548,13 @@ local function addInterfaceNodes(dp)
         local fade = AklimeModDB.interfaceFade
         for i = 1, 3 do
             local k = "mode" .. i
-            local modeNode = addModule(dp, "Platzhalter " .. i,
+            local setEnabled = (i == 1)
+                and function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
+                or  function(v) fade[k].enabled = v end
+            local modeName = (i == 1) and "Chill Modus" or ("Platzhalter " .. i)
+            local modeNode = addModule(dp, modeName,
                 function() return fade[k].enabled end,
-                function(v) fade[k].enabled = v end
+                setEnabled
             )
             addSlider(modeNode, "Transparenz", 0, 100, 1,
                 function() return fade[k].alpha end,
@@ -843,9 +847,13 @@ local function BuildInterfaceContent(filter)
         local fade = AklimeModDB.interfaceFade
         for i = 1, 3 do
             local k = "mode" .. i
-            local modeNode = addModule(dp3, "Platzhalter " .. i,
+            local setEnabled = (i == 1)
+                and function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
+                or  function(v) fade[k].enabled = v end
+            local modeName = (i == 1) and "Chill Modus" or ("Platzhalter " .. i)
+            local modeNode = addModule(dp3, modeName,
                 function() return fade[k].enabled end,
-                function(v) fade[k].enabled = v end
+                setEnabled
             )
             addSlider(modeNode, "Transparenz", 0, 100, 1,
                 function() return fade[k].alpha end,
