@@ -67,7 +67,7 @@ function M:SetFriendOnly(v) GetDB().friendOnly = v and true or false end
 -- ============================================================
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("PARTY_INVITE_REQUEST")
-eventFrame:SetScript("OnEvent", function(_, _, unitName, _, _, _, _, unitID)
+eventFrame:SetScript("OnEvent", function(_, _, unitName, _, _, _, _, _, unitID)
     local db = GetDB()
 
     if db.autoAccept then
