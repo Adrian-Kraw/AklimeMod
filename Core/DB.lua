@@ -202,6 +202,9 @@ function AklimeMod_InitDB()
     db.todoList = db.todoList or {}
     db.todoList.items = db.todoList.items or {}
 
+    db.gearCheck = db.gearCheck or {}
+    def(db.gearCheck, "enabled", false)
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end

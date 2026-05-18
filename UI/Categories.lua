@@ -514,6 +514,20 @@ local function addInterfaceNodes(dp)
         )
         addInfo(mouseNode, "Ring und Spur um den Mauszeiger.")
     end
+
+    if AklimeMod_GearCheck then
+        local gcNode = addModule(dp, "Ausruestungs-Pruefung",
+            function() return AklimeMod_GearCheck.IsEnabled() end,
+            function(v) AklimeMod_GearCheck.SetEnabled(v) end
+        )
+        addInfo(gcNode,
+            "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
+            "Rot:  leere Fassung(en).\n" ..
+            "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
+            "Im Betrachten-Fenster zusaetzlich Itemlevel am Slot.\n" ..
+            "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
+        )
+    end
 end
 
 local function BuildInterfaceContent(filter)
@@ -767,6 +781,20 @@ local function BuildInterfaceContent(filter)
             )
         end
     end
+    if AklimeMod_GearCheck then
+        local gcNode = addModule(dp3, "Ausruestungs-Pruefung",
+            function() return AklimeMod_GearCheck.IsEnabled() end,
+            function(v) AklimeMod_GearCheck.SetEnabled(v) end
+        )
+        addInfo(gcNode,
+            "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
+            "Rot:  leere Fassung(en).\n" ..
+            "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
+            "Im Betrachten-Fenster zusaetzlich Itemlevel am Slot.\n" ..
+            "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
+        )
+    end
+
     -- Colorizer-Nodes direkt in dp3 einfügen
     local function insertColorizerNodes(targetDP, searchFilter)
         local C = AklimeMod_Colorizer

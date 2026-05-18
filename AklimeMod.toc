@@ -2,7 +2,7 @@
 ## Title: AklimeMod
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
-## Version: 1.2.1
+## Version: 1.0
 ## SavedVariables: AklimeModDB
 ## AddonCompartmentFunc: AklimeMod_OpenSettings
 ## IconTexture: Interface\AddOns\AklimeMod\Assets\icon
@@ -20,6 +20,7 @@ Modules\Interface\HideMacroNames.lua
 Modules\Interface\DamageMeterCollapseDown.lua
 Modules\Interface\MinimapButtonCollector.lua
 Modules\Interface\MinimapElementHider.lua
+Modules\Interface\GearCheck.lua
 Modules\Interface\Colorizer\ColorizerCore.lua
 Modules\Interface\Colorizer\ColorizerSkins_UnitFrames.lua
 Modules\Interface\Colorizer\ColorizerSkins_HUD.lua
