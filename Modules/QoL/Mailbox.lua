@@ -335,7 +335,7 @@ function M:UpdateVisibility()
     local db = GetDB()
     if not db.enabled
         or not MailFrame or not MailFrame:IsShown()
-        or not SendMailFrame or not SendMailFrame:IsShown()
+        or PanelTemplates_GetSelectedTab(MailFrame) ~= 2
     then
         self.frame:Hide()
         return
