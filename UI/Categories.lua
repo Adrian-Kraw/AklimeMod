@@ -540,6 +540,25 @@ local function addInterfaceNodes(dp)
             "Drueberbewegen automatisch wieder."
         )
     end
+
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = false })
+    end
+    do
+        local fade = AklimeModDB.interfaceFade
+        for i = 1, 3 do
+            local k = "mode" .. i
+            local modeNode = addModule(dp, "Platzhalter " .. i,
+                function() return fade[k].enabled end,
+                function(v) fade[k].enabled = v end
+            )
+            addSlider(modeNode, "Transparenz", 0, 100, 1,
+                function() return fade[k].alpha end,
+                function(v) fade[k].alpha = v end,
+                function(v) return v .. "%" end
+            )
+        end
+    end
 end
 
 local function BuildInterfaceContent(filter)
@@ -817,6 +836,23 @@ local function BuildInterfaceContent(filter)
             "Sobald der Kampf endet erscheint er beim naechsten\n" ..
             "Drueberbewegen automatisch wieder."
         )
+    end
+
+    dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = false })
+    do
+        local fade = AklimeModDB.interfaceFade
+        for i = 1, 3 do
+            local k = "mode" .. i
+            local modeNode = addModule(dp3, "Platzhalter " .. i,
+                function() return fade[k].enabled end,
+                function(v) fade[k].enabled = v end
+            )
+            addSlider(modeNode, "Transparenz", 0, 100, 1,
+                function() return fade[k].alpha end,
+                function(v) fade[k].alpha = v end,
+                function(v) return v .. "%" end
+            )
+        end
     end
 
     -- Colorizer-Nodes direkt in dp3 einfügen

@@ -149,10 +149,37 @@ local function toggleInitializer(button, node)
     button.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
 end
 
+local function sliderInitializer(frame, node)
+    local data = node:GetData()
+    if frame.label     then frame.label:SetText(data.label or "") end
+    local s = frame.slider
+    if s then
+        s:SetMinMaxValues(data.sliderMin or 0, data.sliderMax or 100)
+        s:SetValueStep(data.sliderStep or 1)
+        s:SetObeyStepOnDrag(true)
+        local cur = data.getVal and data.getVal() or 0
+        s:SetValue(cur)
+        if frame.valueText then
+            frame.valueText:SetText(data.formatFn and data.formatFn(cur) or tostring(cur))
+        end
+        s:SetScript("OnValueChanged", function(_, value)
+            local v = math.floor(value + 0.5)
+            if data.setVal then data.setVal(v) end
+            if frame.valueText then
+                frame.valueText:SetText(data.formatFn and data.formatFn(v) or tostring(v))
+            end
+        end)
+    end
+end
+-- Global damit ColorizerUI.lua denselben Initializer nutzen kann
+AklimeMod_SliderInitializer = sliderInitializer
+
 function AklimeMod_RightFactory(factory, node)
     local data = node:GetData()
     if data.Template == "AklimeMod_ToggleTemplate" then
         factory(data.Template, toggleInitializer)
+    elseif data.Template == "AklimeMod_SliderTemplate" then
+        factory(data.Template, sliderInitializer)
     else
         factory(data.Template, headerInitializer)
     end

@@ -338,5 +338,7 @@ function AklimeMod_ColorizerRightFactory(factory, node)
             if frame.label then frame.label:SetText(data.label or "") end
             frame:SetScript("OnClick", function() if data.onClick then data.onClick() end end)
         end)
+    elseif t == "AklimeMod_SliderTemplate" then
+        factory(t, AklimeMod_SliderInitializer)
     end
 end

@@ -208,6 +208,14 @@ function AklimeMod_InitDB()
     db.combatTooltip = db.combatTooltip or {}
     def(db.combatTooltip, "enabled", false)
 
+    db.interfaceFade = db.interfaceFade or {}
+    for i = 1, 3 do
+        local k = "mode" .. i
+        db.interfaceFade[k] = db.interfaceFade[k] or {}
+        def(db.interfaceFade[k], "enabled", false)
+        def(db.interfaceFade[k], "alpha",   50)
+    end
+
     db.playedTime = db.playedTime or {}
     db.playedTime.chars = db.playedTime.chars or {}
     def(db.playedTime, "enabled", true)
