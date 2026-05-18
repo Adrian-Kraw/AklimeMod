@@ -205,6 +205,9 @@ function AklimeMod_InitDB()
     db.gearCheck = db.gearCheck or {}
     def(db.gearCheck, "enabled", false)
 
+    db.combatTooltip = db.combatTooltip or {}
+    def(db.combatTooltip, "enabled", false)
+
     db.playedTime = db.playedTime or {}
     db.playedTime.chars = db.playedTime.chars or {}
     def(db.playedTime, "enabled", true)

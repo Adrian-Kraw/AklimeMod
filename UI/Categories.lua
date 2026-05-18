@@ -528,6 +528,18 @@ local function addInterfaceNodes(dp)
             "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
         )
     end
+
+    if AklimeMod_CombatTooltip then
+        local ttNode = addModule(dp, "Tooltip im Kampf ausblenden",
+            function() return AklimeMod_CombatTooltip:IsEnabled() end,
+            function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
+        )
+        addInfo(ttNode,
+            "Versteckt den HUD-Tooltip waehrend des Kampfes.\n" ..
+            "Sobald der Kampf endet erscheint er beim naechsten\n" ..
+            "Drueberbewegen automatisch wieder."
+        )
+    end
 end
 
 local function BuildInterfaceContent(filter)
@@ -792,6 +804,18 @@ local function BuildInterfaceContent(filter)
             "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
             "Im Betrachten-Fenster zusaetzlich Itemlevel am Slot.\n" ..
             "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
+        )
+    end
+
+    if AklimeMod_CombatTooltip then
+        local ttNode = addModule(dp3, "Tooltip im Kampf ausblenden",
+            function() return AklimeMod_CombatTooltip:IsEnabled() end,
+            function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
+        )
+        addInfo(ttNode,
+            "Versteckt den HUD-Tooltip waehrend des Kampfes.\n" ..
+            "Sobald der Kampf endet erscheint er beim naechsten\n" ..
+            "Drueberbewegen automatisch wieder."
         )
     end
 
