@@ -136,11 +136,29 @@ local function UpdateRows()
     if M.scrollUp and M.scrollDown then
         local maxOff = math.max(0, total - visible)
         if maxOff > 0 then
-            M.scrollUp:Show();   M.scrollDown:Show()
+            M.scrollUp:Show()
+            M.scrollDown:Show()
             M.scrollUp:SetEnabled(M.offset > 0)
             M.scrollDown:SetEnabled(M.offset < maxOff)
+            -- Track und Thumb anzeigen
+            if M.scrollTrack and M.scrollThumb then
+                M.scrollTrack:Show()
+                local trackH = M.scrollTrack:GetHeight()
+                if trackH and trackH > 0 then
+                    local thumbH = math.max(16, math.floor((visible / total) * trackH))
+                    local thumbY = math.floor((M.offset / maxOff) * (trackH - thumbH))
+                    M.scrollThumb:SetHeight(thumbH)
+                    M.scrollThumb:ClearAllPoints()
+                    M.scrollThumb:SetPoint("TOPLEFT",  M.scrollTrack, "TOPLEFT",  3, -thumbY)
+                    M.scrollThumb:SetPoint("TOPRIGHT", M.scrollTrack, "TOPRIGHT", -3, -thumbY)
+                    M.scrollThumb:Show()
+                end
+            end
         else
-            M.scrollUp:Hide();   M.scrollDown:Hide()
+            M.scrollUp:Hide()
+            M.scrollDown:Hide()
+            if M.scrollTrack then M.scrollTrack:Hide() end
+            if M.scrollThumb then M.scrollThumb:Hide() end
         end
     end
 end
@@ -181,7 +199,11 @@ local function EnsureFrame()
     sBox:SetHeight(20)
     sBox:SetAutoFocus(false)
     sBox:SetScript("OnTextChanged", function(self)
-        M.searchText = self:GetText()
+        local text = self:GetText()
+        if self.Instructions then
+            self.Instructions:SetShown(text == "")
+        end
+        M.searchText = text
         BuildFiltered()
         M.offset = 0
         UpdateRows()
@@ -264,6 +286,56 @@ local function EnsureFrame()
     upBtn:Hide();  downBtn:Hide()
     M.scrollUp   = upBtn
     M.scrollDown = downBtn
+
+    -- Scrollbar-Track zwischen den Pfeilen
+    local track = CreateFrame("Frame", nil, f)
+    track:SetWidth(16)
+    track:SetPoint("TOP",    upBtn,   "BOTTOM", 0, 0)
+    track:SetPoint("BOTTOM", downBtn, "TOP",    0, 0)
+    local trackBg = track:CreateTexture(nil, "BACKGROUND")
+    trackBg:SetAllPoints()
+    trackBg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+    track:Hide()
+    M.scrollTrack = track
+
+    -- Thumb (als Frame damit er draggbar ist)
+    local thumb = CreateFrame("Frame", nil, track)
+    thumb:SetWidth(10)
+    local thumbTex = thumb:CreateTexture(nil, "ARTWORK")
+    thumbTex:SetAllPoints()
+    thumbTex:SetColorTexture(0.5, 0.45, 0.2, 0.9)
+    thumb:EnableMouse(true)
+
+    local dragStartY, dragStartOffset = nil, nil
+
+    thumb:SetScript("OnMouseDown", function()
+        dragStartY      = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+        dragStartOffset = M.offset
+    end)
+
+    thumb:SetScript("OnMouseUp", function()
+        dragStartY = nil
+    end)
+
+    thumb:SetScript("OnUpdate", function()
+        if not dragStartY then return end
+        local curY    = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+        local trackH  = M.scrollTrack:GetHeight()
+        local thumbH  = thumb:GetHeight()
+        local total   = #M.filtered
+        local visible = CalcVisibleRows()
+        local maxOff  = math.max(0, total - visible)
+        if maxOff == 0 or trackH <= thumbH then return end
+        local delta  = (dragStartY - curY) / (trackH - thumbH)
+        local newOff = math.max(0, math.min(maxOff, math.floor(dragStartOffset + delta * maxOff + 0.5)))
+        if newOff ~= M.offset then
+            M.offset = newOff
+            UpdateRows()
+        end
+    end)
+
+    thumb:Hide()
+    M.scrollThumb = thumb
 
     -- Mausrad
     f:EnableMouseWheel(true)
