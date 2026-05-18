@@ -7,6 +7,7 @@ AklimeMod_Commands = {
     { cmd = "/akm help",     desc = "Alle Befehle im Chat anzeigen"               },
     { cmd = "/akm todo",     desc = "ToDo-Liste öffnen / schließen"               },
     { cmd = "/akm ignore",   desc = "Erweiterte Ignore-Liste öffnen / schließen"   },
+    { cmd = "/akm played",  desc = "Gespielte Zeit aller Chars anzeigen"           },
     { cmd = "/akmana",       desc = "Mana-Warnung Status anzeigen"                },
     { cmd = "/akmana test",  desc = "Mana-Warnung Testnachricht senden"           },
     { cmd = "/akmsell",      desc = "(Fallback) Graue Items manuell verkaufen"    },
@@ -35,6 +36,8 @@ frame:SetScript("OnEvent", function(_, _, arg1)
             if AklimeMod_TodoList then AklimeMod_TodoList:Toggle() end
         elseif cmd == "ignore" then
             if AklimeMod_ExtendedIgnore then AklimeMod_ExtendedIgnore:ToggleWindow() end
+        elseif cmd == "played" then
+            if AklimeMod_PlayedTime then AklimeMod_PlayedTime:Print() end
         elseif origSlash then
             origSlash(input)
         end

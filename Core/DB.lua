@@ -205,6 +205,9 @@ function AklimeMod_InitDB()
     db.gearCheck = db.gearCheck or {}
     def(db.gearCheck, "enabled", false)
 
+    db.playedTime = db.playedTime or {}
+    db.playedTime.chars = db.playedTime.chars or {}
+
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end

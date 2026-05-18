@@ -55,6 +55,7 @@ Modules\QoL\Summons.lua
 Modules\QoL\GroupInvites.lua
 Modules\QoL\Mailbox.lua
 Modules\QoL\TodoList.lua
+Modules\QoL\PlayedTime.lua
 Modules\QoL\ExtendedIgnore.lua
 
 Modules\Mouse\MouseEffects.lua
