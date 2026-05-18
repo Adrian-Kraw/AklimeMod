@@ -320,6 +320,37 @@ function M:Print()
     self:Toggle()
 end
 
+function M:GetSavedChars()
+    local db = GetDB()
+    local list = {}
+    for key, rec in pairs(db.chars) do
+        local className = CLASS_NAMES[rec.class] or rec.class or "?"
+        table.insert(list, {
+            key     = key,
+            display = (rec.name or key) .. " – " .. className,
+        })
+    end
+    table.sort(list, function(a, b) return a.display < b.display end)
+    return list
+end
+
+function M:DeleteChar(key)
+    local db = GetDB()
+    db.chars[key] = nil
+    if mainFrame and mainFrame:IsShown() then
+        RefreshFrame()
+    end
+end
+
+function M:DeleteAll()
+    local db = GetDB()
+    db.chars = {}
+    if mainFrame and mainFrame:IsShown() then
+        RefreshFrame()
+    end
+    print("|cFFFFD100AklimeMod:|r Spielzeit-Daten gelöscht.")
+end
+
 -- ============================================================
 -- Events
 -- ============================================================
@@ -332,8 +363,10 @@ f:RegisterEvent("TIME_PLAYED_MSG")
 
 f:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_LOGIN" then
-        requested = true
-        RequestTimePlayed()
+        if AklimeModDB and AklimeModDB.playedTime and AklimeModDB.playedTime.enabled ~= false then
+            requested = true
+            RequestTimePlayed()
+        end
     elseif event == "TIME_PLAYED_MSG" and requested then
         requested = false
         SavePlayedTime(arg1)

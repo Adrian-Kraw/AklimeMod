@@ -207,6 +207,7 @@ function AklimeMod_InitDB()
 
     db.playedTime = db.playedTime or {}
     db.playedTime.chars = db.playedTime.chars or {}
+    def(db.playedTime, "enabled", true)
 
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}

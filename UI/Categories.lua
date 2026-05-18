@@ -1579,6 +1579,52 @@ local function addQoLNodes(dp)
         AklimeMod_DrinkReminder.ShowNow()
     end)
 
+    -- ============================================================
+    -- Spielzeit
+    -- ============================================================
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Spielzeit", centered = false })
+    end
+
+    if AklimeMod_PlayedTime then
+        local playedNode = addModule(dp, "Gespielte Zeit",
+            function() return AklimeModDB.playedTime.enabled end,
+            function(v) AklimeModDB.playedTime.enabled = v end
+        )
+        addInfo(playedNode,
+            "Erfasst die Spielzeit aller Chars beim Login automatisch.\n" ..
+            "Öffnen: /akm played"
+        )
+        addAction(playedNode, "Char löschen...", function()
+            local chars = AklimeMod_PlayedTime:GetSavedChars()
+            local menu = _G["AklimeModPlayedDeleteMenu"]
+                or CreateFrame("Frame", "AklimeModPlayedDeleteMenu", UIParent, "UIDropDownMenuTemplate")
+            UIDropDownMenu_Initialize(menu, function()
+                if #chars == 0 then
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text     = "Keine Daten vorhanden"
+                    info.disabled = true
+                    UIDropDownMenu_AddButton(info)
+                    return
+                end
+                for _, rec in ipairs(chars) do
+                    local key     = rec.key
+                    local display = rec.display
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = display
+                    info.func = function()
+                        AklimeMod_PlayedTime:DeleteChar(key)
+                    end
+                    UIDropDownMenu_AddButton(info)
+                end
+            end, "MENU")
+            ToggleDropDownMenu(1, nil, menu, "cursor", 0, 0)
+        end)
+        addAction(playedNode, "Alle Daten löschen", function()
+            AklimeMod_PlayedTime:DeleteAll()
+        end)
+    end
+
 end  -- addQoLNodes
 
 local function BuildQoLContent()
