@@ -61,11 +61,21 @@ local function DoLeave()
 end
 
 local function DoJoin()
-    if not IsInChannel() then
-        suppress = true
-        JoinChannelByName(CHANNEL_NAME)
-        C_Timer.After(1.0, function() suppress = false end)
-    end
+    suppress = true
+    JoinChannelByName(CHANNEL_NAME)
+    -- Anzeige-Haken in der Chat-UI aktivieren (Channel-Nachrichten einblenden)
+    C_Timer.After(0.5, function()
+        local idx = GetChannelName(CHANNEL_NAME)
+        if idx and idx > 0 then
+            for i = 1, NUM_CHAT_WINDOWS do
+                local cf = _G["ChatFrame" .. i]
+                if cf and cf:IsShown() then
+                    ChatFrame_AddChannel(cf, CHANNEL_NAME)
+                end
+            end
+        end
+        suppress = false
+    end)
 end
 
 -- ============================================================
