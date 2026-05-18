@@ -227,7 +227,7 @@ local function RefreshFrame()
 
         -- Klassenname links
         local nameLbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        nameLbl:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -4)
+        nameLbl:SetPoint("LEFT", row, "LEFT", 0, 0)
         nameLbl:SetWidth(90)
         nameLbl:SetJustifyH("LEFT")
         nameLbl:SetTextColor(r, g, b)
@@ -235,7 +235,7 @@ local function RefreshFrame()
 
         -- Balken-Hintergrund
         local barBg = row:CreateTexture(nil, "BACKGROUND")
-        barBg:SetPoint("TOPLEFT", row, "TOPLEFT", 94, -9)
+        barBg:SetPoint("LEFT", row, "LEFT", 94, 0)
         barBg:SetSize(BAR_MAX_W, BAR_H)
         barBg:SetColorTexture(0.15, 0.15, 0.15, 1)
 
