@@ -250,7 +250,7 @@ local function RefreshFrame()
         local pct = grand > 0 and math.floor((rec.total / grand) * 100) or 0
         local timeLbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         timeLbl:SetPoint("LEFT", barBg, "RIGHT", 6, 0)
-        timeLbl:SetWidth(90)
+        timeLbl:SetWidth(115)
         timeLbl:SetJustifyH("LEFT")
         timeLbl:SetText(FormatTime(rec.total))
 
