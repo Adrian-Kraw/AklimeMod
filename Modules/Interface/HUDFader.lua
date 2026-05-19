@@ -193,6 +193,7 @@ local EXCLUDE_KEY = {
     focusFrame  = "unitFrames",
     partyFrame  = "unitFrames",
     chatCopyBtn = "chat",
+    socialBtn   = "chat",
     buffs       = "buffs",
     debuffs     = "buffs",
     repBar      = "repBar",
