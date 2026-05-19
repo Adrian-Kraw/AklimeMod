@@ -226,68 +226,6 @@ local function SetFactionIcon(button, factionName)
     end
 end
 
-local function GetFavoriteIcon(button)
-    return button and (button.Favorite or button.favorite) or nil
-end
-
-local function SetPointCompat(frame, ...)
-    if not frame then return end
-    if frame.Point then frame:Point(...) else frame:SetPoint(...) end
-end
-
-local function CacheFavoriteAnchor(favorite)
-    if not favorite or favorite._aklimeOriginalPoints or not favorite.GetNumPoints then return end
-    local points = {}
-    for i = 1, favorite:GetNumPoints() do
-        local point, relTo, relPoint, x, y = favorite:GetPoint(i)
-        points[#points + 1] = { point = point, relTo = relTo, relPoint = relPoint, x = x, y = y }
-    end
-    favorite._aklimeOriginalPoints = points
-end
-
-local function RestoreFavoriteAnchor(button)
-    local favorite = GetFavoriteIcon(button)
-    if not favorite or not favorite._aklimeOriginalPoints then return end
-    favorite:ClearAllPoints()
-    for _, data in ipairs(favorite._aklimeOriginalPoints) do
-        SetPointCompat(favorite, data.point, data.relTo, data.relPoint, data.x, data.y)
-    end
-end
-
-local function AdjustFavoriteAnchorNow(button)
-    local favorite = GetFavoriteIcon(button)
-    if not favorite or not favorite.IsShown or not favorite:IsShown() then return end
-    local nameFont = button and button.name
-    if not nameFont or not nameFont.GetStringWidth then return end
-
-    CacheFavoriteAnchor(favorite)
-
-    local width = nameFont:GetStringWidth() or 0
-    local offset = width + 6
-
-    if button.gameIcon and button.gameIcon.GetLeft and nameFont.GetLeft then
-        local iconLeft = button.gameIcon:GetLeft()
-        local nameLeft = nameFont:GetLeft()
-        local starWidth = (favorite.GetWidth and favorite:GetWidth()) or 0
-        if iconLeft and nameLeft and starWidth then
-            local maxOffset = (iconLeft - nameLeft) - starWidth - 4
-            if maxOffset then offset = min(offset, max(0, maxOffset)) end
-        end
-    end
-
-    favorite:ClearAllPoints()
-    SetPointCompat(favorite, "LEFT", nameFont, "LEFT", offset, 0)
-end
-
-local function AdjustFavoriteAnchor(button)
-    if not button then return end
-    if button._aklimeFavoriteAdjustPending then return end
-    button._aklimeFavoriteAdjustPending = true
-    RunNextFrame(function()
-        button._aklimeFavoriteAdjustPending = nil
-        AdjustFavoriteAnchorNow(button)
-    end)
-end
 
 local M = {}
 AklimeMod_FriendsListDecor = M
@@ -346,7 +284,6 @@ local function DecorateWoWFriend(button)
 
     SetFactionIcon(button, nil)
     if button.gameIcon then button.gameIcon:SetTexCoord(0, 1, 0, 1) end
-    AdjustFavoriteAnchor(button)
 end
 
 local function DecorateBNetFriend(button)
@@ -439,14 +376,12 @@ local function DecorateBNetFriend(button)
         end
     end
 
-    AdjustFavoriteAnchor(button)
 end
 
 local function UpdateFriendButton(button)
     if not button or not button.buttonType then return end
     if not GetDB().enabled then
         if button._aklimeFactionIcon then button._aklimeFactionIcon:Hide() end
-        RestoreFavoriteAnchor(button)
         return
     end
 
