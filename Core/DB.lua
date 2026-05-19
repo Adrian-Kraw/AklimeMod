@@ -215,6 +215,8 @@ function AklimeMod_InitDB()
         def(db.interfaceFade[k], "enabled", false)
         def(db.interfaceFade[k], "alpha",   60)
     end
+    def(db.interfaceFade.mode1, "moveDelay", 2)
+    def(db.interfaceFade.mode1, "idleDelay", 12)
 
     db.playedTime = db.playedTime or {}
     db.playedTime.chars = db.playedTime.chars or {}

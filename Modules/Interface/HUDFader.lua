@@ -230,7 +230,8 @@ end
 
 local function StartIdleCountdown()
     idleTimer = CancelTimer(idleTimer)
-    idleTimer = C_Timer.NewTimer(IDLE_DELAY, function()
+    local delay = (GetDB() and GetDB().idleDelay) or IDLE_DELAY
+    idleTimer = C_Timer.NewTimer(delay, function()
         idleTimer = nil
         if IsEnabled() and IsResting() and not inCombat then
             GoIdle()
@@ -302,7 +303,8 @@ ef:SetScript("OnEvent", function(_, event)
         if not IsEnabled() or inCombat then return end
         idleTimer = CancelTimer(idleTimer)
         moveTimer = CancelTimer(moveTimer)
-        moveTimer = C_Timer.NewTimer(MOVE_ACTIVATE_DELAY, function()
+        local delay = (GetDB() and GetDB().moveDelay) or MOVE_ACTIVATE_DELAY
+        moveTimer = C_Timer.NewTimer(delay, function()
             moveTimer = nil
             if IsEnabled() and IsResting() and not inCombat then
                 GoActive()
@@ -360,6 +362,11 @@ end
 -- ============================================================
 function M:IsEnabled()
     return IsEnabled()
+end
+
+function M:ApplyAlpha()
+    if not IsEnabled() or state ~= "active" then return end
+    FadeAllTo(GetActiveAlpha())
 end
 
 function M:SetEnabled(v)

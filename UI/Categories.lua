@@ -535,9 +535,9 @@ local function addInterfaceNodes(dp)
             function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
         )
         addInfo(ttNode,
-            "Versteckt den HUD-Tooltip waehrend des Kampfes.\n" ..
+            "Versteckt den HUD-Tooltip während des Kampfes.\n" ..
             "Sobald der Kampf endet erscheint er beim naechsten\n" ..
-            "Drueberbewegen automatisch wieder."
+            "Drüberbewegen automatisch wieder."
         )
     end
 
@@ -551,16 +551,31 @@ local function addInterfaceNodes(dp)
             local setEnabled = (i == 1)
                 and function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
                 or  function(v) fade[k].enabled = v end
-            local modeName = (i == 1) and "Chill Modus" or ("Platzhalter " .. i)
+            local modeName = (i == 1) and "Chillmodus in Ruhezonen" or ("Platzhalter " .. i)
             local modeNode = addModule(dp, modeName,
                 function() return fade[k].enabled end,
                 setEnabled
             )
             addSlider(modeNode, "Transparenz", 0, 100, 1,
                 function() return fade[k].alpha end,
-                function(v) fade[k].alpha = v end,
+                function(v)
+                    fade[k].alpha = v
+                    if i == 1 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha() end
+                end,
                 function(v) return v .. "%" end
             )
+            if i == 1 then
+                addSlider(modeNode, "Bewegdauer bis Einblenden", 1, 10, 1,
+                    function() return fade[k].moveDelay end,
+                    function(v) fade[k].moveDelay = v end,
+                    function(v) return v .. " s" end
+                )
+                addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
+                    function() return fade[k].idleDelay end,
+                    function(v) fade[k].idleDelay = v end,
+                    function(v) return v .. " s" end
+                )
+            end
         end
     end
 end
@@ -825,7 +840,7 @@ local function BuildInterfaceContent(filter)
             "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
             "Rot:  leere Fassung(en).\n" ..
             "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
-            "Im Betrachten-Fenster zusaetzlich Itemlevel am Slot.\n" ..
+            "Im Betrachten-Fenster zusätzlich Itemlevel am Slot.\n" ..
             "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
         )
     end
@@ -836,9 +851,9 @@ local function BuildInterfaceContent(filter)
             function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
         )
         addInfo(ttNode,
-            "Versteckt den HUD-Tooltip waehrend des Kampfes.\n" ..
-            "Sobald der Kampf endet erscheint er beim naechsten\n" ..
-            "Drueberbewegen automatisch wieder."
+            "Versteckt den HUD-Tooltip während des Kampfes.\n" ..
+            "Sobald der Kampf endet erscheint er beim nächsten\n" ..
+            "Drüberbewegen automatisch wieder."
         )
     end
 
@@ -850,16 +865,31 @@ local function BuildInterfaceContent(filter)
             local setEnabled = (i == 1)
                 and function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
                 or  function(v) fade[k].enabled = v end
-            local modeName = (i == 1) and "Chill Modus" or ("Platzhalter " .. i)
+            local modeName = (i == 1) and "Chillmodus in Ruhezonen" or ("Platzhalter " .. i)
             local modeNode = addModule(dp3, modeName,
                 function() return fade[k].enabled end,
                 setEnabled
             )
             addSlider(modeNode, "Transparenz", 0, 100, 1,
                 function() return fade[k].alpha end,
-                function(v) fade[k].alpha = v end,
+                function(v)
+                    fade[k].alpha = v
+                    if i == 1 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha() end
+                end,
                 function(v) return v .. "%" end
             )
+            if i == 1 then
+                addSlider(modeNode, "Bewegdauer bis Einblenden", 1, 10, 1,
+                    function() return fade[k].moveDelay end,
+                    function(v) fade[k].moveDelay = v end,
+                    function(v) return v .. " s" end
+                )
+                addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
+                    function() return fade[k].idleDelay end,
+                    function(v) fade[k].idleDelay = v end,
+                    function(v) return v .. " s" end
+                )
+            end
         end
     end
 
@@ -1144,7 +1174,7 @@ local function addQoLNodes(dp)
         function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
         function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
     )
-    addInfo(leaveServiceNode, "Verlaesst automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer aendert sich — wird immer per Name gesucht.")
+    addInfo(leaveServiceNode, "Verlässt automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer ändert sich — wird immer per Name gesucht.")
 
     -- ============================================================
     -- NEU: Jagd % Anzeige
@@ -1546,7 +1576,7 @@ local function addQoLNodes(dp)
             function(v) AklimeMod_FriendsListDecor:Set("hideOwnRealm", v) end
         )
         addInfo(friendsNode,
-            "Faerbt Freundesnamen in Klassenfarbe.\n" ..
+            "Färbt Freundesnamen in Klassenfarbe.\n" ..
             "Zeigt Level, Zone und Status (AFK/DND/Offline).\n" ..
             "BNet-Freunde: Spiel-Icon und Fraktionsflagge."
         )
