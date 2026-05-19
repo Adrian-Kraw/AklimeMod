@@ -349,6 +349,10 @@ local function CreateMode(dbKey, zoneCheck)
         moveTimer = CancelTimer(moveTimer)
         local db = getDB()
         local delay = (db and db.moveDelay) or MOVE_ACTIVATE_DELAY
+        if delay == 0 then
+            if zoneCheck() then goActive() end
+            return
+        end
         moveTimer = C_Timer.NewTimer(delay, function()
             moveTimer = nil
             if isEnabled() and zoneCheck() and not inCombat then

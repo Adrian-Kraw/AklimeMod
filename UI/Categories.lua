@@ -575,10 +575,10 @@ local function addInterfaceNodes(dp)
                 function(v) return v .. "%" end
             )
             if i == 1 or i == 2 then
-                addSlider(modeNode, "Bewegdauer bis Einblenden", 1, 10, 1,
+                addSlider(modeNode, "Bewegdauer bis Einblenden", 0, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
-                    function(v) return v .. " s" end
+                    function(v) return v == 0 and "sofort" or v .. " s" end
                 )
                 addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
                     function() return fade[k].idleDelay end,
@@ -917,10 +917,10 @@ local function BuildInterfaceContent(filter)
                 function(v) return v .. "%" end
             )
             if i == 1 or i == 2 then
-                addSlider(modeNode, "Bewegdauer bis Einblenden", 1, 10, 1,
+                addSlider(modeNode, "Bewegdauer bis Einblenden", 0, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
-                    function(v) return v .. " s" end
+                    function(v) return v == 0 and "sofort" or v .. " s" end
                 )
                 addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
                     function() return fade[k].idleDelay end,
