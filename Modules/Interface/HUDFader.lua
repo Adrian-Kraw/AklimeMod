@@ -322,10 +322,8 @@ local function CreateMode(dbKey, zoneCheck)
     function mode:OnEnteringWorld()
         if not isEnabled() then return end
         C_Timer.After(2, function()
-            if isEnabled() and zoneCheck() and not inCombat then
-                state = "idle"
+            if isEnabled() and zoneCheck() and not inCombat and state == "idle" then
                 goIdle()
-                startIdleCountdown()
             end
         end)
     end

@@ -215,12 +215,12 @@ function AklimeMod_InitDB()
         def(db.interfaceFade[k], "enabled", false)
         def(db.interfaceFade[k], "alpha",   60)
     end
-    def(db.interfaceFade.mode1, "moveDelay",  2)
-    def(db.interfaceFade.mode1, "idleDelay", 12)
-    def(db.interfaceFade.mode1, "chatDelay", 15)
-    def(db.interfaceFade.mode2, "moveDelay",  2)
-    def(db.interfaceFade.mode2, "idleDelay", 12)
-    def(db.interfaceFade.mode2, "chatDelay", 15)
+    def(db.interfaceFade.mode1, "moveDelay", 1)
+    def(db.interfaceFade.mode1, "idleDelay", 3)
+    def(db.interfaceFade.mode1, "chatDelay", 5)
+    def(db.interfaceFade.mode2, "moveDelay", 1)
+    def(db.interfaceFade.mode2, "idleDelay", 3)
+    def(db.interfaceFade.mode2, "chatDelay", 5)
     for _, mk in ipairs({ "mode1", "mode2" }) do
         db.interfaceFade[mk].exclude = db.interfaceFade[mk].exclude or {}
         local ex = db.interfaceFade[mk].exclude
