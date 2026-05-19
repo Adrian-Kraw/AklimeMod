@@ -548,10 +548,19 @@ local function addInterfaceNodes(dp)
         local fade = AklimeModDB.interfaceFade
         for i = 1, 3 do
             local k = "mode" .. i
-            local setEnabled = (i == 1)
-                and function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
-                or  function(v) fade[k].enabled = v end
-            local modeName = (i == 1) and "Chillmodus in Ruhezonen" or ("Platzhalter " .. i)
+            local setEnabled
+            if i == 1 then
+                setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
+            elseif i == 2 then
+                setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled2(v) end end
+            else
+                setEnabled = function(v) fade[k].enabled = v end
+            end
+            local modeName
+            if i == 1 then modeName = "Chillmodus in Ruhezonen"
+            elseif i == 2 then modeName = "Offene Welt"
+            else modeName = "Platzhalter " .. i
+            end
             local modeNode = addModule(dp, modeName,
                 function() return fade[k].enabled end,
                 setEnabled
@@ -561,10 +570,11 @@ local function addInterfaceNodes(dp)
                 function(v)
                     fade[k].alpha = v
                     if i == 1 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha() end
+                    if i == 2 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha2() end
                 end,
                 function(v) return v .. "%" end
             )
-            if i == 1 then
+            if i == 1 or i == 2 then
                 addSlider(modeNode, "Bewegdauer bis Einblenden", 1, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
@@ -573,6 +583,11 @@ local function addInterfaceNodes(dp)
                 addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
                     function() return fade[k].idleDelay end,
                     function(v) fade[k].idleDelay = v end,
+                    function(v) return v .. " s" end
+                )
+                addSlider(modeNode, "Chat eingeblendet fuer", 5, 60, 1,
+                    function() return fade[k].chatDelay end,
+                    function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
                 )
             end
@@ -862,10 +877,19 @@ local function BuildInterfaceContent(filter)
         local fade = AklimeModDB.interfaceFade
         for i = 1, 3 do
             local k = "mode" .. i
-            local setEnabled = (i == 1)
-                and function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
-                or  function(v) fade[k].enabled = v end
-            local modeName = (i == 1) and "Chillmodus in Ruhezonen" or ("Platzhalter " .. i)
+            local setEnabled
+            if i == 1 then
+                setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
+            elseif i == 2 then
+                setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled2(v) end end
+            else
+                setEnabled = function(v) fade[k].enabled = v end
+            end
+            local modeName
+            if i == 1 then modeName = "Chillmodus in Ruhezonen"
+            elseif i == 2 then modeName = "Offene Welt"
+            else modeName = "Platzhalter " .. i
+            end
             local modeNode = addModule(dp3, modeName,
                 function() return fade[k].enabled end,
                 setEnabled
@@ -875,10 +899,11 @@ local function BuildInterfaceContent(filter)
                 function(v)
                     fade[k].alpha = v
                     if i == 1 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha() end
+                    if i == 2 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha2() end
                 end,
                 function(v) return v .. "%" end
             )
-            if i == 1 then
+            if i == 1 or i == 2 then
                 addSlider(modeNode, "Bewegdauer bis Einblenden", 1, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
@@ -887,6 +912,11 @@ local function BuildInterfaceContent(filter)
                 addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
                     function() return fade[k].idleDelay end,
                     function(v) fade[k].idleDelay = v end,
+                    function(v) return v .. " s" end
+                )
+                addSlider(modeNode, "Chat eingeblendet fuer", 5, 60, 1,
+                    function() return fade[k].chatDelay end,
+                    function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
                 )
             end

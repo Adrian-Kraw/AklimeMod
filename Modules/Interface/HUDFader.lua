@@ -1,8 +1,8 @@
 -- Modules/Interface/HUDFader.lua
--- HUD-Fader, Modus 1: Chill-Modus.
--- Nur in Ruhezonen aktiv. Alles blendet im Idle auf 0 aus.
--- Chat reagiert auf Nachrichten-Events unabhaengig vom Rest.
--- Bewegung fuer 2 Sekunden blendet alles auf die konfigurierte Alpha ein.
+-- Zwei unabhaengige Modi: Ruhezonen (mode1) und Offene Welt (mode2).
+-- Beide koennen gleichzeitig aktiv sein. Die finale Alpha ist das Maximum aller aktiven Modi.
+-- Kampf: sofort volle Alpha, komplette Zeit sichtbar.
+-- Instanzen: kein Modus wirkt.
 
 local M = {}
 AklimeMod_HUDFader = M
@@ -40,19 +40,18 @@ local ELEMENTS = {
         end
         return f
     end },
-    { key = "minimap",     frames = function()
+    { key = "minimap", frames = function()
         -- Nur MinimapCluster faden. Minimap erbt die Parent-Alpha automatisch.
-        -- Minimap separat zu faden wuerden die Alphas multiplizieren (0.6 * 0.6 = 0.36).
         return MinimapCluster and {MinimapCluster} or {}
     end },
-    { key = "buffs",       frames = function() return BuffFrame        and {BuffFrame}        or {} end },
-    { key = "debuffs",     frames = function() return DebuffFrame      and {DebuffFrame}      or {} end },
-    { key = "playerFrame", frames = function() return PlayerFrame      and {PlayerFrame}      or {} end },
-    { key = "targetFrame", frames = function() return TargetFrame      and {TargetFrame}      or {} end },
-    { key = "focusFrame",  frames = function() return FocusFrame       and {FocusFrame}       or {} end },
-    { key = "partyFrame",  frames = function() return CompactPartyFrame and {CompactPartyFrame} or {} end },
-    { key = "objectives",  frames = function() return ObjectiveTrackerFrame and {ObjectiveTrackerFrame} or {} end },
-    { key = "repBar",      frames = function() return StatusTrackingBarManager and {StatusTrackingBarManager} or {} end },
+    { key = "buffs",        frames = function() return BuffFrame             and {BuffFrame}             or {} end },
+    { key = "debuffs",      frames = function() return DebuffFrame           and {DebuffFrame}           or {} end },
+    { key = "playerFrame",  frames = function() return PlayerFrame           and {PlayerFrame}           or {} end },
+    { key = "targetFrame",  frames = function() return TargetFrame           and {TargetFrame}           or {} end },
+    { key = "focusFrame",   frames = function() return FocusFrame            and {FocusFrame}            or {} end },
+    { key = "partyFrame",   frames = function() return CompactPartyFrame     and {CompactPartyFrame}     or {} end },
+    { key = "objectives",   frames = function() return ObjectiveTrackerFrame and {ObjectiveTrackerFrame} or {} end },
+    { key = "repBar",       frames = function() return StatusTrackingBarManager and {StatusTrackingBarManager} or {} end },
     { key = "expansionBtn", frames = function()
         local f = {}
         for _, n in ipairs({ "ExpansionLandingPageMinimapButton", "GarrisonLandingPageMinimapButton" }) do
@@ -86,9 +85,9 @@ local CHAT_EVENTS = {
     "CHAT_MSG_CHANNEL","CHAT_MSG_INSTANCE_CHAT","CHAT_MSG_INSTANCE_CHAT_LEADER",
 }
 
-local CHAT_SHOW_DURATION  = 15
-local MOVE_ACTIVATE_DELAY =  2
+local MOVE_ACTIVATE_DELAY = 2
 local IDLE_DELAY          = 12
+local CHAT_SHOW_DURATION  = 15
 
 -- ============================================================
 -- Fade-Engine
@@ -117,23 +116,19 @@ end
 
 -- ============================================================
 -- Minimap-Overlays
---
 -- Namenlose MinimapCluster-Kinder (Spielerpfeil, Quest-Blobs,
--- Haendler-Icons) werden von WoW intern per Show() zurueckgebracht.
--- Loesung: OnShow-Hook der sie im Idle-Zustand sofort re-hided.
--- Benannte Kinder (GameTimeFrame etc.): SetAlpha via FadeTo.
+-- Haendler-Icons) ignorieren Parent-Alpha. Loesung: Hide() + OnShow-Hook.
 -- ============================================================
 local minimapIdleActive = false
-local hookedOverlays    = {}   -- bereits gehookte Frames (persistent)
-local currentHidden     = {}   -- in diesem Idle-Zyklus versteckte Frames
+local hookedOverlays    = {}
+local currentHidden     = {}
 
 local function HideMinimapOverlays()
+    if minimapIdleActive then return end  -- bereits versteckt, kein zweites wipe
     minimapIdleActive = true
     wipe(currentHidden)
     if not MinimapCluster then return end
     for _, child in ipairs({ MinimapCluster:GetChildren() }) do
-        -- Nur namenlose Kinder (Spielerpfeil, Quest-Blobs, Haendler-Icons).
-        -- Benannte Frames (Minimap, GameTimeFrame usw.) werden per Alpha behandelt.
         local name = child:GetName()
         if not name or name == "" then
             local ok, shown = pcall(function() return child:IsShown() end)
@@ -152,6 +147,7 @@ local function HideMinimapOverlays()
 end
 
 local function ShowMinimapOverlays()
+    if not minimapIdleActive then return end  -- bereits sichtbar
     minimapIdleActive = false
     for _, child in ipairs(currentHidden) do
         pcall(function() child:Show() end)
@@ -162,20 +158,6 @@ end
 -- ============================================================
 -- Hilfsfunktionen
 -- ============================================================
-local function GetDB()
-    return AklimeModDB and AklimeModDB.interfaceFade and AklimeModDB.interfaceFade.mode1
-end
-
-local function IsEnabled()
-    local db = GetDB()
-    return db and db.enabled == true
-end
-
-local function GetActiveAlpha()
-    local db = GetDB()
-    return (db and db.alpha or 60) / 100
-end
-
 local function GetChatFrames()
     local f = {}
     for i = 1, 10 do
@@ -192,66 +174,222 @@ local function CancelTimer(t)
 end
 
 -- ============================================================
--- Zustand
+-- Unified Alpha
+-- Jeder Modus meldet seine gewuenschte Alpha (nil = nicht aktiv).
+-- Finale Alpha = Maximum aller gemeldeten Werte.
+-- Keine Modi aktiv: volle Alpha (1.0).
 -- ============================================================
-local state     = "idle"
-local inCombat  = false
-local moveTimer = nil
-local idleTimer = nil
-local chatTimer = nil
+local modeAlphas = {}
+local inCombat   = false
 
-local function FadeAllTo(alpha)
-    for _, el in ipairs(ELEMENTS) do
-        for _, f in ipairs(el.frames()) do FadeTo(f, alpha) end
+local function ApplyUnified()
+    if inCombat then return end
+    local maxAlpha = nil
+    for _, a in pairs(modeAlphas) do
+        if maxAlpha == nil or a > maxAlpha then maxAlpha = a end
     end
-    for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, alpha) end
+    if maxAlpha == nil then maxAlpha = 1.0 end
+
+    for _, el in ipairs(ELEMENTS) do
+        for _, f in ipairs(el.frames()) do FadeTo(f, maxAlpha) end
+    end
+    for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, maxAlpha) end
+
+    if maxAlpha == 0 then
+        HideMinimapOverlays()
+    else
+        if Minimap then Minimap:SetAlpha(1.0) end
+        ShowMinimapOverlays()
+    end
 end
 
-local function GoIdle()
-    state = "idle"
-    FadeAllTo(0)
-    HideMinimapOverlays()
-end
-
-local function GoActive()
-    state = "active"
-    chatTimer = CancelTimer(chatTimer)
-    ShowMinimapOverlays()
-    -- Minimap-eigene Alpha auf 1 zuruecksetzen, damit die Parent-Alpha allein wirkt.
+local function GoFullAll()
+    wipe(modeAlphas)
     if Minimap then Minimap:SetAlpha(1.0) end
-    FadeAllTo(GetActiveAlpha())
-end
-
-local function GoFull()
     ShowMinimapOverlays()
-    if Minimap then Minimap:SetAlpha(1.0) end
-    FadeAllTo(1.0)
-end
-
-local function StartIdleCountdown()
-    idleTimer = CancelTimer(idleTimer)
-    local delay = (GetDB() and GetDB().idleDelay) or IDLE_DELAY
-    idleTimer = C_Timer.NewTimer(delay, function()
-        idleTimer = nil
-        if IsEnabled() and IsResting() and not inCombat then
-            GoIdle()
-        end
-    end)
-end
-
--- Chat-Event: nur Chatfenster einblenden, Rest bleibt
-local function OnChatEvent()
-    if not IsEnabled() or not IsResting() or inCombat then return end
-    if state ~= "idle" then return end
-    chatTimer = CancelTimer(chatTimer)
+    for _, el in ipairs(ELEMENTS) do
+        for _, f in ipairs(el.frames()) do FadeTo(f, 1.0) end
+    end
     for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, 1.0) end
-    chatTimer = C_Timer.NewTimer(CHAT_SHOW_DURATION, function()
-        chatTimer = nil
-        if IsEnabled() and IsResting() and state == "idle" and not inCombat then
-            for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, 0) end
-        end
-    end)
 end
+
+-- ============================================================
+-- Mode-Factory
+-- dbKey:     Schlussel in AklimeModDB.interfaceFade (z.B. "mode1")
+-- zoneCheck: function() -> bool  (true = Modus gilt in dieser Zone)
+-- ============================================================
+local function CreateMode(dbKey, zoneCheck)
+    local mode      = {}
+    local state     = "idle"
+    local moveTimer = nil
+    local idleTimer = nil
+    local chatTimer = nil
+
+    local function getDB()
+        return AklimeModDB and AklimeModDB.interfaceFade and AklimeModDB.interfaceFade[dbKey]
+    end
+
+    local function isEnabled()
+        local db = getDB()
+        return db and db.enabled == true
+    end
+
+    local function getActiveAlpha()
+        local db = getDB()
+        return (db and db.alpha or 60) / 100
+    end
+
+    local function setAlpha(a)
+        modeAlphas[dbKey] = a
+        ApplyUnified()
+    end
+
+    local function clearAlpha()
+        modeAlphas[dbKey] = nil
+        ApplyUnified()
+    end
+
+    local function goIdle()
+        state = "idle"
+        setAlpha(0)
+    end
+
+    local function goActive()
+        state = "active"
+        chatTimer = CancelTimer(chatTimer)
+        setAlpha(getActiveAlpha())
+    end
+
+    local function startIdleCountdown()
+        idleTimer = CancelTimer(idleTimer)
+        local db = getDB()
+        local delay = (db and db.idleDelay) or IDLE_DELAY
+        idleTimer = C_Timer.NewTimer(delay, function()
+            idleTimer = nil
+            if isEnabled() and zoneCheck() and not inCombat then
+                goIdle()
+            end
+        end)
+    end
+
+    function mode:OnChatEvent()
+        if not isEnabled() or inCombat or not zoneCheck() then return end
+        if state ~= "idle" then return end
+        chatTimer = CancelTimer(chatTimer)
+        for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, 1.0) end
+        local db = getDB()
+        local delay = (db and db.chatDelay) or CHAT_SHOW_DURATION
+        chatTimer = C_Timer.NewTimer(delay, function()
+            chatTimer = nil
+            if isEnabled() and zoneCheck() and not inCombat then
+                ApplyUnified()
+            end
+        end)
+    end
+
+    function mode:OnEnteringWorld()
+        if not isEnabled() then return end
+        C_Timer.After(2, function()
+            if isEnabled() and zoneCheck() and not inCombat then
+                state = "idle"
+                goIdle()
+                startIdleCountdown()
+            end
+        end)
+    end
+
+    function mode:OnCombatStart()
+        moveTimer = CancelTimer(moveTimer)
+        idleTimer = CancelTimer(idleTimer)
+        chatTimer = CancelTimer(chatTimer)
+        clearAlpha()
+    end
+
+    function mode:OnCombatEnd()
+        if not isEnabled() then return end
+        if zoneCheck() then
+            startIdleCountdown()
+        end
+    end
+
+    function mode:OnStartedMoving()
+        if not isEnabled() or inCombat or not zoneCheck() then return end
+        idleTimer = CancelTimer(idleTimer)
+        moveTimer = CancelTimer(moveTimer)
+        local db = getDB()
+        local delay = (db and db.moveDelay) or MOVE_ACTIVATE_DELAY
+        moveTimer = C_Timer.NewTimer(delay, function()
+            moveTimer = nil
+            if isEnabled() and zoneCheck() and not inCombat then
+                goActive()
+            end
+        end)
+    end
+
+    function mode:OnStoppedMoving()
+        moveTimer = CancelTimer(moveTimer)
+        if not isEnabled() or inCombat then return end
+        if zoneCheck() and state == "active" then
+            startIdleCountdown()
+        end
+    end
+
+    function mode:OnZoneChanged()
+        if not isEnabled() then return end
+        moveTimer = CancelTimer(moveTimer)
+        idleTimer = CancelTimer(idleTimer)
+        chatTimer = CancelTimer(chatTimer)
+        if not zoneCheck() then
+            state = "idle"
+            clearAlpha()
+        elseif state == "idle" and not inCombat then
+            goIdle()
+            startIdleCountdown()
+        end
+    end
+
+    function mode:SetEnabled(v)
+        local db = getDB()
+        if db then db.enabled = v end
+        if v then
+            if zoneCheck() and not inCombat then
+                state = "idle"
+                goIdle()
+                startIdleCountdown()
+            end
+        else
+            moveTimer = CancelTimer(moveTimer)
+            idleTimer = CancelTimer(idleTimer)
+            chatTimer = CancelTimer(chatTimer)
+            state = "idle"
+            clearAlpha()
+        end
+    end
+
+    function mode:IsEnabled()
+        return isEnabled()
+    end
+
+    function mode:ApplyAlpha()
+        if not isEnabled() or state ~= "active" then return end
+        setAlpha(getActiveAlpha())
+    end
+
+    return mode
+end
+
+-- ============================================================
+-- Modi
+-- ============================================================
+local Mode1 = CreateMode("mode1", function()
+    return IsResting() and not IsInInstance()
+end)
+
+local Mode2 = CreateMode("mode2", function()
+    return not IsResting() and not IsInInstance()
+end)
+
+local ALL_MODES = { Mode1, Mode2 }
 
 -- ============================================================
 -- Events
@@ -272,66 +410,33 @@ for _, ev in ipairs(CHAT_EVENTS) do ef:RegisterEvent(ev) end
 
 ef:SetScript("OnEvent", function(_, event)
     if isChatEvent[event] then
-        OnChatEvent()
+        for _, m in ipairs(ALL_MODES) do m:OnChatEvent() end
         return
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
         inCombat = false
-        state    = "idle"
-        C_Timer.After(2, function()
-            if IsEnabled() and IsResting() then
-                GoIdle()
-                StartIdleCountdown()
-            end
-        end)
+        for _, m in ipairs(ALL_MODES) do m:OnEnteringWorld() end
 
     elseif event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
-        moveTimer = CancelTimer(moveTimer)
-        idleTimer = CancelTimer(idleTimer)
-        chatTimer = CancelTimer(chatTimer)
-        if IsEnabled() then GoFull() end
+        for _, m in ipairs(ALL_MODES) do m:OnCombatStart() end
+        GoFullAll()
 
     elseif event == "PLAYER_REGEN_ENABLED" then
         inCombat = false
-        if IsEnabled() and IsResting() then
-            StartIdleCountdown()
-        end
+        for _, m in ipairs(ALL_MODES) do m:OnCombatEnd() end
 
     elseif event == "PLAYER_STARTED_MOVING" then
-        if not IsEnabled() or inCombat then return end
-        idleTimer = CancelTimer(idleTimer)
-        moveTimer = CancelTimer(moveTimer)
-        local delay = (GetDB() and GetDB().moveDelay) or MOVE_ACTIVATE_DELAY
-        moveTimer = C_Timer.NewTimer(delay, function()
-            moveTimer = nil
-            if IsEnabled() and IsResting() and not inCombat then
-                GoActive()
-            end
-        end)
+        for _, m in ipairs(ALL_MODES) do m:OnStartedMoving() end
 
     elseif event == "PLAYER_STOPPED_MOVING" then
-        moveTimer = CancelTimer(moveTimer)
-        if not IsEnabled() or inCombat then return end
-        if IsResting() and state == "active" then
-            StartIdleCountdown()
-        end
+        for _, m in ipairs(ALL_MODES) do m:OnStoppedMoving() end
 
     elseif event == "PLAYER_FLAGS_CHANGED"
         or event == "ZONE_CHANGED_INDOORS"
         or event == "ZONE_CHANGED_NEW_AREA" then
-        if not IsEnabled() then return end
-        if not IsResting() then
-            moveTimer = CancelTimer(moveTimer)
-            idleTimer = CancelTimer(idleTimer)
-            chatTimer = CancelTimer(chatTimer)
-            state = "idle"
-            GoFull()
-        elseif state == "idle" and not inCombat then
-            GoIdle()
-            StartIdleCountdown()
-        end
+        for _, m in ipairs(ALL_MODES) do m:OnZoneChanged() end
     end
 end)
 
@@ -360,29 +465,10 @@ end
 -- ============================================================
 -- API
 -- ============================================================
-function M:IsEnabled()
-    return IsEnabled()
-end
+function M:IsEnabled()    return Mode1:IsEnabled() end
+function M:SetEnabled(v)  Mode1:SetEnabled(v) end
+function M:ApplyAlpha()   Mode1:ApplyAlpha() end
 
-function M:ApplyAlpha()
-    if not IsEnabled() or state ~= "active" then return end
-    FadeAllTo(GetActiveAlpha())
-end
-
-function M:SetEnabled(v)
-    local db = GetDB()
-    if db then db.enabled = v end
-    if v then
-        if IsResting() and not inCombat then
-            state = "idle"
-            GoIdle()
-            StartIdleCountdown()
-        end
-    else
-        moveTimer = CancelTimer(moveTimer)
-        idleTimer = CancelTimer(idleTimer)
-        chatTimer = CancelTimer(chatTimer)
-        state = "idle"
-        GoFull()
-    end
-end
+function M:IsEnabled2()   return Mode2:IsEnabled() end
+function M:SetEnabled2(v) Mode2:SetEnabled(v) end
+function M:ApplyAlpha2()  Mode2:ApplyAlpha() end
