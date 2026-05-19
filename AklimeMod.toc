@@ -2,7 +2,7 @@
 ## Title: AklimeMod
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
-## Version: 1.0
+## Version: 0.9
 ## SavedVariables: AklimeModDB
 ## AddonCompartmentFunc: AklimeMod_OpenSettings
 ## IconTexture: Interface\AddOns\AklimeMod\Assets\icon

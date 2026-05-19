@@ -8,7 +8,7 @@ local M = {}
 AklimeMod_HUDFader = M
 
 -- ============================================================
--- UI-Elemente
+-- UI-Elemente (SetAlpha-Fade)
 -- ============================================================
 local ELEMENTS = {
     { key = "actionBars", frames = function()
@@ -40,28 +40,22 @@ local ELEMENTS = {
         end
         return f
     end },
-    { key = "minimap",      frames = function()
+    -- MinimapCluster fuer den aeusseren Container (smooth fade).
+    -- Minimap-Kinder werden per Hide/Show gesteuert (siehe unten).
+    { key = "minimap",     frames = function()
         local f = {}
         if MinimapCluster then f[#f+1] = MinimapCluster end
-        if Minimap then
-            f[#f+1] = Minimap
-            -- Kinder die SetIgnoreParentAlpha nutzen ignorieren den Parent-Alpha
-            -- und muessen einzeln gefadet werden
-            for _, child in ipairs({ Minimap:GetChildren() }) do
-                local ok, v = pcall(function() return child:GetIgnoreParentAlpha() end)
-                if ok and v then f[#f+1] = child end
-            end
-        end
+        if Minimap        then f[#f+1] = Minimap        end
         return f
     end },
-    { key = "buffs",        frames = function() return BuffFrame        and {BuffFrame}        or {} end },
-    { key = "debuffs",      frames = function() return DebuffFrame      and {DebuffFrame}      or {} end },
-    { key = "playerFrame",  frames = function() return PlayerFrame      and {PlayerFrame}      or {} end },
-    { key = "targetFrame",  frames = function() return TargetFrame      and {TargetFrame}      or {} end },
-    { key = "focusFrame",   frames = function() return FocusFrame       and {FocusFrame}       or {} end },
-    { key = "partyFrame",   frames = function() return CompactPartyFrame and {CompactPartyFrame} or {} end },
-    { key = "objectives",   frames = function() return ObjectiveTrackerFrame and {ObjectiveTrackerFrame} or {} end },
-    { key = "repBar",       frames = function() return StatusTrackingBarManager and {StatusTrackingBarManager} or {} end },
+    { key = "buffs",       frames = function() return BuffFrame        and {BuffFrame}        or {} end },
+    { key = "debuffs",     frames = function() return DebuffFrame      and {DebuffFrame}      or {} end },
+    { key = "playerFrame", frames = function() return PlayerFrame      and {PlayerFrame}      or {} end },
+    { key = "targetFrame", frames = function() return TargetFrame      and {TargetFrame}      or {} end },
+    { key = "focusFrame",  frames = function() return FocusFrame       and {FocusFrame}       or {} end },
+    { key = "partyFrame",  frames = function() return CompactPartyFrame and {CompactPartyFrame} or {} end },
+    { key = "objectives",  frames = function() return ObjectiveTrackerFrame and {ObjectiveTrackerFrame} or {} end },
+    { key = "repBar",      frames = function() return StatusTrackingBarManager and {StatusTrackingBarManager} or {} end },
     { key = "expansionBtn", frames = function()
         local f = {}
         for _, n in ipairs({ "ExpansionLandingPageMinimapButton", "GarrisonLandingPageMinimapButton" }) do
@@ -69,12 +63,12 @@ local ELEMENTS = {
         end
         return f
     end },
-    { key = "socialBtn",    frames = function() return QuickJoinToastButton and {QuickJoinToastButton} or {} end },
-    { key = "chatCopyBtn",  frames = function()
+    { key = "socialBtn",   frames = function() return QuickJoinToastButton and {QuickJoinToastButton} or {} end },
+    { key = "chatCopyBtn", frames = function()
         local b = _G["AklimeMod_ChatCopyBtn"]
         return b and {b} or {}
     end },
-    { key = "damageMeter",  frames = function()
+    { key = "damageMeter", frames = function()
         local f = {}
         if DamageMeter then f[#f+1] = DamageMeter end
         local maxCount = DamageMeterMixin and DamageMeterMixin:GetMaxSessionWindowCount() or 5
@@ -98,7 +92,7 @@ local MOVE_ACTIVATE_DELAY =  2  -- Sekunden Bewegung bis Aktivierung
 local IDLE_DELAY          = 12  -- Sekunden Stillstand bis Idle
 
 -- ============================================================
--- Fade-Engine
+-- Fade-Engine (SetAlpha)
 -- ============================================================
 local fadeTargets = {}
 local FADE_SPEED  = 1.5
@@ -120,6 +114,39 @@ end)
 local function FadeTo(frame, alpha)
     if not frame then return end
     fadeTargets[frame] = math.max(0, math.min(1, alpha))
+end
+
+-- ============================================================
+-- Minimap-Frames: Hide/Show (umgeht SetIgnoreParentAlpha)
+-- Scannt Kinder von MinimapCluster UND Minimap.
+-- ============================================================
+local hiddenMinimapChildren = {}
+
+local function HideMinimapFrames()
+    wipe(hiddenMinimapChildren)
+    local function scanAndHide(parent)
+        if not parent then return end
+        for _, child in ipairs({ parent:GetChildren() }) do
+            local ok, shown = pcall(function() return child:IsShown() end)
+            if ok and shown then
+                local ok2, t = pcall(function() return child:GetObjectType() end)
+                local isMinimapWidget = ok2 and t == "Minimap"
+                if not isMinimapWidget then
+                    hiddenMinimapChildren[#hiddenMinimapChildren + 1] = child
+                    child:Hide()
+                end
+            end
+        end
+    end
+    scanAndHide(MinimapCluster)
+    scanAndHide(Minimap)
+end
+
+local function ShowMinimapFrames()
+    for _, child in ipairs(hiddenMinimapChildren) do
+        pcall(function() child:Show() end)
+    end
+    wipe(hiddenMinimapChildren)
 end
 
 -- ============================================================
@@ -173,15 +200,18 @@ end
 local function GoIdle()
     state = "idle"
     FadeAllTo(0)
+    HideMinimapFrames()
 end
 
 local function GoActive()
     state = "active"
     chatTimer = CancelTimer(chatTimer)
+    ShowMinimapFrames()
     FadeAllTo(GetActiveAlpha())
 end
 
 local function GoFull()
+    ShowMinimapFrames()
     FadeAllTo(1.0)
 end
 
@@ -293,6 +323,28 @@ ef:SetScript("OnEvent", function(_, event)
 end)
 
 -- ============================================================
+-- Debug
+-- ============================================================
+SLASH_AKMHUD1 = "/akmhud"
+SlashCmdList["AKMHUD"] = function()
+    local function scanFrame(label, frame)
+        if not frame then print("  " .. label .. ": nicht gefunden"); return end
+        print(string.format("|cFFFFD100%s|r  alpha=%.2f", label, frame:GetAlpha()))
+        local count = 0
+        for _, child in ipairs({ frame:GetChildren() }) do
+            count = count + 1
+            local name  = child:GetName() or "(kein Name)"
+            local shown = child:IsShown() and "SHOWN" or "hidden"
+            local alpha = string.format("%.2f", child:GetAlpha())
+            print(string.format("  [%d] %-45s %s  alpha=%s", count, name, shown, alpha))
+        end
+        print(string.format("  Gesamt: %d Kinder", count))
+    end
+    scanFrame("MinimapCluster", MinimapCluster)
+    scanFrame("Minimap",        Minimap)
+end
+
+-- ============================================================
 -- API
 -- ============================================================
 function M:IsEnabled()
@@ -313,6 +365,7 @@ function M:SetEnabled(v)
         idleTimer = CancelTimer(idleTimer)
         chatTimer = CancelTimer(chatTimer)
         state = "idle"
+        ShowMinimapFrames()
         GoFull()
     end
 end
