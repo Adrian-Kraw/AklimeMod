@@ -424,7 +424,14 @@ local Mode2 = CreateMode("mode2", function()
     return not IsResting() and not IsInInstance()
 end)
 
-local ALL_MODES = { Mode1, Mode2 }
+-- Housing: Instanztyp "neighborhood" ist Housing-exklusiv (TWW 11.1+).
+-- Gilt fuer Alliance und Horde, alle Sprachen, Aussen- und Innenbereich.
+local Mode3 = CreateMode("mode3", function()
+    local inInst, instType = IsInInstance()
+    return inInst and (instType == "neighborhood" or instType == "interior")
+end)
+
+local ALL_MODES = { Mode1, Mode2, Mode3 }
 
 -- ============================================================
 -- Events
@@ -479,7 +486,14 @@ end)
 -- Debug
 -- ============================================================
 SLASH_AKMHUD1 = "/akmhud"
-SlashCmdList["AKMHUD"] = function()
+SlashCmdList["AKMHUD"] = function(input)
+    if input == "zone" then
+        print("|cFFFFD100HUDFader Zone:|r " .. (GetRealZoneText() or "?") ..
+              " / Sub: " .. (GetSubZoneText() or "?"))
+        local inInst, instType = IsInInstance()
+        print("  IsInInstance: " .. tostring(inInst) .. "  Typ: " .. tostring(instType))
+        return
+    end
     local function scanFrame(label, frame)
         if not frame then print("  " .. label .. ": nicht gefunden"); return end
         print(string.format("|cFFFFD100%s|r  alpha=%.2f", label, frame:GetAlpha()))
@@ -507,5 +521,9 @@ function M:ApplyAlpha()   Mode1:ApplyAlpha() end
 function M:IsEnabled2()   return Mode2:IsEnabled() end
 function M:SetEnabled2(v) Mode2:SetEnabled(v) end
 function M:ApplyAlpha2()  Mode2:ApplyAlpha() end
+
+function M:IsEnabled3()   return Mode3:IsEnabled() end
+function M:SetEnabled3(v) Mode3:SetEnabled(v) end
+function M:ApplyAlpha3()  Mode3:ApplyAlpha() end
 
 function M:Refresh()      ApplyUnified() end

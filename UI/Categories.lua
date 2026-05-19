@@ -553,12 +553,15 @@ local function addInterfaceNodes(dp)
                 setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
             elseif i == 2 then
                 setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled2(v) end end
+            elseif i == 3 then
+                setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled3(v) end end
             else
                 setEnabled = function(v) fade[k].enabled = v end
             end
             local modeName
             if i == 1 then modeName = "Chillmodus in Ruhezonen"
             elseif i == 2 then modeName = "Offene Welt"
+            elseif i == 3 then modeName = "Housing"
             else modeName = "Platzhalter " .. i
             end
             local modeNode = addModule(dp, modeName,
@@ -571,10 +574,11 @@ local function addInterfaceNodes(dp)
                     fade[k].alpha = v
                     if i == 1 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha() end
                     if i == 2 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha2() end
+                    if i == 3 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha3() end
                 end,
                 function(v) return v .. "%" end
             )
-            if i == 1 or i == 2 then
+            if i == 1 or i == 2 or i == 3 then
                 addSlider(modeNode, "Bewegdauer bis Einblenden", 0, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
@@ -895,12 +899,15 @@ local function BuildInterfaceContent(filter)
                 setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled(v) end end
             elseif i == 2 then
                 setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled2(v) end end
+            elseif i == 3 then
+                setEnabled = function(v) if AklimeMod_HUDFader then AklimeMod_HUDFader:SetEnabled3(v) end end
             else
                 setEnabled = function(v) fade[k].enabled = v end
             end
             local modeName
             if i == 1 then modeName = "Chillmodus in Ruhezonen"
             elseif i == 2 then modeName = "Offene Welt"
+            elseif i == 3 then modeName = "Housing"
             else modeName = "Platzhalter " .. i
             end
             local modeNode = addModule(dp3, modeName,
@@ -913,10 +920,11 @@ local function BuildInterfaceContent(filter)
                     fade[k].alpha = v
                     if i == 1 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha() end
                     if i == 2 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha2() end
+                    if i == 3 and AklimeMod_HUDFader then AklimeMod_HUDFader:ApplyAlpha3() end
                 end,
                 function(v) return v .. "%" end
             )
-            if i == 1 or i == 2 then
+            if i == 1 or i == 2 or i == 3 then
                 addSlider(modeNode, "Bewegdauer bis Einblenden", 0, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
