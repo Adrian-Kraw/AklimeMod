@@ -40,13 +40,10 @@ local ELEMENTS = {
         end
         return f
     end },
-    -- MinimapCluster fuer den aeusseren Container (smooth fade).
-    -- Minimap-Kinder werden per Hide/Show gesteuert (siehe unten).
     { key = "minimap",     frames = function()
-        local f = {}
-        if MinimapCluster then f[#f+1] = MinimapCluster end
-        if Minimap        then f[#f+1] = Minimap        end
-        return f
+        -- Nur MinimapCluster faden. Minimap erbt die Parent-Alpha automatisch.
+        -- Minimap separat zu faden wuerden die Alphas multiplizieren (0.6 * 0.6 = 0.36).
+        return MinimapCluster and {MinimapCluster} or {}
     end },
     { key = "buffs",       frames = function() return BuffFrame        and {BuffFrame}        or {} end },
     { key = "debuffs",     frames = function() return DebuffFrame      and {DebuffFrame}      or {} end },
@@ -82,17 +79,19 @@ local ELEMENTS = {
 
 local CHAT_EVENTS = {
     "CHAT_MSG_SAY","CHAT_MSG_YELL","CHAT_MSG_EMOTE","CHAT_MSG_TEXT_EMOTE",
-    "CHAT_MSG_WHISPER","CHAT_MSG_WHISPER_INFORM","CHAT_MSG_PARTY","CHAT_MSG_PARTY_LEADER",
-    "CHAT_MSG_RAID","CHAT_MSG_RAID_LEADER","CHAT_MSG_GUILD","CHAT_MSG_OFFICER",
+    "CHAT_MSG_WHISPER","CHAT_MSG_WHISPER_INFORM",
+    "CHAT_MSG_PARTY","CHAT_MSG_PARTY_LEADER",
+    "CHAT_MSG_RAID","CHAT_MSG_RAID_LEADER",
+    "CHAT_MSG_GUILD","CHAT_MSG_OFFICER",
     "CHAT_MSG_CHANNEL","CHAT_MSG_INSTANCE_CHAT","CHAT_MSG_INSTANCE_CHAT_LEADER",
 }
 
-local CHAT_SHOW_DURATION  = 15  -- Sekunden Chat nach Event sichtbar
-local MOVE_ACTIVATE_DELAY =  2  -- Sekunden Bewegung bis Aktivierung
-local IDLE_DELAY          = 12  -- Sekunden Stillstand bis Idle
+local CHAT_SHOW_DURATION  = 15
+local MOVE_ACTIVATE_DELAY =  2
+local IDLE_DELAY          = 12
 
 -- ============================================================
--- Fade-Engine (SetAlpha)
+-- Fade-Engine
 -- ============================================================
 local fadeTargets = {}
 local FADE_SPEED  = 1.5
@@ -117,36 +116,47 @@ local function FadeTo(frame, alpha)
 end
 
 -- ============================================================
--- Minimap-Frames: Hide/Show (umgeht SetIgnoreParentAlpha)
--- Scannt Kinder von MinimapCluster UND Minimap.
+-- Minimap-Overlays
+--
+-- Namenlose MinimapCluster-Kinder (Spielerpfeil, Quest-Blobs,
+-- Haendler-Icons) werden von WoW intern per Show() zurueckgebracht.
+-- Loesung: OnShow-Hook der sie im Idle-Zustand sofort re-hided.
+-- Benannte Kinder (GameTimeFrame etc.): SetAlpha via FadeTo.
 -- ============================================================
-local hiddenMinimapChildren = {}
+local minimapIdleActive = false
+local hookedOverlays    = {}   -- bereits gehookte Frames (persistent)
+local currentHidden     = {}   -- in diesem Idle-Zyklus versteckte Frames
 
-local function HideMinimapFrames()
-    wipe(hiddenMinimapChildren)
-    local function scanAndHide(parent)
-        if not parent then return end
-        for _, child in ipairs({ parent:GetChildren() }) do
+local function HideMinimapOverlays()
+    minimapIdleActive = true
+    wipe(currentHidden)
+    if not MinimapCluster then return end
+    for _, child in ipairs({ MinimapCluster:GetChildren() }) do
+        -- Nur namenlose Kinder (Spielerpfeil, Quest-Blobs, Haendler-Icons).
+        -- Benannte Frames (Minimap, GameTimeFrame usw.) werden per Alpha behandelt.
+        local name = child:GetName()
+        if not name or name == "" then
             local ok, shown = pcall(function() return child:IsShown() end)
             if ok and shown then
-                local ok2, t = pcall(function() return child:GetObjectType() end)
-                local isMinimapWidget = ok2 and t == "Minimap"
-                if not isMinimapWidget then
-                    hiddenMinimapChildren[#hiddenMinimapChildren + 1] = child
-                    child:Hide()
+                if not hookedOverlays[child] then
+                    hookedOverlays[child] = true
+                    child:HookScript("OnShow", function(self)
+                        if minimapIdleActive then self:Hide() end
+                    end)
                 end
+                currentHidden[#currentHidden + 1] = child
+                child:Hide()
             end
         end
     end
-    scanAndHide(MinimapCluster)
-    scanAndHide(Minimap)
 end
 
-local function ShowMinimapFrames()
-    for _, child in ipairs(hiddenMinimapChildren) do
+local function ShowMinimapOverlays()
+    minimapIdleActive = false
+    for _, child in ipairs(currentHidden) do
         pcall(function() child:Show() end)
     end
-    wipe(hiddenMinimapChildren)
+    wipe(currentHidden)
 end
 
 -- ============================================================
@@ -184,7 +194,7 @@ end
 -- ============================================================
 -- Zustand
 -- ============================================================
-local state     = "idle"   -- "idle" | "active"
+local state     = "idle"
 local inCombat  = false
 local moveTimer = nil
 local idleTimer = nil
@@ -200,18 +210,21 @@ end
 local function GoIdle()
     state = "idle"
     FadeAllTo(0)
-    HideMinimapFrames()
+    HideMinimapOverlays()
 end
 
 local function GoActive()
     state = "active"
     chatTimer = CancelTimer(chatTimer)
-    ShowMinimapFrames()
+    ShowMinimapOverlays()
+    -- Minimap-eigene Alpha auf 1 zuruecksetzen, damit die Parent-Alpha allein wirkt.
+    if Minimap then Minimap:SetAlpha(1.0) end
     FadeAllTo(GetActiveAlpha())
 end
 
 local function GoFull()
-    ShowMinimapFrames()
+    ShowMinimapOverlays()
+    if Minimap then Minimap:SetAlpha(1.0) end
     FadeAllTo(1.0)
 end
 
@@ -308,14 +321,12 @@ ef:SetScript("OnEvent", function(_, event)
         or event == "ZONE_CHANGED_NEW_AREA" then
         if not IsEnabled() then return end
         if not IsResting() then
-            -- Ruhezone verlassen
             moveTimer = CancelTimer(moveTimer)
             idleTimer = CancelTimer(idleTimer)
             chatTimer = CancelTimer(chatTimer)
             state = "idle"
             GoFull()
         elseif state == "idle" and not inCombat then
-            -- Ruhezone betreten
             GoIdle()
             StartIdleCountdown()
         end
@@ -365,7 +376,6 @@ function M:SetEnabled(v)
         idleTimer = CancelTimer(idleTimer)
         chatTimer = CancelTimer(chatTimer)
         state = "idle"
-        ShowMinimapFrames()
         GoFull()
     end
 end
