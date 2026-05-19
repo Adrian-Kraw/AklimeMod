@@ -67,8 +67,7 @@ local ELEMENTS = {
     { key = "damageMeter", frames = function()
         local f = {}
         if DamageMeter then f[#f+1] = DamageMeter end
-        local maxCount = DamageMeterMixin and DamageMeterMixin:GetMaxSessionWindowCount() or 5
-        for i = 1, maxCount do
+        for i = 1, 5 do
             local sw = _G["DamageMeterSessionWindow" .. i]
             if sw then f[#f+1] = sw end
         end
@@ -182,6 +181,34 @@ end
 local modeAlphas = {}
 local inCombat   = false
 
+-- Mapping: ELEMENTS-Key -> DB-exclude-Key
+local EXCLUDE_KEY = {
+    actionBars  = "actionBars",
+    microMenu   = "microMenu",
+    bags        = "bags",
+    minimap     = "minimap",
+    objectives  = "objectives",
+    playerFrame = "unitFrames",
+    targetFrame = "unitFrames",
+    focusFrame  = "unitFrames",
+    partyFrame  = "unitFrames",
+    chatCopyBtn = "chat",
+    buffs       = "buffs",
+    debuffs     = "buffs",
+    repBar      = "repBar",
+    damageMeter = "damageMeter",
+}
+
+-- Gibt true zurueck wenn der excludeKey in einem aktiven Modus als Ausnahme markiert ist
+local function IsExcluded(excludeKey)
+    if not excludeKey then return false end
+    for dbKey in pairs(modeAlphas) do
+        local db = AklimeModDB and AklimeModDB.interfaceFade and AklimeModDB.interfaceFade[dbKey]
+        if db and db.exclude and db.exclude[excludeKey] then return true end
+    end
+    return false
+end
+
 local function ApplyUnified()
     if inCombat then return end
     local maxAlpha = nil
@@ -191,11 +218,16 @@ local function ApplyUnified()
     if maxAlpha == nil then maxAlpha = 1.0 end
 
     for _, el in ipairs(ELEMENTS) do
-        for _, f in ipairs(el.frames()) do FadeTo(f, maxAlpha) end
+        local alpha = IsExcluded(EXCLUDE_KEY[el.key]) and 1.0 or maxAlpha
+        local ok, frames = pcall(el.frames)
+        if ok and frames then
+            for _, f in ipairs(frames) do FadeTo(f, alpha) end
+        end
     end
-    for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, maxAlpha) end
+    local chatAlpha = IsExcluded("chat") and 1.0 or maxAlpha
+    for _, cf in ipairs(GetChatFrames()) do FadeTo(cf, chatAlpha) end
 
-    if maxAlpha == 0 then
+    if maxAlpha == 0 and not IsExcluded("minimap") then
         HideMinimapOverlays()
     else
         if Minimap then Minimap:SetAlpha(1.0) end
@@ -313,7 +345,7 @@ local function CreateMode(dbKey, zoneCheck)
     end
 
     function mode:OnStartedMoving()
-        if not isEnabled() or inCombat or not zoneCheck() then return end
+        if not isEnabled() or inCombat then return end
         idleTimer = CancelTimer(idleTimer)
         moveTimer = CancelTimer(moveTimer)
         local db = getDB()
@@ -472,3 +504,5 @@ function M:ApplyAlpha()   Mode1:ApplyAlpha() end
 function M:IsEnabled2()   return Mode2:IsEnabled() end
 function M:SetEnabled2(v) Mode2:SetEnabled(v) end
 function M:ApplyAlpha2()  Mode2:ApplyAlpha() end
+
+function M:Refresh()      ApplyUnified() end

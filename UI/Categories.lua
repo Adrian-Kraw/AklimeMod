@@ -590,6 +590,19 @@ local function addInterfaceNodes(dp)
                     function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
                 )
+                addInfo(modeNode, "Immer bei 100% sichtbar:")
+                local ex = fade[k].exclude
+                local function refresh() if AklimeMod_HUDFader then AklimeMod_HUDFader:Refresh() end end
+                addToggle(modeNode, "Chat",            function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
+                addToggle(modeNode, "Minimap",         function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
+                addToggle(modeNode, "Quest / Ziele",   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
+                addToggle(modeNode, "Mikromenue",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
+                addToggle(modeNode, "Taschen",         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
+                addToggle(modeNode, "Aktionsleisten",  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
+                addToggle(modeNode, "HP-Anzeigen",     function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
+                addToggle(modeNode, "Buffs / Debuffs", function() return ex.buffs       end, function(v) ex.buffs       = v; refresh() end)
+                addToggle(modeNode, "Rufbar",          function() return ex.repBar      end, function(v) ex.repBar      = v; refresh() end)
+                addToggle(modeNode, "Schadensanzeige", function() return ex.damageMeter end, function(v) ex.damageMeter = v; refresh() end)
             end
         end
     end
@@ -919,6 +932,19 @@ local function BuildInterfaceContent(filter)
                     function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
                 )
+                addInfo(modeNode, "Immer bei 100% sichtbar:")
+                local ex = fade[k].exclude
+                local function refresh() if AklimeMod_HUDFader then AklimeMod_HUDFader:Refresh() end end
+                addToggle(modeNode, "Chat",            function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
+                addToggle(modeNode, "Minimap",         function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
+                addToggle(modeNode, "Quest / Ziele",   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
+                addToggle(modeNode, "Mikromenue",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
+                addToggle(modeNode, "Taschen",         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
+                addToggle(modeNode, "Aktionsleisten",  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
+                addToggle(modeNode, "HP-Anzeigen",     function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
+                addToggle(modeNode, "Buffs / Debuffs", function() return ex.buffs       end, function(v) ex.buffs       = v; refresh() end)
+                addToggle(modeNode, "Rufbar",          function() return ex.repBar      end, function(v) ex.repBar      = v; refresh() end)
+                addToggle(modeNode, "Schadensanzeige", function() return ex.damageMeter end, function(v) ex.damageMeter = v; refresh() end)
             end
         end
     end
