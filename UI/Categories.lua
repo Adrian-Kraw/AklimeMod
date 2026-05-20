@@ -1121,6 +1121,13 @@ AklimeMod_BuildInterfaceContent = BuildInterfaceContent
 -- ============================================================
 local function addQoLNodes(dp)
 
+    -- ============================================================
+    -- Chat und Social
+    -- ============================================================
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Chat und Social", centered = true })
+    end
+
     local chatNode = addModule(dp, "Chat Interaktion",
         function()
             return AklimeMod_ChatInteraction.IsCopyPasteEnabled()
@@ -1131,19 +1138,16 @@ local function addQoLNodes(dp)
             AklimeMod_ChatInteraction.SetClickLinksEnabled(v)
         end
     )
-    -- Toggle: Chat kopieren
     chatNode:Insert({
         Template = "AklimeMod_ToggleTemplate",
         name     = "Chat kopieren aktivieren  (\"C\"-Button, verschiebbar)",
         getVal   = function() return AklimeMod_ChatInteraction.IsCopyPasteEnabled() end,
         setVal   = function(v)
             AklimeMod_ChatInteraction.SetCopyPasteEnabled(v)
-            -- Neu rendern damit "Fixieren"-Toggle grau/aktiv wird
             chatNode:SetCollapsed(true)
             chatNode:SetCollapsed(false)
         end,
     })
-    -- Toggle: Fixieren (ausgegraut wenn copyPaste aus)
     chatNode:Insert({
         Template     = "AklimeMod_ToggleTemplate",
         name         = "C-Button Position fixieren (kein Drag)",
@@ -1151,7 +1155,6 @@ local function addQoLNodes(dp)
         setVal       = function(v) AklimeMod_ChatInteraction.SetBtnLocked(v) end,
         isDisabled   = function() return not AklimeMod_ChatInteraction.IsCopyPasteEnabled() end,
     })
-    -- Toggle: Links klickbar
     chatNode:Insert({
         Template = "AklimeMod_ToggleTemplate",
         name     = "Links klickbar machen",
@@ -1159,6 +1162,174 @@ local function addQoLNodes(dp)
         setVal   = function(v) AklimeMod_ChatInteraction.SetClickLinksEnabled(v) end,
     })
     addInfo(chatNode, "C-Button: frei verschiebbar per Drag.\nLinks im Chat öffnen ein Kopierfenster.")
+
+    if AklimeMod_ChatFade then
+        local chatFadeNode = addModule(dp, "Chat verblassen",
+            function() return AklimeMod_ChatFade.IsEnabled() end,
+            function(v) AklimeMod_ChatFade.SetEnabled(v) end
+        )
+        addInfo(chatFadeNode, "Sichtbar (Sekunden):")
+        for _, opt in ipairs({
+            { label = "15 Sekunden",  val = 15  },
+            { label = "30 Sekunden",  val = 30  },
+            { label = "60 Sekunden",  val = 60  },
+            { label = "120 Sekunden", val = 120 },
+        }) do
+            local v = opt.val
+            addToggle(chatFadeNode, opt.label,
+                function() return AklimeMod_ChatFade.GetTimeVisible() == v end,
+                function(on) if on then AklimeMod_ChatFade.SetTimeVisible(v) end end
+            )
+        end
+        addInfo(chatFadeNode, "Verblassdauer:")
+        for _, opt in ipairs({
+            { label = "1 Sekunde",  val = 1 },
+            { label = "3 Sekunden", val = 3 },
+            { label = "5 Sekunden", val = 5 },
+        }) do
+            local v = opt.val
+            addToggle(chatFadeNode, opt.label,
+                function() return AklimeMod_ChatFade.GetFadeDuration() == v end,
+                function(on) if on then AklimeMod_ChatFade.SetFadeDuration(v) end end
+            )
+        end
+    end
+
+    if AklimeMod_ChatHistory then
+        local chatHistNode = addModule(dp, "Chatverlauf speichern",
+            function() return AklimeMod_ChatHistory:IsEnabled() end,
+            function(v) AklimeMod_ChatHistory:SetEnabled(v) end
+        )
+        addSlider(chatHistNode, "Max. Nachrichten pro Fenster", 50, 500, 50,
+            function() return AklimeMod_ChatHistory:GetMaxMessages() end,
+            function(v) AklimeMod_ChatHistory:SetMaxMessages(v) end,
+            tostring
+        )
+        addInfo(chatHistNode,
+            "Speichert den Chatverlauf sitzungsübergreifend.\n" ..
+            "Beim Login werden die letzten Nachrichten wiederhergestellt.\n\n" ..
+            "Gespeichert in SavedVariables unter:\n" ..
+            "AklimeModDB.chatHistory.messages"
+        )
+        addAction(chatHistNode, "Alle Fenster leeren", function()
+            AklimeMod_ChatHistory:ClearAll()
+        end)
+        addAction(chatHistNode, "Aktives Fenster leeren", function()
+            AklimeMod_ChatHistory:ClearActive()
+        end)
+    end
+
+    if AklimeMod_ExtendedIgnore then
+        local ignoreNode = addModule(dp, "Erweiterte Ignore-Liste",
+            function() return AklimeMod_ExtendedIgnore:IsEnabled() end,
+            function(v) AklimeMod_ExtendedIgnore:SetEnabled(v) end
+        )
+        addInfo(ignoreNode,
+            "Ignoriert Spieler über WoWs 50er-Limit hinaus.\n" ..
+            "Blendet ihre Chat-Nachrichten vollständig aus.\n\n" ..
+            "Hinzufügen: Rechtsklick auf Spieler im Spiel.\n" ..
+            "Verwaltung: /akm ignore"
+        )
+        addAction(ignoreNode, "Liste öffnen (/akm ignore)", function()
+            AklimeMod_ExtendedIgnore:ToggleWindow()
+        end)
+        addAction(ignoreNode, "Alle entfernen", function()
+            AklimeMod_ExtendedIgnore:ClearAll()
+            print("|cFFFFD100AklimeMod:|r Erweiterte Ignore-Liste geleert.")
+        end)
+    end
+
+    local leaveServiceNode = addModule(dp, "Dienste-Channel verlassen",
+        function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
+        function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
+    )
+    addInfo(leaveServiceNode, "Verlässt automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer ändert sich — wird immer per Name gesucht.")
+
+    if AklimeMod_BlockRequests then
+        local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
+            function() return AklimeMod_BlockRequests:IsDuelBlocked() end,
+            function(v) AklimeMod_BlockRequests:SetBlockDuels(v) end
+        )
+        addInfo(blockDuelNode, "Lehnt eingehende Duellanfragen automatisch ab.")
+
+        local blockPetNode = addModule(dp, "Haustierkampf-Duelle blockieren",
+            function() return AklimeMod_BlockRequests:IsPetBattleBlocked() end,
+            function(v) AklimeMod_BlockRequests:SetBlockPetBattles(v) end
+        )
+        addInfo(blockPetNode, "Lehnt eingehende Haustierkampf-Duellanfragen automatisch ab.")
+    end
+
+    if AklimeMod_GroupInvites then
+        local blockInviteNode = addModule(dp, "Gruppeneinladungen blockieren",
+            function() return AklimeMod_GroupInvites:IsBlockEnabled() end,
+            function(v) AklimeMod_GroupInvites:SetBlock(v) end
+        )
+        addToggle(blockInviteNode, "Ausnahme: Gildenmitglieder durchlassen",
+            function() return AklimeMod_GroupInvites:IsBlockExceptGuild() end,
+            function(v) AklimeMod_GroupInvites:SetBlockExceptGuild(v) end
+        )
+        addToggle(blockInviteNode, "Ausnahme: BNet-Freunde durchlassen",
+            function() return AklimeMod_GroupInvites:IsBlockExceptFriend() end,
+            function(v) AklimeMod_GroupInvites:SetBlockExceptFriend(v) end
+        )
+        addInfo(blockInviteNode, "Lehnt alle Gruppeneinladungen automatisch ab.\nAusnahmen erlauben Einladungen von Gilde oder Freunden\ntrotz aktivem Block.")
+
+        local autoAcceptNode = addModule(dp, "Gruppeneinladungen automatisch annehmen",
+            function() return AklimeMod_GroupInvites:IsAutoAcceptEnabled() end,
+            function(v) AklimeMod_GroupInvites:SetAutoAccept(v) end
+        )
+        addToggle(autoAcceptNode, "Von Gildenmitgliedern",
+            function() return AklimeMod_GroupInvites:IsGuildOnly() end,
+            function(v) AklimeMod_GroupInvites:SetGuildOnly(v) end
+        )
+        addToggle(autoAcceptNode, "Von Freunden (BNet + Freundesliste)",
+            function() return AklimeMod_GroupInvites:IsFriendOnly() end,
+            function(v) AklimeMod_GroupInvites:SetFriendOnly(v) end
+        )
+        addInfo(autoAcceptNode,
+            "Nimmt Gruppeneinladungen automatisch an.\n" ..
+            "Kein Filter aktiv: jede Einladung wird angenommen.\n" ..
+            "Mit Filtern: Gilde und Freunde können gleichzeitig aktiv sein."
+        )
+    end
+
+    if AklimeMod_Summons then
+        local summonsNode = addModule(dp, "Beschwörungen automatisch annehmen",
+            function() return AklimeMod_Summons:IsEnabled() end,
+            function(v) AklimeMod_Summons:SetEnabled(v) end
+        )
+        addInfo(summonsNode,
+            "Nimmt eingehende Beschwörungsanfragen automatisch an.\n" ..
+            "Eine Meldung im Chat zeigt wer beschworen hat und wohin."
+        )
+    end
+
+    if AklimeMod_FriendsListDecor then
+        local friendsNode = addModule(dp, "Verbesserte Freundesliste",
+            function() return AklimeMod_FriendsListDecor:IsEnabled() end,
+            function(v) AklimeMod_FriendsListDecor:SetEnabled(v) end
+        )
+        addToggle(friendsNode, "Zone und Realm anzeigen",
+            function() return AklimeMod_FriendsListDecor:Get("showLocation") end,
+            function(v) AklimeMod_FriendsListDecor:Set("showLocation", v) end
+        )
+        addToggle(friendsNode, "Eigenen Realm ausblenden",
+            function() return AklimeMod_FriendsListDecor:Get("hideOwnRealm") end,
+            function(v) AklimeMod_FriendsListDecor:Set("hideOwnRealm", v) end
+        )
+        addInfo(friendsNode,
+            "Färbt Freundesnamen in Klassenfarbe.\n" ..
+            "Zeigt Level, Zone und Status (AFK/DND/Offline).\n" ..
+            "BNet-Freunde: Spiel-Icon und Fraktionsflagge."
+        )
+    end
+
+    -- ============================================================
+    -- Allgemein
+    -- ============================================================
+    if currentSearchFilter == "" then
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Allgemein", centered = true })
+    end
 
     local vaultNode = addModule(dp, "Wöchentliche Schatzkammer",
         function() return true end,
@@ -1245,15 +1416,7 @@ local function addQoLNodes(dp)
         function(v) AklimeMod_AutoSellJunk.SetEnabled(v) end
     )
     addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Händler öffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
-    local leaveServiceNode = addModule(dp, "Dienste-Channel verlassen",
-        function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
-        function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
-    )
-    addInfo(leaveServiceNode, "Verlässt automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer ändert sich — wird immer per Name gesucht.")
 
-    -- ============================================================
-    -- NEU: Jagd % Anzeige
-    -- ============================================================
     local preyPctNode = addModule(dp, "Jagd % Anzeige (statt Kristall)",
         function() return AklimeMod_PreyPercent and AklimeMod_PreyPercent.IsEnabled() end,
         function(v)
@@ -1265,19 +1428,6 @@ local function addQoLNodes(dp)
         "stattdessen den Fortschritt als % Text an.\n\n" ..
         "Die Farbe wechselt automatisch:\n" ..
         "Rot < 25%  \183  Orange < 50%  \183  Gold < 75%  \183  Gruen >= 75%"
-    )
-
-    local manaNode = addModule(dp, "Mana Warnung",
-        function() return AklimeMod_ManaWarning.IsEnabled() end,
-        function(v) AklimeMod_ManaWarning.SetEnabled(v) end
-    )
-    addInfo(manaNode,
-        "Sendet eine Nachricht im Gruppen- / Instanz-Chat wenn Mana niedrig ist.\n" ..
-        "Nur aktiv wenn du in einer Gruppe oder Instanz bist.\n\n" ..
-        "Im Kampf: Warnung bei Low Mana (~20%) und Out of Mana.\n" ..
-        "Außerhalb Kampf: Nur Out of Mana bei fehlgeschlagenem Spell.\n\n" ..
-        "Hinweis: Blizzard sperrt Mana-Werte (Secret Values) in 12.0.\n" ..
-        "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht möglich."
     )
 
     local clock24hNode = addModule(dp, "24-Stunden-Uhr",
@@ -1292,12 +1442,106 @@ local function addQoLNodes(dp)
     )
     addInfo(mapCoordsNode, "Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.\nFormat: Maus: X / Y  -  Spieler: X / Y")
 
+    if AklimeMod_ChatLearnFilter then
+        local learnNode = addModule(dp, "Lernen-/Vergessen-Meldungen ausblenden",
+            function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
+            function(v) AklimeMod_ChatLearnFilter:SetEnabled(v) end
+        )
+        addInfo(learnNode,
+            "Versteckt Systemmeldungen wie:\n" ..
+            "\"Du hast den Zauber X gelernt.\"\n" ..
+            "\"Du hast X verlernt.\""
+        )
+    end
+
+    if AklimeMod_ChatIcons then
+        local chatIconsNode = addModule(dp, "Item- und Währungssymbole im Chat",
+            function() return AklimeMod_ChatIcons:IsEnabled() end,
+            function(v) AklimeMod_ChatIcons:SetEnabled(v) end
+        )
+        addInfo(chatIconsNode,
+            "Zeigt vor jedem Item-Link das Item-Icon.\n" ..
+            "Bei Beute- und Währungsnachrichten auch das Währungs-Icon."
+        )
+    end
+
+    if AklimeMod_ChatIcons then
+        local itemLevelNode = addModule(dp, "Itemlevel in Chat-Links",
+            function() return AklimeMod_ChatIcons:IsItemLevelEnabled() end,
+            function(v) AklimeMod_ChatIcons:SetItemLevelEnabled(v) end
+        )
+        addToggle(itemLevelNode, "Ausrüstungsplatz anzeigen",
+            function() return AklimeMod_ChatIcons:IsShowSlotEnabled() end,
+            function(v) AklimeMod_ChatIcons:SetShowSlotEnabled(v) end
+        )
+        addInfo(itemLevelNode,
+            "Hängt das Itemlevel an jeden ausrüstbaren Link im Chat an.\n" ..
+            "Beispiel: [Schwert des Helden (680)] oder [Schwert des Helden (Einhand 680)]."
+        )
+    end
+
+    if AklimeMod_Mailbox then
+        local mailboxNode = addModule(dp, "Adressbuch für Post",
+            function() return AklimeMod_Mailbox:IsEnabled() end,
+            function(v) AklimeMod_Mailbox:SetEnabled(v) end
+        )
+        addToggle(mailboxNode, "Letzten Empfänger merken",
+            function() return AklimeMod_Mailbox:IsRememberLastRecipient() end,
+            function(v) AklimeMod_Mailbox:SetRememberLastRecipient(v) end
+        )
+        addInfo(mailboxNode,
+            "Zeigt ein Adressbuch neben dem Schreibfenster.\n" ..
+            "Klick auf einen Eintrag setzt den Empfänger.\n" ..
+            "Rechtsklick auf einen Eintrag: Entfernen.\n\n" ..
+            "Empfänger werden automatisch gespeichert\n" ..
+            "wenn du eine Mail sendest.\n\n" ..
+            "Letzter Empfänger: wird beim nächsten Öffnen\n" ..
+            "des Postfachs automatisch eingetragen."
+        )
+        addAction(mailboxNode, "Kontakte leeren", function()
+            AklimeMod_Mailbox:ClearContacts()
+        end)
+    end
+
+    if AklimeMod_Merchant then
+        local merchantNode = addModule(dp, "Händlerfenster - 20 Gegenstände pro Seite",
+            function() return AklimeMod_Merchant:IsEnabled() end,
+            function(v)
+                if v then
+                    AklimeMod_Merchant:Enable()
+                    AklimeModDB.merchant.enabled = true
+                else
+                    AklimeMod_Merchant:Disable()
+                    AklimeModDB.merchant.enabled = false
+                end
+            end
+        )
+        addInfo(merchantNode,
+            "Zeigt 20 statt 10 Gegenstände pro Händler-Seite.\n" ..
+            "Der Händler-Rahmen wird auf zwei Spalten verbreitert.\n" ..
+            "Kann jederzeit ohne Neustart deaktiviert werden."
+        )
+    end
+
     -- ============================================================
     -- Gameplay
     -- ============================================================
     if currentSearchFilter == "" then
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gameplay", centered = true })
     end
+
+    local manaNode = addModule(dp, "Mana Warnung",
+        function() return AklimeMod_ManaWarning.IsEnabled() end,
+        function(v) AklimeMod_ManaWarning.SetEnabled(v) end
+    )
+    addInfo(manaNode,
+        "Sendet eine Nachricht im Gruppen- / Instanz-Chat wenn Mana niedrig ist.\n" ..
+        "Nur aktiv wenn du in einer Gruppe oder Instanz bist.\n\n" ..
+        "Im Kampf: Warnung bei Low Mana (~20%) und Out of Mana.\n" ..
+        "Außerhalb Kampf: Nur Out of Mana bei fehlgeschlagenem Spell.\n\n" ..
+        "Hinweis: Blizzard sperrt Mana-Werte (Secret Values) in 12.0.\n" ..
+        "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht möglich."
+    )
 
     if AklimeMod_HeroismTracker then
         local htNode = addModule(dp, "HT-Anzeige (Heldentum / Trommeln)",
@@ -1446,263 +1690,6 @@ local function addQoLNodes(dp)
             "Quest-Anzahl: goldene Zahl im Tracker-Header.\n" ..
             "Nur Button: Header-Text/Hintergrund verschwinden wenn zugeklappt.\n" ..
             "Zustand merken: der Tracker bleibt zwischen Sessions ein- oder ausgeklappt."
-        )
-    end
-
-    -- ============================================================
-    -- Kontakte
-    -- ============================================================
-    if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Kontakte", centered = true })
-    end
-
-    if AklimeMod_ChatHistory then
-        local chatHistNode = addModule(dp, "Chatverlauf speichern",
-            function() return AklimeMod_ChatHistory:IsEnabled() end,
-            function(v) AklimeMod_ChatHistory:SetEnabled(v) end
-        )
-        addSlider(chatHistNode, "Max. Nachrichten pro Fenster", 50, 500, 50,
-            function() return AklimeMod_ChatHistory:GetMaxMessages() end,
-            function(v) AklimeMod_ChatHistory:SetMaxMessages(v) end,
-            tostring
-        )
-        addInfo(chatHistNode,
-            "Speichert den Chatverlauf sitzungsübergreifend.\n" ..
-            "Beim Login werden die letzten Nachrichten wiederhergestellt.\n\n" ..
-            "Gespeichert in SavedVariables unter:\n" ..
-            "AklimeModDB.chatHistory.messages"
-        )
-        addAction(chatHistNode, "Alle Fenster leeren", function()
-            AklimeMod_ChatHistory:ClearAll()
-        end)
-        addAction(chatHistNode, "Aktives Fenster leeren", function()
-            AklimeMod_ChatHistory:ClearActive()
-        end)
-    end
-
-    if AklimeMod_Summons then
-        local summonsNode = addModule(dp, "Beschwörungen automatisch annehmen",
-            function() return AklimeMod_Summons:IsEnabled() end,
-            function(v) AklimeMod_Summons:SetEnabled(v) end
-        )
-        addInfo(summonsNode,
-            "Nimmt eingehende Beschwörungsanfragen automatisch an.\n" ..
-            "Eine Meldung im Chat zeigt wer beschworen hat und wohin."
-        )
-    end
-
-    if AklimeMod_ExtendedIgnore then
-        local ignoreNode = addModule(dp, "Erweiterte Ignore-Liste",
-            function() return AklimeMod_ExtendedIgnore:IsEnabled() end,
-            function(v) AklimeMod_ExtendedIgnore:SetEnabled(v) end
-        )
-        addInfo(ignoreNode,
-            "Ignoriert Spieler über WoWs 50er-Limit hinaus.\n" ..
-            "Blendet ihre Chat-Nachrichten vollständig aus.\n\n" ..
-            "Hinzufügen: Rechtsklick auf Spieler im Spiel.\n" ..
-            "Verwaltung: /akm ignore"
-        )
-        addAction(ignoreNode, "Liste öffnen (/akm ignore)", function()
-            AklimeMod_ExtendedIgnore:ToggleWindow()
-        end)
-        addAction(ignoreNode, "Alle entfernen", function()
-            AklimeMod_ExtendedIgnore:ClearAll()
-            print("|cFFFFD100AklimeMod:|r Erweiterte Ignore-Liste geleert.")
-        end)
-    end
-
-    if AklimeMod_BlockRequests then
-        local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
-            function() return AklimeMod_BlockRequests:IsDuelBlocked() end,
-            function(v) AklimeMod_BlockRequests:SetBlockDuels(v) end
-        )
-        addInfo(blockDuelNode, "Lehnt eingehende Duellanfragen automatisch ab.")
-
-        local blockPetNode = addModule(dp, "Haustierkampf-Duelle blockieren",
-            function() return AklimeMod_BlockRequests:IsPetBattleBlocked() end,
-            function(v) AklimeMod_BlockRequests:SetBlockPetBattles(v) end
-        )
-        addInfo(blockPetNode, "Lehnt eingehende Haustierkampf-Duellanfragen automatisch ab.")
-    end
-
-    if AklimeMod_GroupInvites then
-        local blockInviteNode = addModule(dp, "Gruppeneinladungen blockieren",
-            function() return AklimeMod_GroupInvites:IsBlockEnabled() end,
-            function(v) AklimeMod_GroupInvites:SetBlock(v) end
-        )
-        addToggle(blockInviteNode, "Ausnahme: Gildenmitglieder durchlassen",
-            function() return AklimeMod_GroupInvites:IsBlockExceptGuild() end,
-            function(v) AklimeMod_GroupInvites:SetBlockExceptGuild(v) end
-        )
-        addToggle(blockInviteNode, "Ausnahme: BNet-Freunde durchlassen",
-            function() return AklimeMod_GroupInvites:IsBlockExceptFriend() end,
-            function(v) AklimeMod_GroupInvites:SetBlockExceptFriend(v) end
-        )
-        addInfo(blockInviteNode, "Lehnt alle Gruppeneinladungen automatisch ab.\nAusnahmen erlauben Einladungen von Gilde oder Freunden\ntrotz aktivem Block.")
-
-        local autoAcceptNode = addModule(dp, "Gruppeneinladungen automatisch annehmen",
-            function() return AklimeMod_GroupInvites:IsAutoAcceptEnabled() end,
-            function(v) AklimeMod_GroupInvites:SetAutoAccept(v) end
-        )
-        addToggle(autoAcceptNode, "Von Gildenmitgliedern",
-            function() return AklimeMod_GroupInvites:IsGuildOnly() end,
-            function(v) AklimeMod_GroupInvites:SetGuildOnly(v) end
-        )
-        addToggle(autoAcceptNode, "Von Freunden (BNet + Freundesliste)",
-            function() return AklimeMod_GroupInvites:IsFriendOnly() end,
-            function(v) AklimeMod_GroupInvites:SetFriendOnly(v) end
-        )
-        addInfo(autoAcceptNode,
-            "Nimmt Gruppeneinladungen automatisch an.\n" ..
-            "Kein Filter aktiv: jede Einladung wird angenommen.\n" ..
-            "Mit Filtern: Gilde und Freunde können gleichzeitig aktiv sein."
-        )
-    end
-
-    if AklimeMod_ChatLearnFilter then
-        local learnNode = addModule(dp, "Lernen-/Vergessen-Meldungen ausblenden",
-            function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
-            function(v) AklimeMod_ChatLearnFilter:SetEnabled(v) end
-        )
-        addInfo(learnNode,
-            "Versteckt Systemmeldungen wie:\n" ..
-            "\"Du hast den Zauber X gelernt.\"\n" ..
-            "\"Du hast X verlernt.\""
-        )
-    end
-
-    if AklimeMod_ChatIcons then
-        local chatIconsNode = addModule(dp, "Item- und Währungssymbole im Chat",
-            function() return AklimeMod_ChatIcons:IsEnabled() end,
-            function(v) AklimeMod_ChatIcons:SetEnabled(v) end
-        )
-        addInfo(chatIconsNode,
-            "Zeigt vor jedem Item-Link das Item-Icon.\n" ..
-            "Bei Beute- und Währungsnachrichten auch das Währungs-Icon."
-        )
-    end
-
-    if AklimeMod_ChatIcons then
-        local itemLevelNode = addModule(dp, "Itemlevel in Chat-Links",
-            function() return AklimeMod_ChatIcons:IsItemLevelEnabled() end,
-            function(v) AklimeMod_ChatIcons:SetItemLevelEnabled(v) end
-        )
-        addToggle(itemLevelNode, "Ausrüstungsplatz anzeigen",
-            function() return AklimeMod_ChatIcons:IsShowSlotEnabled() end,
-            function(v) AklimeMod_ChatIcons:SetShowSlotEnabled(v) end
-        )
-        addInfo(itemLevelNode,
-            "Hängt das Itemlevel an jeden ausrüstbaren Link im Chat an.\n" ..
-            "Beispiel: [Schwert des Helden (680)] oder [Schwert des Helden (Einhand 680)]."
-        )
-    end
-
-    if AklimeMod_ChatFade then
-        local chatFadeNode = addModule(dp, "Chat verblassen",
-            function() return AklimeMod_ChatFade.IsEnabled() end,
-            function(v) AklimeMod_ChatFade.SetEnabled(v) end
-        )
-        addInfo(chatFadeNode, "Sichtbar (Sekunden):")
-        for _, opt in ipairs({
-            { label = "15 Sekunden",  val = 15  },
-            { label = "30 Sekunden",  val = 30  },
-            { label = "60 Sekunden",  val = 60  },
-            { label = "120 Sekunden", val = 120 },
-        }) do
-            local v = opt.val
-            addToggle(chatFadeNode, opt.label,
-                function() return AklimeMod_ChatFade.GetTimeVisible() == v end,
-                function(on) if on then AklimeMod_ChatFade.SetTimeVisible(v) end end
-            )
-        end
-        addInfo(chatFadeNode, "Verblassdauer:")
-        for _, opt in ipairs({
-            { label = "1 Sekunde",  val = 1 },
-            { label = "3 Sekunden", val = 3 },
-            { label = "5 Sekunden", val = 5 },
-        }) do
-            local v = opt.val
-            addToggle(chatFadeNode, opt.label,
-                function() return AklimeMod_ChatFade.GetFadeDuration() == v end,
-                function(on) if on then AklimeMod_ChatFade.SetFadeDuration(v) end end
-            )
-        end
-    end
-
-    if AklimeMod_FriendsListDecor then
-        local friendsNode = addModule(dp, "Verbesserte Freundesliste",
-            function() return AklimeMod_FriendsListDecor:IsEnabled() end,
-            function(v) AklimeMod_FriendsListDecor:SetEnabled(v) end
-        )
-        addToggle(friendsNode, "Zone und Realm anzeigen",
-            function() return AklimeMod_FriendsListDecor:Get("showLocation") end,
-            function(v) AklimeMod_FriendsListDecor:Set("showLocation", v) end
-        )
-        addToggle(friendsNode, "Eigenen Realm ausblenden",
-            function() return AklimeMod_FriendsListDecor:Get("hideOwnRealm") end,
-            function(v) AklimeMod_FriendsListDecor:Set("hideOwnRealm", v) end
-        )
-        addInfo(friendsNode,
-            "Färbt Freundesnamen in Klassenfarbe.\n" ..
-            "Zeigt Level, Zone und Status (AFK/DND/Offline).\n" ..
-            "BNet-Freunde: Spiel-Icon und Fraktionsflagge."
-        )
-    end
-
-    -- ============================================================
-    -- Post
-    -- ============================================================
-    if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Post", centered = true })
-    end
-
-    if AklimeMod_Mailbox then
-        local mailboxNode = addModule(dp, "Adressbuch",
-            function() return AklimeMod_Mailbox:IsEnabled() end,
-            function(v) AklimeMod_Mailbox:SetEnabled(v) end
-        )
-        addToggle(mailboxNode, "Letzten Empfänger merken",
-            function() return AklimeMod_Mailbox:IsRememberLastRecipient() end,
-            function(v) AklimeMod_Mailbox:SetRememberLastRecipient(v) end
-        )
-        addInfo(mailboxNode,
-            "Zeigt ein Adressbuch neben dem Schreibfenster.\n" ..
-            "Klick auf einen Eintrag setzt den Empfänger.\n" ..
-            "Rechtsklick auf einen Eintrag: Entfernen.\n\n" ..
-            "Empfänger werden automatisch gespeichert\n" ..
-            "wenn du eine Mail sendest.\n\n" ..
-            "Letzter Empfänger: wird beim nächsten Öffnen\n" ..
-            "des Postfachs automatisch eingetragen."
-        )
-        addAction(mailboxNode, "Kontakte leeren", function()
-            AklimeMod_Mailbox:ClearContacts()
-        end)
-    end
-
-    -- ============================================================
-    -- Haendler
-    -- ============================================================
-    if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Händler", centered = true })
-    end
-
-    if AklimeMod_Merchant then
-        local merchantNode = addModule(dp, "20 Gegenstände pro Seite",
-            function() return AklimeMod_Merchant:IsEnabled() end,
-            function(v)
-                if v then
-                    AklimeMod_Merchant:Enable()
-                    AklimeModDB.merchant.enabled = true
-                else
-                    AklimeMod_Merchant:Disable()
-                    AklimeModDB.merchant.enabled = false
-                end
-            end
-        )
-        addInfo(merchantNode,
-            "Zeigt 20 statt 10 Gegenstände pro Händler-Seite.\n" ..
-            "Der Händler-Rahmen wird auf zwei Spalten verbreitert.\n" ..
-            "Kann jederzeit ohne Neustart deaktiviert werden."
         )
     end
 
