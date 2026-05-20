@@ -80,7 +80,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 
 frame:SetScript("OnEvent", function(_, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == "AklimeMod" then
+    if event == "ADDON_LOADED" and arg1 == "AklimeModTools" then
         CreateCoordFrame()
 
         -- Anzeigen wenn Weltkarte geöffnet wird

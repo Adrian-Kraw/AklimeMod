@@ -200,7 +200,7 @@ eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function(_, event, arg1)
 
-    if event == "ADDON_LOADED" and arg1 == "AklimeMod" then
+    if event == "ADDON_LOADED" and arg1 == "AklimeModTools" then
         AklimeMod_InitDB()
         if AklimeMod_Colorizer then AklimeMod_Colorizer:Init() end
         UpdateMinimapPos()
