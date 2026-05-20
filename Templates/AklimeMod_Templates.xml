@@ -24,14 +24,14 @@
     <Layers>
       <Layer level="OVERLAY">
         <FontString parentKey="name" inherits="GameFontNormalLeft">
-          <Anchors><Anchor point="LEFT" x="40" y="0"/></Anchors>
+          <Anchors><Anchor point="LEFT" x="40" y="2"/></Anchors>
         </FontString>
       </Layer>
     </Layers>
     <Frames>
       <CheckButton parentKey="enableButton">
         <Size x="22" y="22"/>
-        <Anchors><Anchor point="LEFT" x="10"/></Anchors>
+        <Anchors><Anchor point="LEFT" x="10" y="2"/></Anchors>
         <NormalTexture    atlas="checkbox-minimal" useAtlasSize="true"/>
         <PushedTexture    atlas="checkbox-minimal" useAtlasSize="true"/>
         <HighlightTexture atlas="checkbox-minimal" useAtlasSize="true" alphaMode="ADD"/>
@@ -45,14 +45,14 @@
     <Layers>
       <Layer level="OVERLAY">
         <FontString parentKey="name" inherits="GameFontNormalLeft">
-          <Anchors><Anchor point="LEFT" x="40" y="0"/></Anchors>
+          <Anchors><Anchor point="LEFT" x="40" y="2"/></Anchors>
         </FontString>
       </Layer>
     </Layers>
     <Frames>
       <CheckButton parentKey="enableButton">
         <Size x="22" y="22"/>
-        <Anchors><Anchor point="LEFT" x="10"/></Anchors>
+        <Anchors><Anchor point="LEFT" x="10" y="2"/></Anchors>
         <NormalTexture    atlas="checkbox-minimal" useAtlasSize="true"/>
         <PushedTexture    atlas="checkbox-minimal" useAtlasSize="true"/>
         <HighlightTexture atlas="checkbox-minimal" useAtlasSize="true" alphaMode="ADD"/>
@@ -130,14 +130,14 @@
       </Layer>
       <Layer level="OVERLAY">
         <FontString parentKey="name" inherits="GameFontNormalLeft">
-          <Anchors><Anchor point="LEFT" x="15" y="0"/></Anchors>
+          <Anchors><Anchor point="LEFT" x="15" y="2"/></Anchors>
         </FontString>
       </Layer>
     </Layers>
     <Frames>
       <CheckButton parentKey="toggle">
         <Size x="28" y="28"/>
-        <Anchors><Anchor point="RIGHT" x="-10"/></Anchors>
+        <Anchors><Anchor point="RIGHT" x="-10" y="2"/></Anchors>
         <NormalTexture    atlas="checkbox-minimal" useAtlasSize="true"/>
         <PushedTexture    atlas="checkbox-minimal" useAtlasSize="true"/>
         <HighlightTexture atlas="checkbox-minimal" useAtlasSize="true" alphaMode="ADD"/>
@@ -221,15 +221,23 @@
 
   <!-- Trennstrich -->
   <Button name="AklimeMod_SeparatorTemplate" virtual="true">
-    <Size y="30"/>
+    <Size y="50"/>
     <Layers>
       <Layer level="ARTWORK">
-        <Texture parentKey="line" file="Interface\BUTTONS\WHITE8X8">
+        <Texture parentKey="lineTop" file="Interface\BUTTONS\WHITE8X8">
           <Color r="0.3" g="0.3" b="0.3" a="0.8"/>
           <Size y="1"/>
           <Anchors>
-            <Anchor point="LEFT"  x="0" y="0"/>
-            <Anchor point="RIGHT" x="0" y="0"/>
+            <Anchor point="TOPLEFT"  x="0" y="-12"/>
+            <Anchor point="TOPRIGHT" x="0" y="-12"/>
+          </Anchors>
+        </Texture>
+        <Texture parentKey="lineBottom" file="Interface\BUTTONS\WHITE8X8">
+          <Color r="0.3" g="0.3" b="0.3" a="0.8"/>
+          <Size y="1"/>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT"  x="0" y="12"/>
+            <Anchor point="BOTTOMRIGHT" x="0" y="12"/>
           </Anchors>
         </Texture>
       </Layer>

@@ -37,10 +37,19 @@ local function addToggle(node, name, getVal, setVal)
     })
 end
 
+local INFO_LINE_H = 14  -- GameFontHighlightSmall Zeilenhoehe (px)
+
 local function addInfo(node, text)
+    local height = 24
+    if type(text) == "string" and text ~= "" then
+        local lines = 1
+        for _ in text:gmatch("\n") do lines = lines + 1 end
+        height = math.max(24, lines * INFO_LINE_H + 8)
+    end
     node:Insert({
         Template = "AklimeMod_InfoTextTemplate",
         text     = text,
+        extent   = height,
     })
 end
 
@@ -249,7 +258,7 @@ local function mouseColorInitializer(button, node)
         button.colorPicker:SetScript("OnEnter", function(self)
             local r, g, b = getColor()
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Farbe waehlen", 1, 1, 1)
+            GameTooltip:AddLine("Farbe wählen", 1, 1, 1)
             GameTooltip:AddLine(ColorToHex(r, g, b), 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
@@ -383,7 +392,7 @@ local function GetOrCreateDashboard(parent)
     for _, e in ipairs(cmds) do
         local row = dashboardPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         row:SetPoint("TOPLEFT", dashboardPanel, "TOPLEFT", 20, y)
-        row:SetText("|cFF00CCFF" .. e.cmd .. "|r   —   " .. e.desc)
+        row:SetText("|cFF00CCFF" .. e.cmd .. "|r - " .. e.desc)
         y = y - 22
     end
     return dashboardPanel
@@ -518,16 +527,16 @@ local function addInterfaceNodes(dp)
     end
 
     if AklimeMod_GearCheck then
-        local gcNode = addModule(dp, "Ausruestungs-Pruefung",
+        local gcNode = addModule(dp, "Ausrüstungs-Prüfung",
             function() return AklimeMod_GearCheck.IsEnabled() end,
             function(v) AklimeMod_GearCheck.SetEnabled(v) end
         )
         addInfo(gcNode,
             "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
-            "Rot:  leere Fassung(en).\n" ..
+            "Rot: leere Fassung(en).\n" ..
             "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
-            "Im Betrachten-Fenster zusaetzlich Itemlevel am Slot.\n" ..
-            "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
+            "Im Betrachten-Fenster zusätzlich Itemlevel am Slot.\n" ..
+            "Gilt für Charakter-Fenster und Betrachten-Fenster."
         )
     end
 
@@ -538,13 +547,13 @@ local function addInterfaceNodes(dp)
         )
         addInfo(ttNode,
             "Versteckt den HUD-Tooltip während des Kampfes.\n" ..
-            "Sobald der Kampf endet erscheint er beim naechsten\n" ..
+            "Sobald der Kampf endet erscheint er beim nächsten\n" ..
             "Drüberbewegen automatisch wieder."
         )
     end
 
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = true })
     end
     do
         local fade = AklimeModDB.interfaceFade
@@ -591,7 +600,7 @@ local function addInterfaceNodes(dp)
                     function(v) fade[k].idleDelay = v end,
                     function(v) return v .. " s" end
                 )
-                addSlider(modeNode, "Chat eingeblendet fuer", 5, 60, 1,
+                addSlider(modeNode, "Chat eingeblendet für", 5, 60, 1,
                     function() return fade[k].chatDelay end,
                     function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
@@ -602,7 +611,7 @@ local function addInterfaceNodes(dp)
                 addToggle(modeNode, "Chat",            function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
                 addToggle(modeNode, "Minimap",         function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
                 addToggle(modeNode, "Quest / Ziele",   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
-                addToggle(modeNode, "Mikromenue",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
+                addToggle(modeNode, "Mikromenü",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
                 addToggle(modeNode, "Taschen",         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
                 addToggle(modeNode, "Aktionsleisten",  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
                 addToggle(modeNode, "HP-Anzeigen",     function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
@@ -736,7 +745,7 @@ local function BuildInterfaceContent(filter)
         function() return AklimeMod_DamageMeterCollapseDown.IsEnabled() end,
         function(v) AklimeMod_DamageMeterCollapseDown.SetEnabled(v) end
     )
-    addInfo(dmCollapseNode, "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.\nStandardmäßig klappt sie nach oben — mit diesem Toggle nach unten.")
+    addInfo(dmCollapseNode, "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.\nMit diesem Toggle klappt sie nach unten statt nach oben.")
 
     if AklimeMod_MinimapCollector then
         local mmCollectorNode = addModule(dp3, "Minimap Button Sammler",
@@ -749,7 +758,7 @@ local function BuildInterfaceContent(filter)
                 AklimeMod_MinimapCollector.SetEnabled(v)
             end
         )
-        addInfo(mmCollectorNode, "Versteckt alle Addon-Minimap-Buttons in einem eigenen Button.\nKlick: Buttons aufklappen. Drag: Position ändern — wird automatisch gespeichert.")
+        addInfo(mmCollectorNode, "Versteckt alle Addon-Minimap-Buttons in einem eigenen Button.\nKlick: aufklappen. Drag: Position verschieben, wird gespeichert.")
         addToggle(mmCollectorNode, "Eigenen AklimeMod-Button einschließen",
             function()
                 if not AklimeMod_MinimapCollector then return false end
@@ -830,12 +839,12 @@ local function BuildInterfaceContent(filter)
             function() return AklimeMod_MouseEffects.Get("trailOnlyCombat") end,
             function(v) AklimeMod_MouseEffects.Set("trailOnlyCombat", v) end
         )
-        addInfo(mouseNode, "Ringgroesse:")
+        addInfo(mouseNode, "Ringgröße:")
         for _, opt in ipairs({
             { label = "Klein", size = 56 },
             { label = "Mittel", size = 76 },
-            { label = "Gross", size = 96 },
-            { label = "Sehr gross", size = 120 },
+            { label = "Groß", size = 96 },
+            { label = "Sehr groß", size = 120 },
         }) do
             local size = opt.size
             addToggle(mouseNode, opt.label,
@@ -866,16 +875,16 @@ local function BuildInterfaceContent(filter)
         end
     end
     if AklimeMod_GearCheck then
-        local gcNode = addModule(dp3, "Ausruestungs-Pruefung",
+        local gcNode = addModule(dp3, "Ausrüstungs-Prüfung",
             function() return AklimeMod_GearCheck.IsEnabled() end,
             function(v) AklimeMod_GearCheck.SetEnabled(v) end
         )
         addInfo(gcNode,
             "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
-            "Rot:  leere Fassung(en).\n" ..
+            "Rot: leere Fassung(en).\n" ..
             "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
             "Im Betrachten-Fenster zusätzlich Itemlevel am Slot.\n" ..
-            "Gilt fuer Charakter-Fenster und Betrachten-Fenster."
+            "Gilt für Charakter-Fenster und Betrachten-Fenster."
         )
     end
 
@@ -891,7 +900,7 @@ local function BuildInterfaceContent(filter)
         )
     end
 
-    dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = false })
+    dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = true })
     do
         local fade = AklimeModDB.interfaceFade
         for i = 1, 3 do
@@ -937,7 +946,7 @@ local function BuildInterfaceContent(filter)
                     function(v) fade[k].idleDelay = v end,
                     function(v) return v .. " s" end
                 )
-                addSlider(modeNode, "Chat eingeblendet fuer", 5, 60, 1,
+                addSlider(modeNode, "Chat eingeblendet für", 5, 60, 1,
                     function() return fade[k].chatDelay end,
                     function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
@@ -948,7 +957,7 @@ local function BuildInterfaceContent(filter)
                 addToggle(modeNode, "Chat",            function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
                 addToggle(modeNode, "Minimap",         function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
                 addToggle(modeNode, "Quest / Ziele",   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
-                addToggle(modeNode, "Mikromenue",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
+                addToggle(modeNode, "Mikromenü",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
                 addToggle(modeNode, "Taschen",         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
                 addToggle(modeNode, "Aktionsleisten",  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
                 addToggle(modeNode, "HP-Anzeigen",     function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
@@ -1235,7 +1244,7 @@ local function addQoLNodes(dp)
         function() return AklimeMod_AutoSellJunk.IsEnabled() end,
         function(v) AklimeMod_AutoSellJunk.SetEnabled(v) end
     )
-    addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Haendler oeffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
+    addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Händler öffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
     local leaveServiceNode = addModule(dp, "Dienste-Channel verlassen",
         function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
         function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
@@ -1268,7 +1277,7 @@ local function addQoLNodes(dp)
         "Im Kampf: Warnung bei Low Mana (~20%) und Out of Mana.\n" ..
         "Außerhalb Kampf: Nur Out of Mana bei fehlgeschlagenem Spell.\n\n" ..
         "Hinweis: Blizzard sperrt Mana-Werte (Secret Values) in 12.0.\n" ..
-        "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht moeglich."
+        "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht möglich."
     )
 
     local clock24hNode = addModule(dp, "24-Stunden-Uhr",
@@ -1287,7 +1296,7 @@ local function addQoLNodes(dp)
     -- Gameplay
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gameplay", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gameplay", centered = true })
     end
 
     if AklimeMod_HeroismTracker then
@@ -1351,7 +1360,7 @@ local function addQoLNodes(dp)
     -- Quest
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quest", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quest", centered = true })
     end
 
     if AklimeMod_QuestAutomation then
@@ -1444,7 +1453,7 @@ local function addQoLNodes(dp)
     -- Kontakte
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Kontakte", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Kontakte", centered = true })
     end
 
     if AklimeMod_ChatHistory then
@@ -1458,7 +1467,7 @@ local function addQoLNodes(dp)
             tostring
         )
         addInfo(chatHistNode,
-            "Speichert den Chatverlauf sitzungsuebergreifend.\n" ..
+            "Speichert den Chatverlauf sitzungsübergreifend.\n" ..
             "Beim Login werden die letzten Nachrichten wiederhergestellt.\n\n" ..
             "Gespeichert in SavedVariables unter:\n" ..
             "AklimeModDB.chatHistory.messages"
@@ -1652,7 +1661,7 @@ local function addQoLNodes(dp)
     -- Post
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Post", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Post", centered = true })
     end
 
     if AklimeMod_Mailbox then
@@ -1682,7 +1691,7 @@ local function addQoLNodes(dp)
     -- Haendler
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Händler", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Händler", centered = true })
     end
 
     if AklimeMod_Merchant then
@@ -1709,7 +1718,7 @@ local function addQoLNodes(dp)
     -- Gesundheit
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gesundheit", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gesundheit", centered = true })
     end
 
     local drinkNode = addModule(dp, "Trinkerinnerung",
@@ -1747,7 +1756,7 @@ local function addQoLNodes(dp)
     -- Spielzeit
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Spielzeit", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Spielzeit", centered = true })
     end
 
     if AklimeMod_PlayedTime then
@@ -1821,7 +1830,7 @@ local function addPvPNodes(dp)
     )
 
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Sonstiges", centered = false })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Sonstiges", centered = true })
     end
 
     local chatBlockNode = addModule(dp, "Chat im PvP blockieren",
@@ -1873,7 +1882,7 @@ local function BuildCollectingContent()
     dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
         label    = "Charakter-Tracker",
-        centered = false,
+        centered = true,
     })
     dp:Insert({
         Template = "AklimeMod_InfoTextTemplate",
@@ -1884,7 +1893,7 @@ local function BuildCollectingContent()
     dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
         label    = "Schlachtzüge",
-        centered = false,
+        centered = true,
     })
 
     local EXP_NAMES_SHORT = {
@@ -1940,7 +1949,7 @@ local function BuildCollectingContent()
     dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
         label    = "Währungen",
-        centered = false,
+        centered = true,
     })
 
     local ALL_CURR_EXP = {
@@ -2027,13 +2036,13 @@ local function BuildGlobalSearch(filter)
     local dp = newDP()
     currentSearchFilter = filter:lower()
 
-    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quality of Life", centered = false })
+    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quality of Life", centered = true })
     addQoLNodes(dp)
 
-    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface", centered = false })
+    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface", centered = true })
     addInterfaceNodes(dp)
 
-    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "PvP", centered = false })
+    dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "PvP", centered = true })
     addPvPNodes(dp)
 
     currentSearchFilter = ""
@@ -2073,7 +2082,6 @@ local categories = {
     { order=3, name="Quality of Life", callback=BuildQoLContent                              },
     { order=4, name="Collecting",      callback=BuildCollectingContent                       },
     { order=5, name="PvP",             callback=function() AklimeMod_BuildPvPContent() end   },
-    { order=6, name="Profile",         callback=function() BuildEmpty("Profile")         end },
 }
 
 local function SetSelected(clickedButton)

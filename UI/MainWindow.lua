@@ -121,6 +121,23 @@ ScrollUtil.InitScrollBoxListWithScrollBar(
     AklimeMod_RightScrollView
 )
 
+local TEMPLATE_EXTENTS = {
+    AklimeMod_ToggleTemplate       = 32,
+    AklimeMod_SliderTemplate       = 52,
+    AklimeMod_ModuleHeaderTemplate = 32,
+    AklimeMod_SkinHeaderTemplate   = 32,
+    AklimeMod_InfoTextTemplate     = 24,
+    AklimeMod_ActionButtonTemplate = 70,
+    AklimeMod_SeparatorTemplate    = 50,
+    AklimeMod_SubColorTemplate     = 32,
+}
+
+AklimeMod_RightScrollView:SetElementExtentCalculator(function(index, node)
+    local data = node:GetData()
+    if data and data.extent then return data.extent end
+    return (data and data.Template and TEMPLATE_EXTENTS[data.Template]) or 32
+end)
+
 -- ============================================================
 -- Shared Initializer (wie FrameColor)
 -- ============================================================
