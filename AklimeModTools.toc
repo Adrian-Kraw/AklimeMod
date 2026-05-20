@@ -1,5 +1,6 @@
 ## Interface: 120007, 120005
 ## Title: AklimeModTools
+## X-Curse-Project-ID: 1548949
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
 ## Version: 0.9.0
