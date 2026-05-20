@@ -74,16 +74,10 @@ eventFrame:SetScript("OnEvent", function(_, _, unitName, _, _, _, _, _, unitID)
         local guildOnly  = db.guildOnly  == true
         local friendOnly = db.friendOnly == true
 
-        if guildOnly then
-            if IsGuildMember(unitName) then
-                AcceptGroup()
-                StaticPopup_Hide("PARTY_INVITE")
-            end
-            return
-        end
-
-        if friendOnly then
-            if IsFriend(unitID) then
+        if guildOnly or friendOnly then
+            local ok = (guildOnly and IsGuildMember(unitName))
+                    or (friendOnly and IsFriend(unitID))
+            if ok then
                 AcceptGroup()
                 StaticPopup_Hide("PARTY_INVITE")
             end

@@ -1544,26 +1544,18 @@ local function addQoLNodes(dp)
             function() return AklimeMod_GroupInvites:IsAutoAcceptEnabled() end,
             function(v) AklimeMod_GroupInvites:SetAutoAccept(v) end
         )
-        addToggle(autoAcceptNode, "Nur von Gildenmitgliedern",
+        addToggle(autoAcceptNode, "Von Gildenmitgliedern",
             function() return AklimeMod_GroupInvites:IsGuildOnly() end,
-            function(v)
-                AklimeMod_GroupInvites:SetGuildOnly(v)
-                if v then AklimeMod_GroupInvites:SetFriendOnly(false) end
-                autoAcceptNode:SetCollapsed(true); autoAcceptNode:SetCollapsed(false)
-            end
+            function(v) AklimeMod_GroupInvites:SetGuildOnly(v) end
         )
-        addToggle(autoAcceptNode, "Nur von Freunden (BNet + Freundesliste)",
+        addToggle(autoAcceptNode, "Von Freunden (BNet + Freundesliste)",
             function() return AklimeMod_GroupInvites:IsFriendOnly() end,
-            function(v)
-                AklimeMod_GroupInvites:SetFriendOnly(v)
-                if v then AklimeMod_GroupInvites:SetGuildOnly(false) end
-                autoAcceptNode:SetCollapsed(true); autoAcceptNode:SetCollapsed(false)
-            end
+            function(v) AklimeMod_GroupInvites:SetFriendOnly(v) end
         )
         addInfo(autoAcceptNode,
             "Nimmt Gruppeneinladungen automatisch an.\n" ..
-            "Kein Filter: jede Einladung wird angenommen.\n" ..
-            "Nur Gilde oder Nur Freunde: alle anderen werden ignoriert."
+            "Kein Filter aktiv: jede Einladung wird angenommen.\n" ..
+            "Mit Filtern: Gilde und Freunde können gleichzeitig aktiv sein."
         )
     end
 
