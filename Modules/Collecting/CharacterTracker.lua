@@ -730,6 +730,67 @@ function AklimeMod_CT_Refresh()
     MkCharHeader(contentFrame, y, colX, sel, siDB)
     y = y + ROW_H
 
+    -- ── Große Schatzkammer ────────────────────────────────────
+    local hasVaultData = false
+    for _, ch in ipairs(sel) do
+        local toon = siDB.Toons[ch]
+        if toon and toon.weeklyVault then hasVaultData = true; break end
+    end
+
+    if hasVaultData then
+        y = y + 4
+        local vHdr = MkHdr(contentFrame, y)
+        local vFs = vHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        vFs:SetPoint("LEFT", vHdr, "LEFT", 8, 0)
+        vFs:SetText(NORMAL_FONT_COLOR_CODE .. "Große Schatzkammer" .. FONT_COLOR_CODE_CLOSE)
+        y = y + ROW_H
+
+        local VAULT_ROWS = {
+            { key = "raid",    label = "Schlachtzüge" },
+            { key = "dungeon", label = "Dungeons" },
+            { key = "world",   label = "Weltaktivitäten" },
+        }
+        for ri, vr in ipairs(VAULT_ROWS) do
+            local row = MkRow(contentFrame, y, ri%2==0)
+            MkTxt(row, NORMAL_FONT_COLOR_CODE .. vr.label .. FONT_COLOR_CODE_CLOSE,
+                8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
+            for ci, ch in ipairs(sel) do
+                local toon = siDB.Toons[ch]
+                local vault = toon and toon.weeklyVault
+                local slots = vault and vault[vr.key]
+                local txt
+                if slots == nil then
+                    txt = GRAY_FONT_COLOR_CODE .. "-" .. FONT_COLOR_CODE_CLOSE
+                elseif slots >= 3 then
+                    txt = GREEN_FONT_COLOR_CODE .. "3/3" .. FONT_COLOR_CODE_CLOSE
+                elseif slots > 0 then
+                    txt = NORMAL_FONT_COLOR_CODE .. slots .. "/3" .. FONT_COLOR_CODE_CLOSE
+                else
+                    txt = GRAY_FONT_COLOR_CODE .. "0/3" .. FONT_COLOR_CODE_CLOSE
+                end
+                MkTxt(row, txt, colX + (ci-1)*COL_W, COL_W, "GameFontNormalSmall", "CENTER")
+            end
+            y = y + ROW_H
+        end
+
+        -- Vierte Zeile: offen = Belohnung verfügbar aber noch nicht abgeholt
+        local rewardRow = MkRow(contentFrame, y, false)
+        MkTxt(rewardRow, NORMAL_FONT_COLOR_CODE .. "Belohnung" .. FONT_COLOR_CODE_CLOSE,
+            8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
+        for ci, ch in ipairs(sel) do
+            local toon = siDB.Toons[ch]
+            local vault = toon and toon.weeklyVault
+            local txt
+            if vault and vault.hasRewards then
+                txt = GREEN_FONT_COLOR_CODE .. "offen" .. FONT_COLOR_CODE_CLOSE
+            else
+                txt = GRAY_FONT_COLOR_CODE .. "-" .. FONT_COLOR_CODE_CLOSE
+            end
+            MkTxt(rewardRow, txt, colX + (ci-1)*COL_W, COL_W, "GameFontNormalSmall", "CENTER")
+        end
+        y = y + ROW_H
+    end
+
     -- ── Raids ─────────────────────────────────────────────────
     local raidsByExp = BuildRaids(sel)
     local expIDs = {}

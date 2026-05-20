@@ -215,6 +215,40 @@ local function CollectInstances(db, toonKey)
 end
 
 -- ============================================================
+-- Weekly Vault (Große Schatzkammer)
+-- Enum.WeeklyRewardChestThresholdType: Raid=1, MythicPlus=2, World=4
+-- ============================================================
+local VAULT_TYPES = {
+    { key = "raid",    typeID = 1 },
+    { key = "dungeon", typeID = 2 },
+    { key = "world",   typeID = 4 },
+}
+
+local function CollectWeeklyVault(toon)
+    if not C_WeeklyRewards then return end
+    toon.weeklyVault = toon.weeklyVault or {}
+    local vault = toon.weeklyVault
+
+    for _, vt in ipairs(VAULT_TYPES) do
+        local ok, activities = pcall(C_WeeklyRewards.GetActivities, vt.typeID)
+        if ok and activities then
+            local slots = 0
+            for _, act in ipairs(activities) do
+                if act.progress and act.threshold and act.progress >= act.threshold then
+                    slots = slots + 1
+                end
+            end
+            vault[vt.key] = slots
+        else
+            vault[vt.key] = vault[vt.key] or 0
+        end
+    end
+
+    local ok2, hasRewards = pcall(C_WeeklyRewards.HasAvailableRewards)
+    vault.hasRewards = ok2 and hasRewards == true or false
+end
+
+-- ============================================================
 -- Haupt-Sammelfunktion (beim Login aufrufen)
 -- ============================================================
 local function CollectToonData()
@@ -258,6 +292,9 @@ local function CollectToonData()
 
     -- Währungen sammeln
     CollectCurrencies(t)
+
+    -- Weekly Vault sammeln
+    CollectWeeklyVault(t)
 
     -- Instanzen sammeln
     CollectInstances(db, toonKey)
