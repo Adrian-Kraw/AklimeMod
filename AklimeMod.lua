@@ -19,7 +19,7 @@ minimapBtn:RegisterForDrag("LeftButton")
 local btnIcon = minimapBtn:CreateTexture(nil, "ARTWORK")
 btnIcon:SetSize(30, 30)
 btnIcon:SetPoint("CENTER", minimapBtn, "CENTER", 0, 0)
-btnIcon:SetTexture("Interface\\AddOns\\AklimeMod\\Assets\\icon")
+btnIcon:SetTexture("Interface\\AddOns\\AklimeModTools\\Assets\\icon")
 
 local mask = minimapBtn:CreateMaskTexture()
 mask:SetAllPoints(btnIcon)

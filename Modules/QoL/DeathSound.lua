@@ -2,7 +2,7 @@
 -- Spielt einen Sound ab wenn der Charakter stirbt.
 -- Wird pro Tod nur einmal abgespielt.
 
-local SOUND_FILE = "Interface\\AddOns\\AklimeMod\\Assets\\SqueakyToySound.mp3"
+local SOUND_FILE = "Interface\\AddOns\\AklimeModTools\\Assets\\SqueakyToySound.mp3"
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.deathSound then return AklimeModDB.deathSound end

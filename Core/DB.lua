@@ -24,7 +24,7 @@ function AklimeMod_InitDB()
     def(db.rareFrame, "enabled", false)
 
     db.raidFrameCenter = db.raidFrameCenter or {}
-    def(db.raidFrameCenter, "enabled", true)
+    def(db.raidFrameCenter, "enabled", false)
     def(db.raidFrameCenter, "offsetX",  0)
 
     db.chatInteraction = db.chatInteraction or {}
@@ -50,7 +50,7 @@ function AklimeMod_InitDB()
     def(db.autoSellJunk, "enabled", false)
 
     db.leaveServiceChannel = db.leaveServiceChannel or {}
-    def(db.leaveServiceChannel, "enabled", true)
+    def(db.leaveServiceChannel, "enabled", false)
 
     db.mapCoords = db.mapCoords or {}
     def(db.mapCoords, "enabled", false)  -- Default: an
@@ -241,7 +241,7 @@ function AklimeMod_InitDB()
 
     db.playedTime = db.playedTime or {}
     db.playedTime.chars = db.playedTime.chars or {}
-    def(db.playedTime, "enabled", true)
+    def(db.playedTime, "enabled", false)
 
     -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}

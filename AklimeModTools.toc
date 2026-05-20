@@ -1,11 +1,11 @@
-## Interface: 120005, 120000
-## Title: AklimeMod
+## Interface: 120007, 120005
+## Title: AklimeModTools
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
 ## Version: 0.9.0
 ## SavedVariables: AklimeModDB
 ## AddonCompartmentFunc: AklimeMod_OpenSettings
-## IconTexture: Interface\AddOns\AklimeMod\Assets\icon
+## IconTexture: Interface\AddOns\AklimeModTools\Assets\icon
 
 Templates\AklimeMod_Templates.xml
 

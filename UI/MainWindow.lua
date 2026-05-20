@@ -6,7 +6,7 @@
 local frame = AklimeModFrame
 
 _G["AklimeModFrameTitleText"]:SetText("AklimeMod")
-AklimeModFramePortrait:SetTexture("Interface\\AddOns\\AklimeMod\\Assets\\icon")
+AklimeModFramePortrait:SetTexture("Interface\\AddOns\\AklimeModTools\\Assets\\icon")
 
 frame:SetFrameStrata("DIALOG")
 frame:SetMovable(true)
