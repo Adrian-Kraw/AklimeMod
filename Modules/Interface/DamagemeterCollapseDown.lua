@@ -118,7 +118,7 @@ frame:RegisterEvent("ADDON_LOADED")
 
 frame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then
-        if arg1 == "AklimeMod" then
+        if arg1 == "AklimeModTools" then
             frame:RegisterEvent("PLAYER_ENTERING_WORLD")
         elseif arg1 == "Blizzard_DamageMeter" then
             C_Timer.After(1.0, function()

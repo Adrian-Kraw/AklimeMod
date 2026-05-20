@@ -58,7 +58,7 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 frame:SetScript("OnEvent", function(_, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == "AklimeMod" then
+    if event == "ADDON_LOADED" and arg1 == "AklimeModTools" then
         -- In 12.0 gibt es keine globale ActionButton_UpdateName mehr
         -- Wir hooken UpdateName direkt auf jedem Button
         C_Timer.After(0.5, function()
