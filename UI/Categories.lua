@@ -1829,10 +1829,6 @@ local function addPvPNodes(dp)
         "|cFFFF3333Rot|r   = Gegner"
     )
 
-    if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Sonstiges", centered = true })
-    end
-
     local chatBlockNode = addModule(dp, "Chat im PvP blockieren",
         function() return AklimeMod_PvPChatBlock and AklimeMod_PvPChatBlock.IsEnabled() end,
         function(v)
@@ -1878,74 +1874,7 @@ local function BuildCollectingContent()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     local dp = newDP()
 
-    -- ── Charakter-Tracker ─────────────────────────────────────
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Charakter-Tracker",
-        centered = true,
-    })
-    dp:Insert({
-        Template = "AklimeMod_InfoTextTemplate",
-        text     = "Charaktere im Tracker auswählen: Tracker öffnen → 'Charaktere' Button.",
-    })
-
-    -- ── Raids nach Erweiterung ────────────────────────────────
-    dp:Insert({
-        Template = "AklimeMod_SeparatorTemplate",
-        label    = "Schlachtzüge",
-        centered = true,
-    })
-
-    local EXP_NAMES_SHORT = {
-        [0]="Classic", [1]="TBC", [2]="WotLK", [3]="Cata", [4]="MoP",
-        [5]="WoD", [6]="Legion", [7]="BfA", [8]="SL", [9]="DF",
-        [10]="TWW", [11]="Midnight",
-    }
-
-    -- Master-Toggle pro Erweiterung
-    local function BuildExpRaidToggles(dpTarget)
-        -- Aus eigener DB oder SI
-        local dataDB = (AklimeModDB and AklimeModDB.tracker and next(AklimeModDB.tracker.Instances))
-            and AklimeModDB.tracker
-            or _G.SavedInstancesDB
-        if not dataDB or not dataDB.Instances then return end
-
-        local exps = {}
-        for _, inst in pairs(dataDB.Instances) do
-            if inst.Raid and inst.Expansion then
-                local exp = inst.Expansion
-                if exp >= 0 and exp <= 11 then
-                    exps[exp] = true
-                end
-            end
-        end
-        local expList = {}
-        for e in pairs(exps) do expList[#expList+1] = e end
-        table.sort(expList, function(a,b) return a > b end)
-
-        for _, exp in ipairs(expList) do
-            local e = exp
-            local label = EXP_NAMES_SHORT[e] or ("Exp "..e)
-            dpTarget:Insert({
-                Template = "AklimeMod_ToggleTemplate",
-                name     = label,
-                getVal   = function()
-                    local db = AklimeModDB and AklimeModDB.savedInstances
-                    return not (db and db.raidExps and db.raidExps[e] == false)
-                end,
-                setVal   = function(v)
-                    local db = AklimeModDB and AklimeModDB.savedInstances
-                    if db then
-                        db.raidExps = db.raidExps or {}
-                        db.raidExps[e] = v and nil or false
-                    end
-                end,
-            })
-        end
-    end
-    BuildExpRaidToggles(dp)
-
-    -- ── Währungen nach Erweiterung ────────────────────────────
+    -- ── Währungen ─────────────────────────────────────────────
     dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
         label    = "Währungen",
@@ -1995,7 +1924,6 @@ local function BuildCollectingContent()
         local exp, expLabel = pair[1], pair[2]
         local ids = CURR_BY_EXP[exp]
         if ids then
-            -- Exp-Label
             dp:Insert({
                 Template = "AklimeMod_InfoTextTemplate",
                 text     = "|cFF888888" .. expLabel .. "|r",

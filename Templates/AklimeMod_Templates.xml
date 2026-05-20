@@ -224,14 +224,6 @@
     <Size y="50"/>
     <Layers>
       <Layer level="ARTWORK">
-        <Texture parentKey="lineTop" file="Interface\BUTTONS\WHITE8X8">
-          <Color r="0.3" g="0.3" b="0.3" a="0.8"/>
-          <Size y="1"/>
-          <Anchors>
-            <Anchor point="TOPLEFT"  x="0" y="-12"/>
-            <Anchor point="TOPRIGHT" x="0" y="-12"/>
-          </Anchors>
-        </Texture>
         <Texture parentKey="lineBottom" file="Interface\BUTTONS\WHITE8X8">
           <Color r="0.3" g="0.3" b="0.3" a="0.8"/>
           <Size y="1"/>
