@@ -532,10 +532,10 @@ local function addInterfaceNodes(dp)
             function(v) AklimeMod_GearCheck.SetEnabled(v) end
         )
         addInfo(gcNode,
-            "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
-            "Rot: leere Fassung(en).\n" ..
-            "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
-            "Im Betrachten-Fenster zusätzlich Itemlevel am Slot.\n" ..
+            "Zeigt an jedem Equipment-Slot:\n" ..
+            "  • Sockel-Icons neben dem Slot (Edelstein oder leere Fassung)\n" ..
+            "  • Itemlevel unten rechts am Slot, in Qualitätsfarbe\n" ..
+            "  • Verzauberungsstatus als Text neben dem Slot\n" ..
             "Gilt für Charakter-Fenster und Betrachten-Fenster."
         )
     end
@@ -880,10 +880,10 @@ local function BuildInterfaceContent(filter)
             function(v) AklimeMod_GearCheck.SetEnabled(v) end
         )
         addInfo(gcNode,
-            "Zeigt einen farbigen Punkt unten links am Equipment-Slot:\n" ..
-            "Rot: leere Fassung(en).\n" ..
-            "Gelb: fehlende Verzauberung (nur blaue+ Items).\n\n" ..
-            "Im Betrachten-Fenster zusätzlich Itemlevel am Slot.\n" ..
+            "Zeigt an jedem Equipment-Slot:\n" ..
+            "  • Sockel-Icons neben dem Slot (Edelstein oder leere Fassung)\n" ..
+            "  • Itemlevel unten rechts am Slot, in Qualitätsfarbe\n" ..
+            "  • Verzauberungsstatus als Text neben dem Slot\n" ..
             "Gilt für Charakter-Fenster und Betrachten-Fenster."
         )
     end
