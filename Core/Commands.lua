@@ -8,16 +8,15 @@ AklimeMod_Commands = {
     { cmd = "/akm todo",     desc = "ToDo-Liste öffnen / schließen"               },
     { cmd = "/akm ignore",   desc = "Erweiterte Ignore-Liste öffnen / schließen"   },
     { cmd = "/akm played",  desc = "Gespielte Zeit aller Chars anzeigen"           },
-    { cmd = "/akmana",       desc = "Mana-Warnung Status anzeigen"                },
-    { cmd = "/akmana test",  desc = "Mana-Warnung Testnachricht senden"           },
-    { cmd = "/akmsell",      desc = "(Fallback) Graue Items manuell verkaufen"    },
+    { cmd = "/akmana",       desc = "Mana-Warnung Status anzeigen"      },
+    { cmd = "/akmana test",  desc = "Mana-Warnung Testnachricht senden"  },
 }
 
 -- /akm help — gibt alle Befehle im Chat aus
 local function PrintHelp()
     print("|cFFFFD100AklimeMod Befehle:|r")
     for _, e in ipairs(AklimeMod_Commands) do
-        print(string.format("  |cFF00CCFF%-20s|r — %s", e.cmd, e.desc))
+        print("|cFF00CCFF" .. e.cmd .. "|r - " .. e.desc)
     end
 end
 

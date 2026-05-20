@@ -369,8 +369,10 @@ local function GetOrCreateDashboard(parent)
     local y = -40
     Label("|cFFFFD100Kontakt|r", y, "GameFontNormalLarge"); y = y - 28
     Separator(y); y = y - 18
-    Label("|cFF00CCFFGithub:|r  github.com/aklime/aklimemod", y); y = y - 22
-    Label("|cFF00CCFFIngame:|r  Yodabär-Blackmoore", y); y = y - 30
+    Label("|cFF00CCFFIngame:|r", y); y = y - 22
+    Label("  Yodabär-Blackmoore", y); y = y - 22
+    Label("  Aklime-Blackmoore", y); y = y - 22
+    Label("  Sattarnna-Un'Goro", y); y = y - 30
     Separator(y); y = y - 18
     Label("|cFFFFD100Befehle|r", y, "GameFontNormalLarge"); y = y - 28
     Separator(y); y = y - 18

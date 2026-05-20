@@ -363,7 +363,6 @@ eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 eventFrame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
-eventFrame:RegisterEvent("WEEKLY_REWARDS_ITEM_CLAIMED")
 
 eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
@@ -398,7 +397,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
         end
         CleanExpiredInstances()
 
-    elseif event == "WEEKLY_REWARDS_UPDATE" or event == "WEEKLY_REWARDS_ITEM_CLAIMED" then
+    elseif event == "WEEKLY_REWARDS_UPDATE" then
         C_Timer.After(0.3, function()
             local db = GetTrackerDB()
             if not db then return end
