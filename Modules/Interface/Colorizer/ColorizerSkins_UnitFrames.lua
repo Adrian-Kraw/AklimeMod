@@ -390,11 +390,12 @@ local function skinRaidGroup(i, mr,mg,mb,ma)
         "BorderFrameBorderTopRight","BorderFrameBorderBottomRight","BorderFrameBorderTopLeft","BorderFrameBorderBottomLeft" }) do
         T(_G[pfx..sfx], mr,mg,mb,ma)
     end
-    for n=1,5 do
-        for _,sfx in ipairs({ "HorizBottomBorder","HorizTopBorder","VertRightBorder","VertLeftBorder" }) do
-            T(_G[pfx.."Member"..n..sfx], mr,mg,mb,ma)
-        end
-    end
+    -- Deaktiviert: koennte Debuff-Typ-Indikatoren (Magie/Gift/Fluch/Krankheit) ueberschreiben.
+    -- for n=1,5 do
+    --     for _,sfx in ipairs({ "HorizBottomBorder","HorizTopBorder","VertRightBorder","VertLeftBorder" }) do
+    --         T(_G[pfx.."Member"..n..sfx], mr,mg,mb,ma)
+    --     end
+    -- end
 end
 local function restoreRaidGroup(i)
     local pfx = "CompactRaidGroup"..i
@@ -402,6 +403,7 @@ local function restoreRaidGroup(i)
         "BorderFrameBorderTopRight","BorderFrameBorderBottomRight","BorderFrameBorderTopLeft","BorderFrameBorderBottomLeft" }) do
         R(_G[pfx..sfx])
     end
+    -- Member-Borders ebenfalls wiederherstellen, falls aus aelteren Versionen noch getinted.
     for n=1,5 do
         for _,sfx in ipairs({ "HorizBottomBorder","HorizTopBorder","VertRightBorder","VertLeftBorder" }) do
             R(_G[pfx.."Member"..n..sfx])
