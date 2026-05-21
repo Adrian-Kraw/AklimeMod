@@ -449,6 +449,7 @@ local function addInterfaceNodes(dp)
                 else
                     AklimeModDB.eliteFrame.style = nil; AklimeMod_RemoveEliteFrame()
                 end
+                AklimeMod_RefreshRightToggles()
             end
         )
     end
@@ -839,19 +840,11 @@ local function BuildInterfaceContent(filter)
             function() return AklimeMod_MouseEffects.Get("trailOnlyCombat") end,
             function(v) AklimeMod_MouseEffects.Set("trailOnlyCombat", v) end
         )
-        addInfo(mouseNode, "Ringgröße:")
-        for _, opt in ipairs({
-            { label = "Klein", size = 56 },
-            { label = "Mittel", size = 76 },
-            { label = "Groß", size = 96 },
-            { label = "Sehr groß", size = 120 },
-        }) do
-            local size = opt.size
-            addToggle(mouseNode, opt.label,
-                function() return AklimeMod_MouseEffects.GetSize() == size end,
-                function(v) if v then AklimeMod_MouseEffects.SetSize(size) end end
-            )
-        end
+        addSlider(mouseNode, "Ringgröße", 40, 150, 2,
+            function() return AklimeMod_MouseEffects.GetSize() end,
+            function(v) AklimeMod_MouseEffects.SetSize(v) end,
+            function(v) return v .. " px" end
+        )
         mouseNode:Insert({
             Template = "AklimeMod_SubColorTemplate",
             mouseRingColor = true,
@@ -860,19 +853,14 @@ local function BuildInterfaceContent(filter)
             Template = "AklimeMod_SubColorTemplate",
             mouseTrailColor = true,
         })
-        addInfo(mouseNode, "Mausspur-Dichte:")
-        for _, opt in ipairs({
-            { label = "Niedrig", preset = "low" },
-            { label = "Mittel", preset = "medium" },
-            { label = "Hoch", preset = "high" },
-            { label = "Ultra", preset = "ultra" },
-        }) do
-            local preset = opt.preset
-            addToggle(mouseNode, opt.label,
-                function() return AklimeMod_MouseEffects.GetTrailPreset() == preset end,
-                function(v) if v then AklimeMod_MouseEffects.SetTrailPreset(preset) end end
-            )
-        end
+        local trailPresets = { "low", "medium", "high", "ultra" }
+        local trailLabels  = { "Niedrig", "Mittel", "Hoch", "Ultra" }
+        local trailIndex   = { low = 1, medium = 2, high = 3, ultra = 4 }
+        addSlider(mouseNode, "Mausspur-Dichte", 1, 4, 1,
+            function() return trailIndex[AklimeMod_MouseEffects.GetTrailPreset()] or 2 end,
+            function(v) AklimeMod_MouseEffects.SetTrailPreset(trailPresets[v]) end,
+            function(v) return trailLabels[v] or "" end
+        )
     end
     if AklimeMod_GearCheck then
         local gcNode = addModule(dp3, "Ausrüstungs-Prüfung",
@@ -1178,7 +1166,7 @@ local function addQoLNodes(dp)
             local v = opt.val
             addToggle(chatFadeNode, opt.label,
                 function() return AklimeMod_ChatFade.GetTimeVisible() == v end,
-                function(on) if on then AklimeMod_ChatFade.SetTimeVisible(v) end end
+                function(on) if on then AklimeMod_ChatFade.SetTimeVisible(v); AklimeMod_RefreshRightToggles() end end
             )
         end
         addInfo(chatFadeNode, "Verblassdauer:")
@@ -1190,7 +1178,7 @@ local function addQoLNodes(dp)
             local v = opt.val
             addToggle(chatFadeNode, opt.label,
                 function() return AklimeMod_ChatFade.GetFadeDuration() == v end,
-                function(on) if on then AklimeMod_ChatFade.SetFadeDuration(v) end end
+                function(on) if on then AklimeMod_ChatFade.SetFadeDuration(v); AklimeMod_RefreshRightToggles() end end
             )
         end
     end
@@ -1658,7 +1646,7 @@ local function addQoLNodes(dp)
             local v = opt.val
             addToggle(autoQuestNode, opt.label,
                 function() return AklimeMod_QuestAutomation:GetModifier() == v end,
-                function(on) if on then AklimeMod_QuestAutomation:SetModifier(v) end end
+                function(on) if on then AklimeMod_QuestAutomation:SetModifier(v); AklimeMod_RefreshRightToggles() end end
             )
         end
         addAction(autoQuestNode, "Ignoreliste leeren", function()
@@ -1740,7 +1728,7 @@ local function addQoLNodes(dp)
         addToggle(drinkNode,
             opt.label,
             function() return AklimeMod_DrinkReminder.GetInterval() == m end,
-            function(v) if v then AklimeMod_DrinkReminder.SetInterval(m) end end
+            function(v) if v then AklimeMod_DrinkReminder.SetInterval(m); AklimeMod_RefreshRightToggles() end end
         )
     end
     addAction(drinkNode, "Jetzt testen", function()
