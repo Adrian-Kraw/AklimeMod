@@ -41,7 +41,7 @@ local function UpdateMinimapPos()
 end
 
 -- Spread-Tabelle einmalig definiert, von beiden Stellen genutzt
-local SPREADS   = { -24, -8, 8, 24 }
+local SPREADS   = { -37, -22, -7, 7, 22, 39 }
 local OUTER_R   = 135
 
 local function ApplyMenuPositions(angle)
@@ -101,10 +101,24 @@ local MENU_ITEMS = {
             end
         end,
     },
-    {   -- unten-mitte: Instances
-        icon    = "Interface\\GossipFrame\\DailyActiveQuestIcon",
+    {   -- mitte: Todo
+        icon    = C_Item.GetItemIconByID(32620) or "Interface\\Icons\\INV_Misc_Note_01",
+        tooltip = "ToDo-Liste",
+        onClick = function()
+            if AklimeMod_TodoList then AklimeMod_TodoList:Toggle() end
+        end,
+    },
+    {   -- unten-mitte: Charakter-Tracker
+        icon    = C_Item.GetItemIconByID(272339) or "Interface\\GossipFrame\\DailyActiveQuestIcon",
         tooltip = "Charakter-Tracker",
         onClick = function() AklimeMod_CT_Toggle() end,
+    },
+    {   -- unten-mitte: Playtime
+        icon    = C_Item.GetItemIconByID(162690) or "Interface\\Icons\\Achievement_BG_returnxflags_def_WSG",
+        tooltip = "Gespielte Zeit",
+        onClick = function()
+            if AklimeMod_PlayedTime then AklimeMod_PlayedTime:Toggle() end
+        end,
     },
     {   -- unten: Settings
         icon    = "Interface\\Icons\\trade_engineering",
@@ -131,7 +145,11 @@ local function CreateMenuButton(item)
     local tex = btn:CreateTexture(nil, "ARTWORK")
     tex:SetPoint("TOPLEFT",     btn, "TOPLEFT",      3, -3)
     tex:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -3,  3)
-    tex:SetTexture(item.icon)
+    if item.atlas then
+        tex:SetAtlas(item.atlas)
+    else
+        tex:SetTexture(item.icon)
+    end
 
     local hl = btn:CreateTexture(nil, "HIGHLIGHT")
     hl:SetAllPoints()
