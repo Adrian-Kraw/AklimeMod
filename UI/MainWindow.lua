@@ -144,7 +144,6 @@ end)
 local function headerInitializer(button, node)
     local data = node:GetData()
     button.name:SetText(data.name)
-    button.enableButton:SetChecked(data.getEnabled())
     local function updateArrow()
         local atlas = node:IsCollapsed()
             and "Options_ListExpand_Right"
@@ -157,13 +156,14 @@ local function headerInitializer(button, node)
     button.enableButton:SetScript("OnClick", function(self)
         data.setEnabled(self:GetChecked()); updateArrow()
     end)
+    button.enableButton:SetChecked(data.getEnabled())
 end
 
 local function toggleInitializer(button, node)
     local data = node:GetData()
     button.name:SetText(data.name)
-    button.toggle:SetChecked(data.getVal())
     button.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
+    button.toggle:SetChecked(data.getVal())
 end
 
 local function sliderInitializer(frame, node)

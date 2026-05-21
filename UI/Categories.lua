@@ -1861,27 +1861,64 @@ local function BuildCollectingContent()
     })
 
     local ALL_CURR_EXP = {
-        {11,"Midnight"},{10,"The War Within"},{9,"Dragonflight"},
+        {15,"Saison"},{14,"Dungeon & Schlachtzug"},{13,"Spieler gegen Spieler"},
+        {12,"Verschiedenes"},{11,"Midnight"},{10,"The War Within"},{9,"Dragonflight"},
         {8,"Shadowlands"},{7,"Battle for Azeroth"},{6,"Legion"},
-        {5,"Warlords"},{4,"Mists"},{3,"Cataclysm"},{2,"WotLK"},
+        {5,"Warlords of Draenor"},{4,"Mists of Pandaria"},{3,"Cataclysm"},{2,"WotLK"},
         {1,"TBC"},{0,"Classic"},
     }
     local CURR_BY_EXP = {}
     for _, ce in ipairs({
-        {id=3392,exp=11},{id=3373,exp=11},{id=3376,exp=11},{id=3379,exp=11},
-        {id=3385,exp=11},{id=3383,exp=11},{id=3319,exp=11},{id=3316,exp=11},
-        {id=3377,exp=11},{id=3378,exp=11},{id=3028,exp=11},{id=3310,exp=11},
-        {id=3400,exp=11},{id=3341,exp=11},{id=3343,exp=11},{id=3345,exp=11},
-        {id=3347,exp=11},
-        {id=3056,exp=10},{id=2806,exp=10},{id=2803,exp=10},{id=2807,exp=10},
-        {id=2912,exp=10},{id=2914,exp=10},{id=2650,exp=10},
-        {id=2245,exp=9},{id=2123,exp=9},{id=2118,exp=9},
-        {id=1191,exp=8},{id=1602,exp=8},{id=1792,exp=8},
-        {id=1710,exp=7},{id=1718,exp=7},{id=1560,exp=7},
-        {id=1754,exp=6},{id=1220,exp=6},
-        {id=994,exp=5},{id=823,exp=5},
-        {id=738,exp=4},{id=752,exp=4},
-        {id=391,exp=3},{id=241,exp=2},
+        -- Saison (Morgenlichtwappen + Saison-Währungen)
+        {id=3310,exp=15},{id=2803,exp=15},{id=3378,exp=15},{id=3418,exp=15},
+        {id=3028,exp=15},{id=3356,exp=15},{id=3383,exp=15},{id=3341,exp=15},
+        {id=3343,exp=15},{id=3346,exp=15},{id=3347,exp=15},{id=3212,exp=15},
+        -- Dungeon & Schlachtzug
+        {id=1166,exp=14},
+        -- Spieler gegen Spieler
+        {id=391,exp=13},{id=2123,exp=13},{id=1792,exp=13},{id=1602,exp=13},
+        -- Verschiedenes
+        {id=2588,exp=12},{id=402,exp=12},{id=81,exp=12},
+        {id=3363,exp=12},{id=515,exp=12},{id=2032,exp=12},
+        -- Midnight (Content + Tatkraft-Berufswährungen)
+        {id=3373,exp=11},{id=3405,exp=11},{id=3393,exp=11},{id=3316,exp=11},
+        {id=3385,exp=11},{id=3376,exp=11},{id=3392,exp=11},{id=3379,exp=11},
+        {id=3377,exp=11},{id=3400,exp=11},
+        {id=3256,exp=11},{id=3257,exp=11},{id=3258,exp=11},{id=3260,exp=11},
+        {id=3261,exp=11},{id=3262,exp=11},{id=3263,exp=11},{id=3264,exp=11},
+        {id=3265,exp=11},{id=3266,exp=11},
+        -- The War Within
+        {id=3220,exp=10},{id=3055,exp=10},{id=3093,exp=10},{id=3089,exp=10},
+        {id=3090,exp=10},{id=3056,exp=10},{id=3218,exp=10},{id=3226,exp=10},
+        {id=2815,exp=10},{id=3303,exp=10},{id=3149,exp=10},
+        -- Dragonflight
+        {id=2118,exp=9},{id=2657,exp=9},{id=2594,exp=9},{id=2650,exp=9},
+        {id=2122,exp=9},{id=2777,exp=9},{id=2003,exp=9},
+        -- Shadowlands
+        {id=1754,exp=8},{id=1979,exp=8},{id=1885,exp=8},{id=1820,exp=8},
+        {id=1931,exp=8},{id=2009,exp=8},{id=1819,exp=8},{id=1813,exp=8},
+        {id=1828,exp=8},{id=1906,exp=8},{id=1767,exp=8},{id=1977,exp=8},
+        {id=1816,exp=8},{id=1904,exp=8},
+        -- Battle for Azeroth
+        {id=1717,exp=7},{id=1803,exp=7},{id=1299,exp=7},{id=1560,exp=7},
+        {id=1755,exp=7},{id=1721,exp=7},{id=1710,exp=7},{id=1580,exp=7},
+        {id=1719,exp=7},
+        -- Legion
+        {id=1149,exp=6},{id=1533,exp=6},{id=1342,exp=6},{id=1275,exp=6},
+        {id=1226,exp=6},{id=1220,exp=6},{id=1273,exp=6},{id=1155,exp=6},
+        {id=1508,exp=6},
+        -- Warlords of Draenor
+        {id=994,exp=5},{id=823,exp=5},{id=824,exp=5},
+        {id=1101,exp=5},{id=1129,exp=5},
+        -- Mists of Pandaria
+        {id=738,exp=4},{id=752,exp=4},{id=776,exp=4},
+        {id=777,exp=4},{id=789,exp=4},{id=697,exp=4},
+        -- Cataclysm
+        {id=416,exp=3},
+        -- Wrath of the Lich King
+        {id=241,exp=2},
+        -- The Burning Crusade
+        {id=1704,exp=1},
     }) do
         if not CURR_BY_EXP[ce.exp] then CURR_BY_EXP[ce.exp] = {} end
         CURR_BY_EXP[ce.exp][#CURR_BY_EXP[ce.exp]+1] = ce.id
@@ -1907,11 +1944,19 @@ local function BuildCollectingContent()
                 Template = "AklimeMod_InfoTextTemplate",
                 text     = "|cFF888888" .. expLabel .. "|r",
             })
+            -- Währungen innerhalb der Erweiterung A-Z sortieren
+            local sorted = {}
             for _, id in ipairs(ids) do
-                local cid = id
+                sorted[#sorted+1] = { id = id, name = GetCurrNameLocal(id) }
+            end
+            table.sort(sorted, function(a, b) return a.name < b.name end)
+
+            for _, entry in ipairs(sorted) do
+                local cid  = entry.id
+                local name = entry.name
                 dp:Insert({
                     Template = "AklimeMod_ToggleTemplate",
-                    name     = GetCurrNameLocal(cid),
+                    name     = name,
                     getVal   = function()
                         local db = AklimeModDB and AklimeModDB.savedInstances
                         return not (db and db.currencies and db.currencies[cid] == false)
@@ -1920,7 +1965,15 @@ local function BuildCollectingContent()
                         local db = AklimeModDB and AklimeModDB.savedInstances
                         if db then
                             db.currencies = db.currencies or {}
-                            db.currencies[cid] = v and nil or false
+                            if v then
+                                db.currencies[cid] = nil
+                            else
+                                db.currencies[cid] = false
+                            end
+                        end
+                        local ctFrame = _G["AklimeModCTFrame"]
+                        if ctFrame and ctFrame:IsShown() then
+                            AklimeMod_CT_Refresh()
                         end
                     end,
                 })
