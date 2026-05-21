@@ -159,11 +159,28 @@ local function headerInitializer(button, node)
     button.enableButton:SetChecked(data.getEnabled())
 end
 
+local _rightToggleFrames = {}
+
 local function toggleInitializer(button, node)
     local data = node:GetData()
+    button._node = node
+    _rightToggleFrames[button] = true
     button.name:SetText(data.name)
     button.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
     button.toggle:SetChecked(data.getVal())
+end
+
+function AklimeMod_RefreshRightToggles()
+    C_Timer.After(0, function()
+        for button in pairs(_rightToggleFrames) do
+            if button._node and button.toggle then
+                local data = button._node:GetData()
+                if data and data.getVal then
+                    button.toggle:SetChecked(data.getVal())
+                end
+            end
+        end
+    end)
 end
 
 local function sliderInitializer(frame, node)
