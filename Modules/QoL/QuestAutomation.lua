@@ -46,9 +46,23 @@ local function IsNPCIgnored()
     return npcID ~= nil and db.ignoredNPCs[npcID] ~= nil
 end
 
+local function IsDaily(questID, frequency)
+    if frequency and frequency > 0 then return true end
+    if not (C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification) then return false end
+    local c = C_QuestInfoSystem.GetQuestClassification(questID)
+    return c == Enum.QuestClassification.Recurring or c == Enum.QuestClassification.Calling
+end
+
+local function IsWeekly(questID)
+    if not (C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification) then return false end
+    return C_QuestInfoSystem.GetQuestClassification(questID) == Enum.QuestClassification.Weekly
+end
+
 local function ShouldFilterQuest(questID, isTrivial, frequency)
     local db = GetDB()
-    if db.ignoreDailies and frequency and frequency > 0 then return true end
+    local daily = IsDaily(questID, frequency)
+    if daily     and not db.acceptDailies then return true end
+    if not daily and not db.acceptNormal  then return true end
     if db.ignoreTrivial and isTrivial then return true end
     if db.ignoreWarband
         and C_QuestLog
@@ -142,7 +156,9 @@ local function OnQuestDataLoadResult(questID)
     acceptQuestIDs[questID] = nil
     if IsNPCIgnored() then return end
     local db = GetDB()
-    if db.ignoreDailies and C_QuestLog.IsQuestRepeatableType and C_QuestLog.IsQuestRepeatableType(questID) then return end
+    local daily = IsDaily(questID, nil)
+    if daily     and not db.acceptDailies then return end
+    if not daily and not db.acceptNormal  then return end
     if db.ignoreTrivial and C_QuestLog.IsQuestTrivial and C_QuestLog.IsQuestTrivial(questID) then return end
     if db.ignoreWarband and C_QuestLog.IsQuestFlaggedCompletedOnAccount and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID) then return end
     AcceptQuest()
@@ -151,6 +167,21 @@ end
 
 local function OnQuestProgress()
     if ShouldAutoQuest() and IsQuestCompletable() then CompleteQuest() end
+end
+
+local function ShouldAutoTurnIn(questID)
+    local db = GetDB()
+    if not db.autoTurnIn then return false end
+    if db.ignoreDailiesTurnIn  and IsDaily(questID, nil) then return false end
+    if db.ignoreWeekliesTurnIn and IsWeekly(questID)     then return false end
+    return true
+end
+
+local function OnQuestComplete()
+    if not ShouldAutoQuest() then return end
+    if GetNumQuestChoices() > 1 then return end
+    if not ShouldAutoTurnIn(GetQuestID()) then return end
+    GetQuestReward(1)
 end
 
 -- ============================================================
@@ -261,22 +292,30 @@ end
 local M = {}
 AklimeMod_QuestAutomation = M
 
-function M:IsEnabled()       return GetDB().enabled       == true end
-function M:GetModifier()     return GetDB().modifier      or "NONE" end
-function M:IsIgnoreDailies() return GetDB().ignoreDailies == true end
-function M:IsIgnoreTrivial() return GetDB().ignoreTrivial == true end
-function M:IsIgnoreWarband() return GetDB().ignoreWarband == true end
-function M:IsWowheadLink()   return GetDB().wowheadLink   == true end
+function M:IsEnabled()              return GetDB().enabled              == true end
+function M:GetModifier()            return GetDB().modifier             or "NONE" end
+function M:IsAcceptNormal()         return GetDB().acceptNormal         ~= false end
+function M:IsAcceptDailies()        return GetDB().acceptDailies        == true end
+function M:IsIgnoreTrivial()        return GetDB().ignoreTrivial        == true end
+function M:IsIgnoreWarband()        return GetDB().ignoreWarband        == true end
+function M:IsWowheadLink()          return GetDB().wowheadLink          == true end
+function M:IsAutoTurnIn()           return GetDB().autoTurnIn           == true end
+function M:IsIgnoreDailiesTurnIn()  return GetDB().ignoreDailiesTurnIn  == true end
+function M:IsIgnoreWeekliesTurnIn() return GetDB().ignoreWeekliesTurnIn == true end
 
 function M:SetEnabled(v)
     GetDB().enabled = v and true or false
     HookMenus()
 end
 
-function M:SetModifier(v)       GetDB().modifier      = v end
-function M:SetIgnoreDailies(v)  GetDB().ignoreDailies = v and true or false end
-function M:SetIgnoreTrivial(v)  GetDB().ignoreTrivial = v and true or false end
-function M:SetIgnoreWarband(v)  GetDB().ignoreWarband = v and true or false end
+function M:SetModifier(v)              GetDB().modifier             = v end
+function M:SetAcceptNormal(v)          GetDB().acceptNormal         = v and true or false end
+function M:SetAcceptDailies(v)         GetDB().acceptDailies        = v and true or false end
+function M:SetIgnoreTrivial(v)         GetDB().ignoreTrivial        = v and true or false end
+function M:SetIgnoreWarband(v)         GetDB().ignoreWarband        = v and true or false end
+function M:SetAutoTurnIn(v)            GetDB().autoTurnIn           = v and true or false end
+function M:SetIgnoreDailiesTurnIn(v)   GetDB().ignoreDailiesTurnIn  = v and true or false end
+function M:SetIgnoreWeekliesTurnIn(v)  GetDB().ignoreWeekliesTurnIn = v and true or false end
 
 function M:SetWowheadLink(v)
     GetDB().wowheadLink = v and true or false
@@ -302,6 +341,7 @@ eventFrame:SetScript("OnEvent", function(self, _, _)
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("QUEST_DATA_LOAD_RESULT")
     self:RegisterEvent("QUEST_PROGRESS")
+    self:RegisterEvent("QUEST_COMPLETE")
     self:SetScript("OnEvent", function(_, event, arg1)
         if     event == "GOSSIP_SHOW"            then OnGossipShow()
         elseif event == "GOSSIP_CLOSED"           then OnGossipClosed()
@@ -309,6 +349,7 @@ eventFrame:SetScript("OnEvent", function(self, _, _)
         elseif event == "QUEST_DETAIL"            then OnQuestDetail()
         elseif event == "QUEST_DATA_LOAD_RESULT"  then OnQuestDataLoadResult(arg1)
         elseif event == "QUEST_PROGRESS"          then OnQuestProgress()
+        elseif event == "QUEST_COMPLETE"          then OnQuestComplete()
         end
     end)
 end)

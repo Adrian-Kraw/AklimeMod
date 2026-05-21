@@ -157,10 +157,14 @@ function AklimeMod_InitDB()
     db.questAutomation = db.questAutomation or {}
     def(db.questAutomation, "enabled",        false)
     def(db.questAutomation, "modifier",       "NONE")
-    def(db.questAutomation, "ignoreDailies",  false)
+    def(db.questAutomation, "acceptNormal",   true)
+    def(db.questAutomation, "acceptDailies",  false)
     def(db.questAutomation, "ignoreTrivial",  false)
     def(db.questAutomation, "ignoreWarband",  false)
-    def(db.questAutomation, "wowheadLink",    false)
+    def(db.questAutomation, "wowheadLink",           false)
+    def(db.questAutomation, "autoTurnIn",            false)
+    def(db.questAutomation, "ignoreDailiesTurnIn",   false)
+    def(db.questAutomation, "ignoreWeekliesTurnIn",  false)
     db.questAutomation.ignoredNPCs = db.questAutomation.ignoredNPCs or {}
 
     db.heroismTracker = db.heroismTracker or {}
