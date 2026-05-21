@@ -154,6 +154,9 @@ function AklimeMod_InitDB()
     def(db.blockRequests, "blockDuels",      false)
     def(db.blockRequests, "blockPetBattles", false)
 
+    db.readyCheck = db.readyCheck or {}
+    def(db.readyCheck, "enabled", false)
+
     db.questAutomation = db.questAutomation or {}
     def(db.questAutomation, "enabled",        false)
     def(db.questAutomation, "modifier",       "NONE")

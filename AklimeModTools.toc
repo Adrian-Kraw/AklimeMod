@@ -53,6 +53,7 @@ Modules\QoL\HeroismTracker.lua
 Modules\QoL\DeathSound.lua
 Modules\QoL\TalentReminder.lua
 Modules\QoL\BlockRequests.lua
+Modules\QoL\ReadyCheck.lua
 Modules\QoL\ChatHistory.lua
 Modules\QoL\Summons.lua
 Modules\QoL\GroupInvites.lua
