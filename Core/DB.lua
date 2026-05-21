@@ -158,6 +158,9 @@ function AklimeMod_InitDB()
     def(db.readyCheck, "enabled", false)
     def(db.readyCheck, "delay",   3)
 
+    db.skipCinematic = db.skipCinematic or {}
+    def(db.skipCinematic, "enabled", false)
+
     db.questAutomation = db.questAutomation or {}
     def(db.questAutomation, "enabled",        false)
     def(db.questAutomation, "modifier",       "NONE")

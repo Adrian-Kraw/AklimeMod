@@ -1346,6 +1346,14 @@ local function addQoLNodes(dp)
         addInfo(rcNode, "Nimmt Bereitschaftsabfragen automatisch an.\nDer Countdown ist am Ja-Button sichtbar.")
     end
 
+    if AklimeMod_SkipCinematic then
+        local scNode = addModule(dp, "Cutscenes und Cinematics überspringen",
+            function() return AklimeMod_SkipCinematic.IsEnabled() end,
+            function(v) AklimeMod_SkipCinematic.SetEnabled(v) end
+        )
+        addInfo(scNode, "Überspringt automatisch In-Engine Cutscenes\nsowie vorgerenderte Videosequenzen.")
+    end
+
     local repairNode = addModule(dp, "Auto Repair",
         function() return AklimeModDB.autoRepair.enabled end,
         function(v) AklimeModDB.autoRepair.enabled = v end
