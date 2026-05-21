@@ -1612,9 +1612,13 @@ local function addQoLNodes(dp)
             function() return AklimeMod_QuestAutomation:IsEnabled() end,
             function(v) AklimeMod_QuestAutomation:SetEnabled(v) end
         )
-        addToggle(autoQuestNode, "Tagesquests überspringen",
-            function() return AklimeMod_QuestAutomation:IsIgnoreDailies() end,
-            function(v) AklimeMod_QuestAutomation:SetIgnoreDailies(v) end
+        addToggle(autoQuestNode, "Normale Quests annehmen",
+            function() return AklimeMod_QuestAutomation:IsAcceptNormal() end,
+            function(v) AklimeMod_QuestAutomation:SetAcceptNormal(v) end
+        )
+        addToggle(autoQuestNode, "Tagesquests annehmen",
+            function() return AklimeMod_QuestAutomation:IsAcceptDailies() end,
+            function(v) AklimeMod_QuestAutomation:SetAcceptDailies(v) end
         )
         addToggle(autoQuestNode, "Triviale Quests überspringen",
             function() return AklimeMod_QuestAutomation:IsIgnoreTrivial() end,
@@ -1623,6 +1627,18 @@ local function addQoLNodes(dp)
         addToggle(autoQuestNode, "Warband-abgeschlossene Quests überspringen",
             function() return AklimeMod_QuestAutomation:IsIgnoreWarband() end,
             function(v) AklimeMod_QuestAutomation:SetIgnoreWarband(v) end
+        )
+        addToggle(autoQuestNode, "Abgeben: Quests automatisch abschließen",
+            function() return AklimeMod_QuestAutomation:IsAutoTurnIn() end,
+            function(v) AklimeMod_QuestAutomation:SetAutoTurnIn(v) end
+        )
+        addToggle(autoQuestNode, "Abgeben: Tagesquests überspringen",
+            function() return AklimeMod_QuestAutomation:IsIgnoreDailiesTurnIn() end,
+            function(v) AklimeMod_QuestAutomation:SetIgnoreDailiesTurnIn(v) end
+        )
+        addToggle(autoQuestNode, "Abgeben: Wochenquests überspringen",
+            function() return AklimeMod_QuestAutomation:IsIgnoreWeekliesTurnIn() end,
+            function(v) AklimeMod_QuestAutomation:SetIgnoreWeekliesTurnIn(v) end
         )
         addInfo(autoQuestNode,
             "Nimmt verfügbare Quests beim NPC automatisch an und gibt\n" ..
