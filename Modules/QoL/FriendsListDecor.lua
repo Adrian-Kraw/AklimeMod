@@ -230,6 +230,48 @@ end
 local M = {}
 AklimeMod_FriendsListDecor = M
 
+local function FindFavoriteStar(button)
+    -- Atlas-Name ist bekannt: "friendslist-favorite"
+    for _, region in ipairs({ button:GetRegions() }) do
+        local ok, atlas = pcall(function() return region:GetAtlas() end)
+        if ok and atlas == "friendslist-favorite" then return region end
+    end
+    return nil
+end
+
+local starReplacements = {}
+
+local function MoveStarRight(button, nameFont)
+    local star = FindFavoriteStar(button)
+
+    if not star or not star:IsShown() then
+        local repl = starReplacements[button]
+        if repl then repl:Hide() end
+        return
+    end
+
+    -- Original verstecken (wuerde ausserhalb der Clip-Region landen)
+    star:Hide()
+
+    -- Ersatz-Textur einmalig pro Button erstellen
+    local repl = starReplacements[button]
+    if not repl then
+        repl = button:CreateTexture(nil, "ARTWORK", nil, 7)
+        repl:SetAtlas("friendslist-favorite")
+        repl:SetSize(17, 17)
+        starReplacements[button] = repl
+    end
+
+    -- Position: direkt nach dem Text-Ende
+    repl:ClearAllPoints()
+    if nameFont then
+        repl:SetPoint("LEFT", nameFont, "LEFT", nameFont:GetStringWidth() + 2, 0)
+    else
+        repl:SetPoint("LEFT", button, "LEFT", 280, 0)
+    end
+    repl:Show()
+end
+
 local function DecorateWoWFriend(button)
     local nameFont = button and button.name
     local infoFont = button and button.info
@@ -284,6 +326,7 @@ local function DecorateWoWFriend(button)
 
     SetFactionIcon(button, nil)
     if button.gameIcon then button.gameIcon:SetTexCoord(0, 1, 0, 1) end
+    MoveStarRight(button, nameFont)
 end
 
 local function DecorateBNetFriend(button)
@@ -337,7 +380,7 @@ local function DecorateBNetFriend(button)
 
         local clientDisplay = ColorClientText(realID or "", gameInfo.clientProgram)
         if clientDisplay ~= "" and charName ~= "" then
-            displayName = clientDisplay .. " || " .. charName
+            displayName = clientDisplay .. " " .. charName
         elseif charName ~= "" then
             displayName = charName
         elseif clientDisplay ~= "" then
@@ -376,6 +419,7 @@ local function DecorateBNetFriend(button)
         end
     end
 
+    MoveStarRight(button, nameFont)
 end
 
 local function UpdateFriendButton(button)
