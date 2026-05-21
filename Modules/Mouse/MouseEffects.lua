@@ -67,20 +67,17 @@ local function TrailPreset()
     return TRAIL_PRESETS[DB().trailPreset or "medium"] or TRAIL_PRESETS.medium
 end
 
-local function ReleaseTrail(anim)
-    local tex = anim:GetParent()
-    tex:Hide()
-    active = active - 1
-    pool[#pool + 1] = tex
-end
-
 local function NewTrail()
     local tex = UIParent:CreateTexture(nil, "OVERLAY")
     tex:SetTexture("Interface\\Cooldown\\star4")
     tex:SetBlendMode("ADD")
     tex:SetSize(26, 26)
     local ag = tex:CreateAnimationGroup()
-    ag:SetScript("OnFinished", ReleaseTrail)
+    ag:SetScript("OnFinished", function()
+        tex:Hide()
+        active = active - 1
+        pool[#pool + 1] = tex
+    end)
     local fade = ag:CreateAnimation("Alpha")
     fade:SetFromAlpha(0.75)
     fade:SetToAlpha(0)
