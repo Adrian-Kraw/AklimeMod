@@ -156,6 +156,7 @@ function AklimeMod_InitDB()
 
     db.readyCheck = db.readyCheck or {}
     def(db.readyCheck, "enabled", false)
+    def(db.readyCheck, "delay",   3)
 
     db.questAutomation = db.questAutomation or {}
     def(db.questAutomation, "enabled",        false)
