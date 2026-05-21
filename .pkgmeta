@@ -2,3 +2,4 @@ ignore:
   - .gitignore
   - .vscode
   - README.md
+  - CHANGELOG.md

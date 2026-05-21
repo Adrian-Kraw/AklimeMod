@@ -1900,7 +1900,7 @@ local function BuildCollectingContent()
         {id=1828,exp=8},{id=1906,exp=8},{id=1767,exp=8},{id=1977,exp=8},
         {id=1816,exp=8},{id=1904,exp=8},
         -- Battle for Azeroth
-        {id=1717,exp=7},{id=1803,exp=7},{id=1299,exp=7},{id=1560,exp=7},
+        {id=1717,exp=7},{id=1716,exp=7},{id=1803,exp=7},{id=1299,exp=7},{id=1560,exp=7},
         {id=1755,exp=7},{id=1721,exp=7},{id=1710,exp=7},{id=1580,exp=7},
         {id=1719,exp=7},
         -- Legion
