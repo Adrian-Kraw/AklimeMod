@@ -1333,6 +1333,14 @@ local function addQoLNodes(dp)
         end
     end)
 
+    if AklimeMod_ReadyCheck then
+        local rcNode = addModule(dp, "Bereitschaftsabfrage automatisch annehmen",
+            function() return AklimeMod_ReadyCheck.IsEnabled() end,
+            function(v) AklimeMod_ReadyCheck.SetEnabled(v) end
+        )
+        addInfo(rcNode, "Nimmt Bereitschaftsabfragen automatisch\nmit kurzer Zufallsverzögerung an.")
+    end
+
     local repairNode = addModule(dp, "Auto Repair",
         function() return AklimeModDB.autoRepair.enabled end,
         function(v) AklimeModDB.autoRepair.enabled = v end
