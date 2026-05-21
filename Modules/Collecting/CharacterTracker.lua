@@ -1018,6 +1018,7 @@ function AklimeMod_CT_Refresh()
                     local iStr = ceicon and ("|T"..ceicon..":14:14|t ") or ""
                     GameTooltip:AddLine(iStr .. NORMAL_FONT_COLOR_CODE .. cename .. FONT_COLOR_CODE_CLOSE)
                     GameTooltip:AddLine(" ")
+                    local total = 0
                     for _, charName in ipairs(allSel) do
                         local t = db2.Toons[charName]
                         local a = t and t.currency and t.currency[ceid] and t.currency[ceid].amount
@@ -1027,7 +1028,15 @@ function AklimeMod_CT_Refresh()
                             GameTooltip:AddDoubleLine(nameStr,
                                 GREEN_FONT_COLOR_CODE .. FormatAmount(a) .. FONT_COLOR_CODE_CLOSE,
                                 1,1,1, 1,1,1)
+                            total = total + a
                         end
+                    end
+                    if total > 0 then
+                        GameTooltip:AddLine(" ")
+                        GameTooltip:AddDoubleLine(
+                            "|cFFFFFFFFSumme|r",
+                            "|cFFFFD100" .. FormatAmount(total) .. FONT_COLOR_CODE_CLOSE,
+                            1,1,1, 1,1,1)
                     end
                     GameTooltip:Show()
                 end)
