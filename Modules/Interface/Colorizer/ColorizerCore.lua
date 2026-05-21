@@ -306,6 +306,9 @@ end
 function C:InitDB()
     AklimeModDB.colorizer = AklimeModDB.colorizer or {}
     local db = AklimeModDB.colorizer
+    if not db.__globalColor then
+        db.__globalColor = { r = 0.28, g = 0.28, b = 0.28, a = 1 }
+    end
     for key, skin in pairs(self.skins) do
         db[key] = db[key] or {}
         local skdb = db[key]
