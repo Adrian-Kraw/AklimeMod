@@ -216,6 +216,24 @@ local function RefreshFrame()
     local maxTime = list[1] and list[1].total or 1
     local contentW = mainFrame._content:GetWidth()
 
+    -- Prozentwerte berechnen (Largest Remainder Method -> ergibt immer 100%)
+    local rawPcts, flooredPcts = {}, {}
+    local sumFloored = 0
+    for i, rec in ipairs(list) do
+        rawPcts[i] = grand > 0 and (rec.total / grand * 100) or 0
+        flooredPcts[i] = math.floor(rawPcts[i])
+        sumFloored = sumFloored + flooredPcts[i]
+    end
+    local remainder = 100 - sumFloored
+    local indices = {}
+    for i = 1, #rawPcts do indices[i] = i end
+    table.sort(indices, function(a, b)
+        return (rawPcts[a] - math.floor(rawPcts[a])) > (rawPcts[b] - math.floor(rawPcts[b]))
+    end)
+    for i = 1, remainder do
+        flooredPcts[indices[i]] = flooredPcts[indices[i]] + 1
+    end
+
     for i, rec in ipairs(list) do
         local row = CreateFrame("Frame", nil, content)
         row:SetHeight(ROW_H)
@@ -247,7 +265,7 @@ local function RefreshFrame()
         bar:SetColorTexture(r * 0.8, g * 0.8, b * 0.8, 0.9)
 
         -- Zeit
-        local pct = grand > 0 and math.floor((rec.total / grand) * 100) or 0
+        local pct = flooredPcts[i]
         local timeLbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         timeLbl:SetPoint("LEFT", barBg, "RIGHT", 6, 0)
         timeLbl:SetWidth(115)
