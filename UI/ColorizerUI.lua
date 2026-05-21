@@ -52,9 +52,92 @@ local function SetSwatchFromDB(colorPicker, skinKey, colorKey)
 end
 
 -- ============================================================
+-- Global-Farb-Zeile Initializer
+-- ============================================================
+do
+    local C = AklimeMod_Colorizer
+    function C.ApplyGlobalColor(r, g, b, a)
+        AklimeModDB.colorizer.__globalColor = { r=r, g=g, b=b, a=a }
+        for _, group in ipairs(C.groupOrder) do
+            for _, key in ipairs(group.keys) do
+                local skinDB = AklimeModDB.colorizer[key]
+                if skinDB and skinDB.colors then
+                    for ck in pairs(skinDB.colors) do
+                        local co = skinDB.colors[ck]
+                        co.r = r; co.g = g; co.b = b; co.a = a
+                        co.followClassColor = false
+                    end
+                end
+            end
+        end
+        for _, group in ipairs(C.groupOrder) do
+            for _, key in ipairs(group.keys) do
+                if C:IsEnabled(key) then
+                    local skin = C.skins[key]
+                    if skin then pcall(function() skin:apply() end) end
+                end
+            end
+        end
+    end
+end
+
+local function globalColorInitializer(button, node)
+    local C = AklimeMod_Colorizer
+    if button.name then button.name:SetText("Globalfarbe auf alle anwenden") end
+    if button.followClassColor then button.followClassColor:Hide() end
+
+    local function getColor()
+        return AklimeModDB.colorizer.__globalColor or { r=0.28, g=0.28, b=0.28, a=1 }
+    end
+
+    local function refreshSwatch()
+        local co = getColor()
+        if button.colorPicker and button.colorPicker.swatch then
+            button.colorPicker.swatch:SetAtlas(nil)
+            button.colorPicker.swatch:SetColorTexture(co.r, co.g, co.b, 1)
+        end
+    end
+    refreshSwatch()
+
+    if button.colorPicker then
+        button.colorPicker:SetEnabled(true)
+        button.colorPicker:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine("Globalfarbe wählen", 1, 1, 1)
+            GameTooltip:AddLine("Setzt diese Farbe für alle Farbslots aller Skins", 0.7, 0.7, 0.7)
+            GameTooltip:Show()
+        end)
+        button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        button.colorPicker:SetScript("OnClick", function()
+            local co = getColor()
+            local oldR, oldG, oldB, oldA = co.r, co.g, co.b, co.a
+            local function onChange()
+                local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+                local na = ColorPickerFrame:GetColorAlpha()
+                C.ApplyGlobalColor(nr, ng, nb, na)
+                refreshSwatch()
+            end
+            ColorPickerFrame:Hide()
+            ColorPickerFrame:SetupColorPickerAndShow({
+                swatchFunc  = onChange,
+                opacityFunc = onChange,
+                cancelFunc  = function()
+                    C.ApplyGlobalColor(oldR, oldG, oldB, oldA)
+                    refreshSwatch()
+                end,
+                hasOpacity = true,
+                opacity    = co.a or 1,
+                r = co.r, g = co.g, b = co.b,
+            })
+        end)
+    end
+end
+
+-- ============================================================
 -- Sub-Farb-Zeile Initializer
 -- ============================================================
 local function subColorInitializer(button, node)
+    if button.followClassColor then button.followClassColor:Show() end
     local d  = node:GetData()
     local C  = AklimeMod_Colorizer
 
@@ -280,6 +363,8 @@ function AklimeMod_ColorizerRightFactory(factory, node)
     local t = d.Template
     if t == "AklimeMod_SkinHeaderTemplate" then
         factory(t, skinHeaderInitializer)
+    elseif t == "AklimeMod_SubColorTemplate" and d.isGlobalColor then
+        factory(t, globalColorInitializer)
     elseif t == "AklimeMod_SubColorTemplate" then
         factory(t, subColorInitializer)
     elseif t == "AklimeMod_ToggleTemplate" and d.toggleKey then

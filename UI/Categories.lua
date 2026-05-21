@@ -992,11 +992,25 @@ local function BuildInterfaceContent(filter)
             if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
         end
 
-        targetDP:Insert({
+        local allNode = targetDP:Insert({
             Template   = "AklimeMod_ModuleHeaderTemplate",
             name       = "Alle aktivieren / deaktivieren",
             getEnabled = AllEnabled,
             setEnabled = SetAll,
+        })
+        allNode:SetCollapsed(true)
+        allNode:Insert({
+            Template      = "AklimeMod_SubColorTemplate",
+            isGlobalColor = true,
+        })
+        allNode:Insert({
+            Template = "AklimeMod_ActionButtonTemplate",
+            label    = "Standard wiederherstellen",
+            onClick  = function()
+                local d = AklimeMod_Colorizer.defaults.main
+                AklimeMod_Colorizer.ApplyGlobalColor(d.r, d.g, d.b, d.a)
+                if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
+            end,
         })
 
         for _, group in ipairs(C.groupOrder) do
