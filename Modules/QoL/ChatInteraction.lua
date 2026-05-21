@@ -140,6 +140,11 @@ local function OpenChatCopy(chatIdx, url)
         f:SetHeight(320)
         local cf = _G["ChatFrame"..(chatIdx or 1)]
         if not cf then return end
+
+        -- Breite vor dem Einfuegen setzen, sonst berechnet WoW Zeilenumbrueche
+        -- mit der falschen Breite und Klicks landen auf der falschen Zeile.
+        f.editBox:SetWidth(f.scrollFrame:GetWidth())
+
         local maxLines = cf:GetNumMessages() or 0
         local startLine = math.max(1, maxLines - 300)
         local inserted = false
@@ -151,7 +156,12 @@ local function OpenChatCopy(chatIdx, url)
                 inserted = true
             end
         end
-        f.editBox:SetWidth(f.scrollFrame:GetWidth())
+
+        -- Nach unten scrollen, damit die neuesten Nachrichten sichtbar sind.
+        -- Einen Frame warten, weil GetVerticalScrollRange erst nach dem Render aktuell ist.
+        C_Timer.After(0, function()
+            f.scrollFrame:SetVerticalScroll(f.scrollFrame:GetVerticalScrollRange())
+        end)
     end
     f:Show()
 end
