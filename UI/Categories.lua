@@ -1530,7 +1530,7 @@ local function addQoLNodes(dp)
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gameplay", centered = true })
     end
 
-    local manaNode = addModule(dp, "Mana Warnung",
+    local manaNode = addModule(dp, "Mana Warnung (Work in Progress)",
         function() return AklimeMod_ManaWarning.IsEnabled() end,
         function(v) AklimeMod_ManaWarning.SetEnabled(v) end
     )
