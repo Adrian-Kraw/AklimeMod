@@ -1338,7 +1338,12 @@ local function addQoLNodes(dp)
             function() return AklimeMod_ReadyCheck.IsEnabled() end,
             function(v) AklimeMod_ReadyCheck.SetEnabled(v) end
         )
-        addInfo(rcNode, "Nimmt Bereitschaftsabfragen automatisch\nmit kurzer Zufallsverzögerung an.")
+        addSlider(rcNode, "Verzögerung", 1, 6, 1,
+            function() return AklimeMod_ReadyCheck.GetDelay() end,
+            function(v) AklimeMod_ReadyCheck.SetDelay(v) end,
+            function(v) return v .. " Sek." end
+        )
+        addInfo(rcNode, "Nimmt Bereitschaftsabfragen automatisch an.\nDer Countdown ist am Ja-Button sichtbar.")
     end
 
     local repairNode = addModule(dp, "Auto Repair",

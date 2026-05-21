@@ -42,7 +42,7 @@ eventFrame:RegisterEvent("READY_CHECK_FINISHED")
 eventFrame:SetScript("OnEvent", function(_, event)
     if event == "READY_CHECK" then
         if GetDB().enabled then
-            StartTimer(math.random(10, 30) / 10)
+            StartTimer(GetDB().delay or 3)
         end
     elseif event == "READY_CHECK_FINISHED" then
         StopTimer()
@@ -52,4 +52,6 @@ end)
 AklimeMod_ReadyCheck = {
     IsEnabled  = function() return GetDB().enabled == true end,
     SetEnabled = function(v) GetDB().enabled = v and true or false end,
+    GetDelay   = function() return GetDB().delay or 3 end,
+    SetDelay   = function(v) GetDB().delay = v end,
 }
