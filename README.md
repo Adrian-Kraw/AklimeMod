@@ -25,7 +25,7 @@ Visuelle Anpassungen am Spielclient.
 - **Mausring und Mausspur**: Farbiger Ring und Trail-Effekt am Mauszeiger, anpassbar in Farbe, Größe und Stil
 - **Ausrüstungs-Prüfung**: Zeigt Sockel-Icons, Itemlevel und Verzauberungsstatus an jedem Equipment-Slot
 - **Tooltip im Kampf ausblenden**: Blendet den Tooltip während des Kampfes aus
-- **Farbliche Anpassungen**: Einfärben von Unit Frames, HUD, Micro Menu, Action Bars und zahlreichen Fenstern
+- **Farbliche Anpassungen**: Einfärben von Unit Frames, HUD, Micro Menu, Action Bars und zahlreichen Fenstern. Alle Skins lassen sich auf einmal aktivieren und mit einer gemeinsamen Globalfarbe einfärben
 
 **Interface Ausblendung**
 - **Chillmodus in Ruhezonen**: Blendet HUD-Elemente in Ruhezonen automatisch aus
@@ -70,9 +70,11 @@ Komfort-Features für den Spielalltag.
 - **HT-Anzeige**: Zeigt an wenn Heldentum / Trommeln aktiv ist
 - **Todessound**: Spielt einen Sound beim Tod des eigenen Charakters
 - **Talent-Erinnerung**: Hinweis wenn man einen Dungeon ohne gewählte Talente betritt
+- **Lazy Ready Check**: Bestätigt Ready Checks automatisch nach einer einstellbaren Verzögerung
+- **Cutscene überspringen**: Überspringt Ingame-Cutscenes und Cinematics automatisch
 
 **Quest**
-- **Quest automatisch annehmen / abgeben**: Nimmt Quests und Belohnungen automatisch an, überspringt Gossipdialoge
+- **Quest automatisch annehmen / abgeben**: Nimmt Quests und Belohnungen automatisch an, überspringt Gossipdialoge. Dailies und Weeklies einzeln konfigurierbar
 - **Wowhead-URL im Quest-Menü**: Fügt einen Wowhead-Link im Quest-Menü ein
 - **Quest-Tracker Erweiterungen**: Eigener Quest-Tracker mit einstellbarer Breite und Ein-/Ausblenden per Klick
 
@@ -88,7 +90,7 @@ Komfort-Features für den Spielalltag.
 Charakter- und Fortschrittsübersicht über alle eigenen Charaktere.
 
 - **Charakter-Tracker**: Zeigt gespeicherte Instanzen (Raids), Große Schatzkammer, Währungen und Gold für alle Charaktere
-- **Währungen**: Filter welche Währungen pro Erweiterung im Tracker angezeigt werden
+- **Währungen**: Nach Erweiterung sortiert mit Gesamtsummen pro Währung über alle Charaktere, Filter welche Währungen angezeigt werden
 
 ---
 
