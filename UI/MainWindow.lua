@@ -185,16 +185,23 @@ end
 
 local function sliderInitializer(frame, node)
     local data = node:GetData()
-    if frame.label     then frame.label:SetText(data.label or "") end
+    if frame.label then frame.label:SetText(data.label or "") end
     local s = frame.slider
     if s then
+        -- Alten Callback entfernen bevor Bereich/Wert geaendert werden.
+        -- Sonst feuert der recycelte Callback vom vorherigen Node beim
+        -- SetMinMaxValues-Clamping und schreibt den falschen Wert in die DB.
+        s:SetScript("OnValueChanged", nil)
         s:SetMinMaxValues(data.sliderMin or 0, data.sliderMax or 100)
         s:SetValueStep(data.sliderStep or 1)
         s:SetObeyStepOnDrag(true)
         local cur = data.getVal and data.getVal() or 0
         s:SetValue(cur)
+        local actual = math.floor(s:GetValue() + 0.5)
+        -- Wenn der gespeicherte Wert ausserhalb des Slider-Bereichs lag, korrigieren.
+        if actual ~= cur and data.setVal then data.setVal(actual) end
         if frame.valueText then
-            frame.valueText:SetText(data.formatFn and data.formatFn(cur) or tostring(cur))
+            frame.valueText:SetText(data.formatFn and data.formatFn(actual) or tostring(actual))
         end
         s:SetScript("OnValueChanged", function(_, value)
             local v = math.floor(value + 0.5)

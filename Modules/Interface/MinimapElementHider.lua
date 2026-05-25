@@ -50,6 +50,55 @@ local function IsElementHidden(key)
     return db.enabled and db[key] == true
 end
 
+local function IsHousing()
+    local inInst, instType = IsInInstance()
+
+    -- Bekannte Housing-Instanztypen je nach WoW-Build
+    if inInst and (instType == "neighborhood" or instType == "interior" or instType == "home") then
+        return true
+    end
+
+    -- TWW Housing kann Instanztypen verwenden, die kein regulaerer Content sind.
+    -- Bekannte Content-Typen ausschliessen, alles andere als Housing behandeln.
+    if inInst then
+        local contentTypes = { party = true, raid = true, pvp = true, arena = true, scenario = true }
+        if not contentTypes[instType] then
+            return true
+        end
+    end
+
+    -- TWW Housing-Innenbereich: oft als Micro-Karte dargestellt (kein IsInInstance).
+    if C_Map and C_Map.GetBestMapForUnit then
+        local mapID = C_Map.GetBestMapForUnit("player")
+        if mapID then
+            local info = C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
+            if info and info.mapType == Enum.UIMapType.Micro then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+-- Debug: /akmmapinfo (im Housing-Bereich eingeben)
+SLASH_AKMMAPINFO1 = "/akmmapinfo"
+SlashCmdList["AKMMAPINFO"] = function()
+    local inInst, instType = IsInInstance()
+    print("|cFFFFD100AklimeMod:|r IsInInstance=" .. tostring(inInst) .. " type=" .. tostring(instType))
+    if C_Map and C_Map.GetBestMapForUnit then
+        local mapID = C_Map.GetBestMapForUnit("player")
+        print("|cFFFFD100AklimeMod:|r mapID=" .. tostring(mapID))
+        if mapID then
+            local info = C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
+            if info then
+                print("|cFFFFD100AklimeMod:|r mapType=" .. tostring(info.mapType) .. " name=" .. tostring(info.name))
+            end
+        end
+    end
+    print("|cFFFFD100AklimeMod:|r IsHousing=" .. tostring(IsHousing()))
+end
+
 local function ApplyFrame(frame, hide)
     if not frame then return end
     if hide then
@@ -74,6 +123,9 @@ local function HookFrame(frame)
     if not frame.HookScript then return end
     hooked[frame] = true
     frame:HookScript("OnShow", function(self)
+        -- Housing-Bearbeitungsmodus: Blizzard positioniert Minimap-Elemente neu.
+        -- Hier nichts ausblenden, sonst verschiebt sich die Minimap.
+        if IsHousing() then return end
         for elementKey, names in pairs(ELEMENTS) do
             for _, frameName in ipairs(names) do
                 if ResolveFrame(frameName) == self and IsElementHidden(elementKey) then
@@ -115,6 +167,7 @@ local function ApplyManagedFrames(key, hide)
 end
 
 local function ApplyElement(key)
+    if IsHousing() then return end
     local hide = IsElementHidden(key)
     for _, name in ipairs(ELEMENTS[key] or {}) do
         local frame = ResolveFrame(name)
@@ -133,6 +186,17 @@ local function ApplyElement(key)
 end
 
 function Hider.Apply()
+    if IsHousing() then
+        -- Housing: alle verwalteten Elemente wieder einblenden.
+        -- Blizzard benoetigt sie fuer die Interior-Karte und den Bearbeitungsmodus.
+        for key in pairs(ELEMENTS) do
+            for _, name in ipairs(ELEMENTS[key] or {}) do
+                ApplyFrame(ResolveFrame(name), false)
+            end
+            ApplyManagedFrames(key, false)
+        end
+        return
+    end
     for key in pairs(ELEMENTS) do
         ApplyElement(key)
     end
