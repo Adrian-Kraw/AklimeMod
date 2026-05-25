@@ -45,7 +45,24 @@ local function HandleDeleteConfirm()
     end
 end
 
--- Fall 2: wertvolle Items — "BESTÄTIGEN" automatisch eintragen (EnhanceQoL-Methode)
+-- Bestätigungstext je nach Popup-Typ.
+-- Gibt nil zurück wenn der Typ nicht bekannt ist.
+local function GetConfirmText(which)
+    if which == "DELETE_GOOD_ITEM"
+    or which == "DELETE_GOOD_QUEST_ITEM"
+    or which == "DESTROY_ITEM"
+    or which == "CONFIRM_DESTROY_ITEM"
+    then
+        return DELETE_ITEM_CONFIRM_STRING
+    end
+    if which == "UNLEARN_SKILL" then
+        -- CONFIRM_UNLEARN_PROFESSION existiert in manchen WoW-Versionen als Global
+        return CONFIRM_UNLEARN_PROFESSION or DELETE_ITEM_CONFIRM_STRING
+    end
+    return nil
+end
+
+-- Fall 2: Bestätigungstext automatisch eintragen
 local function HookConfirmDialogs()
     for i = 1, 4 do
         local popup = _G["StaticPopup" .. i]
@@ -54,13 +71,13 @@ local function HookConfirmDialogs()
                 local db = AklimeModDB and AklimeModDB.easyDelete
                 if not db or db.skipConfirm ~= true then return end
                 if not self then return end
-                if (self.which == "DELETE_GOOD_ITEM" or self.which == "DELETE_GOOD_QUEST_ITEM") then
-                    local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
-                    if editBox then
-                        editBox:SetText(DELETE_ITEM_CONFIRM_STRING)
-                        editBox:ClearFocus()
-                        editBox:SetAutoFocus(false)
-                    end
+                local text = GetConfirmText(self.which)
+                if not text then return end
+                local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+                if editBox then
+                    editBox:SetText(text)
+                    editBox:ClearFocus()
+                    editBox:SetAutoFocus(false)
                 end
             end)
         end

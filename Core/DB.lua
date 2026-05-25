@@ -43,6 +43,9 @@ function AklimeMod_InitDB()
     def(db.easyDelete, "skipDelete",  false)
     def(db.easyDelete, "skipConfirm", false)
 
+    db.buyConfirm = db.buyConfirm or {}
+    def(db.buyConfirm, "enabled", false)
+
     db.manaWarning = db.manaWarning or {}
     def(db.manaWarning, "enabled", false)
 
@@ -227,13 +230,13 @@ function AklimeMod_InitDB()
         def(db.interfaceFade[k], "alpha",   60)
     end
     def(db.interfaceFade.mode1, "moveDelay", 1)
-    def(db.interfaceFade.mode1, "idleDelay", 3)
+    def(db.interfaceFade.mode1, "idleDelay", 5)
     def(db.interfaceFade.mode1, "chatDelay", 5)
     def(db.interfaceFade.mode2, "moveDelay", 1)
-    def(db.interfaceFade.mode2, "idleDelay", 3)
+    def(db.interfaceFade.mode2, "idleDelay", 5)
     def(db.interfaceFade.mode2, "chatDelay", 5)
     def(db.interfaceFade.mode3, "moveDelay", 1)
-    def(db.interfaceFade.mode3, "idleDelay", 3)
+    def(db.interfaceFade.mode3, "idleDelay", 5)
     def(db.interfaceFade.mode3, "chatDelay", 5)
     for _, mk in ipairs({ "mode1", "mode2", "mode3" }) do
         db.interfaceFade[mk].exclude = db.interfaceFade[mk].exclude or {}

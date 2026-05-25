@@ -1434,6 +1434,14 @@ local function addQoLNodes(dp)
         end
     )
 
+    if AklimeMod_BuyConfirm then
+        local buyNode = addModule(dp, "Kaufbestätigung automatisch annehmen",
+            function() return AklimeMod_BuyConfirm.IsEnabled() end,
+            function(v) AklimeMod_BuyConfirm.SetEnabled(v) end
+        )
+        addInfo(buyNode, "Bestätigt automatisch Kaufdialoge bei nicht umtauschbaren\nItems und Token-Käufen (Ja/Nein-Dialoge ohne Texteingabe).")
+    end
+
     local sellJunkNode = addModule(dp, "Graue Items automatisch verkaufen",
         function() return AklimeMod_AutoSellJunk.IsEnabled() end,
         function(v) AklimeMod_AutoSellJunk.SetEnabled(v) end

@@ -83,8 +83,12 @@ local function OnGossipShow()
     if not ShouldAutoQuest() then return end
     if IsNPCIgnored() then return end
 
+    local hasActive    = C_GossipInfo.GetNumActiveQuests() > 0
+    local available    = C_GossipInfo.GetAvailableQuests()
+    local hasAvailable = #available > 0
+
     -- Abgeschlossene aktive Quests abgeben
-    if C_GossipInfo.GetNumActiveQuests() > 0 then
+    if hasActive then
         for _, quest in pairs(C_GossipInfo.GetActiveQuests()) do
             if quest.isComplete then
                 C_GossipInfo.SelectActiveQuest(quest.questID)
@@ -93,8 +97,7 @@ local function OnGossipShow()
     end
 
     -- Verfügbare Quests annehmen
-    local available = C_GossipInfo.GetAvailableQuests()
-    if #available > 0 then
+    if hasAvailable then
         for _, quest in pairs(available) do
             if not ShouldFilterQuest(quest.questID, quest.isTrivial, quest.frequency) then
                 C_GossipInfo.SelectAvailableQuest(quest.questID)
@@ -103,7 +106,10 @@ local function OnGossipShow()
         return
     end
 
-    -- Gossip-Option klicken wenn eindeutig oder Quest-relevant
+    -- Gossip-Optionen nur anklicken wenn Quest-Kontext vorhanden.
+    -- Ohne Quests im Gossip koennte es sich um Housing, Portale o.ae. handeln.
+    if not hasActive and not hasAvailable then return end
+
     local options = C_GossipInfo.GetOptions()
     if not options or #options == 0 then return end
     if #options == 1 then
