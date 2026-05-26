@@ -1613,8 +1613,7 @@ local function addQoLNodes(dp)
         )
         addInfo(deathNode,
             "Spielt einen Sound ab wenn der Charakter stirbt.\n" ..
-            "Wird pro Tod nur einmal abgespielt.\n\n" ..
-            "Datei: Assets\\death.mp3"
+            "Wird pro Tod nur einmal abgespielt."
         )
     end
 
