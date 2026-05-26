@@ -118,15 +118,34 @@ end
 -- Namenlose MinimapCluster-Kinder (Spielerpfeil, Quest-Blobs,
 -- Haendler-Icons) ignorieren Parent-Alpha. Loesung: Hide() + OnShow-Hook.
 -- ============================================================
-local minimapIdleActive = false
-local hookedOverlays    = {}
-local currentHidden     = {}
+local minimapIdleActive  = false
+local hookedOverlays     = {}
+local currentHidden      = {}
+local minimapShowHooked  = false  -- Einmalig: hooksecurefunc auf Minimap.Show im Housing
 
 local function HideMinimapOverlays()
     if minimapIdleActive then return end  -- bereits versteckt, kein zweites wipe
     minimapIdleActive = true
     wipe(currentHidden)
     if not MinimapCluster then return end
+    local inInst, instType = IsInInstance()
+    local inHousing = inInst and (instType == "interior" or instType == "neighborhood")
+
+    if inHousing then
+        -- Im Housing ignoriert Minimap die Parent-Alpha von MinimapCluster.
+        -- Minimap direkt verstecken (Hide) damit Pfeil und alle Kinder verschwinden.
+        -- MinimapCluster-Kinder nicht anfassen (verhindert Layout-Reflow).
+        if not Minimap then return end
+        if not minimapShowHooked then
+            minimapShowHooked = true
+            hooksecurefunc(Minimap, "Show", function(self)
+                if minimapIdleActive then self:Hide() end
+            end)
+        end
+        Minimap:Hide()
+        return
+    end
+
     for _, child in ipairs({ MinimapCluster:GetChildren() }) do
         local name = child:GetName()
         if not name or name == "" then
@@ -148,6 +167,10 @@ end
 local function ShowMinimapOverlays()
     if not minimapIdleActive then return end  -- bereits sichtbar
     minimapIdleActive = false
+    -- Im Housing wurde Minimap direkt versteckt, wieder einblenden.
+    if Minimap and not Minimap:IsShown() then
+        Minimap:Show()
+    end
     for _, child in ipairs(currentHidden) do
         pcall(function() child:Show() end)
     end
@@ -458,6 +481,11 @@ ef:SetScript("OnEvent", function(_, event)
 
     if event == "PLAYER_ENTERING_WORLD" then
         inCombat = false
+        -- Minimap ggf. aus Housing-Idle-Zustand wieder einblenden.
+        if Minimap and not Minimap:IsShown() then
+            Minimap:Show()
+            Minimap:SetAlpha(1.0)
+        end
         for _, m in ipairs(ALL_MODES) do m:OnEnteringWorld() end
 
     elseif event == "PLAYER_REGEN_DISABLED" then
@@ -503,7 +531,10 @@ SlashCmdList["AKMHUD"] = function(input)
             local name  = child:GetName() or "(kein Name)"
             local shown = child:IsShown() and "SHOWN" or "hidden"
             local alpha = string.format("%.2f", child:GetAlpha())
-            print(string.format("  [%d] %-45s %s  alpha=%s", count, name, shown, alpha))
+            local okW, w = pcall(function() return child:GetWidth() end)
+            local okH, h = pcall(function() return child:GetHeight() end)
+            local size  = (okW and okH) and string.format("%dx%d", w, h) or "?"
+            print(string.format("  [%d] %-45s %s  alpha=%s  size=%s", count, name, shown, alpha, size))
         end
         print(string.format("  Gesamt: %d Kinder", count))
     end

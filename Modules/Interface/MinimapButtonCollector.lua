@@ -19,6 +19,16 @@ local IGNORE = {
 }
 
 -- ============================================================
+-- Housing-Erkennung
+-- ============================================================
+local function IsHousingInstance()
+    local inInst, instType = IsInInstance()
+    if not inInst then return false end
+    local normal = { party=true, raid=true, pvp=true, arena=true, scenario=true }
+    return not normal[instType or ""]
+end
+
+-- ============================================================
 -- DB
 -- ============================================================
 local function GetDB()
@@ -150,33 +160,45 @@ end
 -- Verstecken / Wiederherstellen
 -- ============================================================
 local function StoreAndHideAll()
-    -- Erst alte Liste wiederherstellen
+    -- Bereits bekannte Buttons direkt verstecken, OHNE sie vorher einzublenden.
+    -- btn:Show() wuerde die eigenen OnShow-Handler der Addons ausloesen,
+    -- die die Minimap-Position veraendern koennen.
     suppressHook = true
     for _, btn in ipairs(storedButtons) do
-        btn:Show()
+        btn:Hide()
     end
     suppressHook = false
 
-    storedButtons = ScanAllMinimapButtons()
-
+    -- Nur NEUE sichtbare Buttons suchen, die noch nicht bekannt sind.
+    local seen = {}
     for _, btn in ipairs(storedButtons) do
-        -- Original-Position speichern
-        if not btn._mmc_origPoint then
-            local p1, p2, p3, p4, p5 = btn:GetPoint()
-            btn._mmc_origPoint  = { p1, p2, p3, p4, p5 }
-            btn._mmc_origParent = btn:GetParent()
-        end
+        local name = btn:GetName()
+        if name then seen[name] = true end
+    end
 
-        btn:Hide()
+    for _, btn in ipairs(ScanAllMinimapButtons()) do
+        local name = btn:GetName()
+        if name and not seen[name] then
+            seen[name] = true
 
-        -- Hook damit Addons den Button nicht wieder einblenden
-        if not btn._mmc_hooked then
-            btn._mmc_hooked = true
-            hooksecurefunc(btn, "Show", function(self)
-                if IsEnabled() and not isOpen and not suppressHook then
-                    self:Hide()
-                end
-            end)
+            if not btn._mmc_origPoint then
+                local p1, p2, p3, p4, p5 = btn:GetPoint()
+                btn._mmc_origPoint  = { p1, p2, p3, p4, p5 }
+                btn._mmc_origParent = btn:GetParent()
+            end
+
+            btn:Hide()
+
+            if not btn._mmc_hooked then
+                btn._mmc_hooked = true
+                hooksecurefunc(btn, "Show", function(self)
+                    if IsEnabled() and not isOpen and not suppressHook then
+                        self:Hide()
+                    end
+                end)
+            end
+
+            storedButtons[#storedButtons + 1] = btn
         end
     end
 end

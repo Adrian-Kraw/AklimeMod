@@ -4,6 +4,67 @@ local Hider = {}
 local hooked = {}
 local managedFrames = {}
 
+-- Minimap-Position fuer Housing-Workaround.
+-- Blizzard verschiebt die Minimap im Housing periodisch (Karten-Update, Bearbeitungsmodus).
+local savedMinimapPoint = nil
+local wasHousing = false
+local housingTicker = nil
+
+local function IsHousingEditMode()
+    if C_HousingLayout and C_HousingLayout.IsEditingLayout then
+        return C_HousingLayout.IsEditingLayout()
+    end
+    return false
+end
+
+local function SaveMinimapPoint()
+    local f = _G.MinimapCluster or Minimap
+    if not f then return end
+    local ok, point, relativeTo, relativePoint, x, y = pcall(function()
+        return f:GetPoint()
+    end)
+    if ok and point then
+        savedMinimapPoint = { point, relativeTo, relativePoint, x, y }
+    end
+end
+
+local function RestoreMinimapPoint()
+    if not savedMinimapPoint then return end
+    local f = _G.MinimapCluster or Minimap
+    if not f then return end
+    f:ClearAllPoints()
+    f:SetPoint(
+        savedMinimapPoint[1],
+        savedMinimapPoint[2],
+        savedMinimapPoint[3],
+        savedMinimapPoint[4],
+        savedMinimapPoint[5]
+    )
+end
+
+local function StopPositionGuard()
+    if housingTicker then
+        housingTicker:Cancel()
+        housingTicker = nil
+    end
+end
+
+local function StartPositionGuard()
+    if housingTicker then return end
+    housingTicker = C_Timer.NewTicker(6.0, function()
+        -- savedMinimapPoint wird beim Verlassen des Housings auf nil gesetzt.
+        -- Ist es nil, wurde Housing verlassen und der Ticker beendet sich.
+        if not savedMinimapPoint then
+            StopPositionGuard()
+            return
+        end
+        -- Im Bearbeitungsmodus Blizzard gewaehren lassen.
+        if not IsHousingEditMode() then
+            RestoreMinimapPoint()
+        end
+    end)
+end
+
 local ELEMENTS = {
     tracking = {
         "MiniMapTracking",
@@ -81,23 +142,6 @@ local function IsHousing()
     return false
 end
 
--- Debug: /akmmapinfo (im Housing-Bereich eingeben)
-SLASH_AKMMAPINFO1 = "/akmmapinfo"
-SlashCmdList["AKMMAPINFO"] = function()
-    local inInst, instType = IsInInstance()
-    print("|cFFFFD100AklimeMod:|r IsInInstance=" .. tostring(inInst) .. " type=" .. tostring(instType))
-    if C_Map and C_Map.GetBestMapForUnit then
-        local mapID = C_Map.GetBestMapForUnit("player")
-        print("|cFFFFD100AklimeMod:|r mapID=" .. tostring(mapID))
-        if mapID then
-            local info = C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-            if info then
-                print("|cFFFFD100AklimeMod:|r mapType=" .. tostring(info.mapType) .. " name=" .. tostring(info.name))
-            end
-        end
-    end
-    print("|cFFFFD100AklimeMod:|r IsHousing=" .. tostring(IsHousing()))
-end
 
 local function ApplyFrame(frame, hide)
     if not frame then return end
@@ -187,13 +231,17 @@ end
 
 function Hider.Apply()
     if IsHousing() then
-        -- Housing: alle verwalteten Elemente wieder einblenden.
-        -- Blizzard benoetigt sie fuer die Interior-Karte und den Bearbeitungsmodus.
+        -- Elemente einblenden damit ObjectiveTracker korrekt positioniert bleibt.
         for key in pairs(ELEMENTS) do
             for _, name in ipairs(ELEMENTS[key] or {}) do
                 ApplyFrame(ResolveFrame(name), false)
             end
             ApplyManagedFrames(key, false)
+        end
+        -- Minimap-Position im naechsten Tick wiederherstellen (nach MinimapCluster-Layout).
+        -- Im Bearbeitungsmodus Blizzard gewaehren lassen.
+        if not IsHousingEditMode() then
+            C_Timer.After(0, RestoreMinimapPoint)
         end
         return
     end
@@ -228,6 +276,40 @@ frame:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 frame:RegisterEvent("SPELLS_CHANGED")
 frame:SetScript("OnEvent", function(_, event, addonName)
     if event == "ADDON_LOADED" and addonName ~= "Blizzard_TimeManager" and addonName ~= "Blizzard_Calendar" then return end
+
+    local housing = IsHousing()
+
+    if event == "PLAYER_ENTERING_WORLD" then
+        if housing and not wasHousing then
+            -- Overworld -> Housing: Position fruehzeitig speichern (vor Blizzard-Layout).
+            C_Timer.After(0.1, function()
+                if not IsHousing() then return end
+                SaveMinimapPoint()
+            end)
+            -- Watchdog erst starten nachdem das Housing-Layout gesetzt ist.
+            C_Timer.After(2.0, function()
+                if not IsHousing() then return end
+                StartPositionGuard()
+            end)
+        elseif not housing then
+            -- Housing verlassen: Watchdog stoppen.
+            StopPositionGuard()
+            savedMinimapPoint = nil
+        end
+        wasHousing = housing
+    end
+
+    -- Im Housing MINIMAP_UPDATE_TRACKING und SPELLS_CHANGED ignorieren.
+    -- Diese feuern haeufig und wuerden Hider.Apply() wiederholt aufrufen,
+    -- was MinimapCluster neu ausrichtet und die Minimap verschiebt.
+    if housing and (event == "MINIMAP_UPDATE_TRACKING" or event == "SPELLS_CHANGED") then
+        return
+    end
+
+    if housing then
+        C_Timer.After(3.0, Hider.Apply)
+        return
+    end
     C_Timer.After(0.2, Hider.Apply)
     C_Timer.After(1.0, Hider.Apply)
 end)

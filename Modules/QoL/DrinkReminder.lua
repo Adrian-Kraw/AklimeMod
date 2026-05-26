@@ -15,8 +15,11 @@ local function IsEnabled()
 end
 
 local function IsInInstanceNow()
-    local _, instanceType = IsInInstance()
-    return instanceType ~= "none"
+    local inInst, instanceType = IsInInstance()
+    if not inInst then return false end
+    -- Housing gilt nicht als Instanz: Reminder soll dort ebenfalls erscheinen.
+    if instanceType == "interior" or instanceType == "neighborhood" then return false end
+    return true
 end
 
 -- ============================================================
