@@ -1,3 +1,73 @@
+## 0.9.4
+
+**EN**
+
+General
+* Addon name unified to "Aklime Mod Tools" everywhere
+
+Translation
+* Addon fully bilingual (EN/DE)
+
+Character Tracker
+* Raid name translation table corrected and expanded
+* Currency sorting in the Settings panel
+
+Easy Confirm and Delete
+* Two new separate checkboxes added:
+* No longer type UNLEARN 
+* No longer type UNDERSTOOD 
+* UNLEARN was previously bundled internally under "CONFIRM", now standalone
+
+Gear Check
+* Enchant indicator for weapon slots correctly positioned (was mirrored)
+* Main hand: text now appears on the left (outward), off hand: right (outward)
+
+Prey Progress (formerly Hunt % Display)
+* Module renamed: "Prey Progress in Phases" / "Jagd Fortschritt in Phasen"
+* Display changed: instead of 25 / 50 / 75 / 100 % now Phase 1 / Phase 2 / Phase 3 / Phase 4
+
+Rare Enemies
+* Toggle text clarified: "Add Silver Dragon additionally to the Star" 
+
+Miscellaneous
+* Possible bug fixed: saved value for UI fade could reset itself
+* Drink reminder now also active in the Housing instance
+* Auto-purchase confirmation: skip option added
+
+**DE**
+
+Allgemein
+* Addon-Name überall vereinheitlicht zu „Aklime Mod Tools"
+
+Übersetzung
+* Addon vollständig bilingual (EN/DE)
+
+Charakter-Tracker
+* Raid-Namensübersetzungstabelle korrigiert und erweitert
+* Währungssortierung im Settings-Panel
+
+Easy Confirm and Delete
+* Zwei neue separate Haken ergänzt:
+* Nicht mehr VERLERNEN schreiben
+* Nicht mehr VERSTANDEN schreiben
+* VERLERNEN war bisher intern unter „BESTÄTIGEN" versteckt, ist jetzt eigenständig
+
+Gear Check
+* Verzauberungs-Anzeige bei Waffen-Slots korrekt positioniert (war gespiegelt)
+* Hauptwaffe: Text erscheint jetzt links (auswärts), Nebenwaffe: rechts (auswärts)
+
+Prey Progress (ehemals Hunt % Display)
+* Modul umbenannt: „Prey Progress in Phases" / „Jagd Fortschritt in Phasen"
+* Anzeige geändert: statt 25 / 50 / 75 / 100 % jetzt Phase 1 / Phase 2 / Phase 3 / Phase 4
+
+Seltene Gegner
+* Toggle-Text präzisiert: „Add Silver Dragon additionally to the Star" / „Silbernen Drachen zusätzlich zum Stern hinzufügen"
+
+Sonstiges
+* Möglicher Bug behoben: gespeicherter Wert beim UI-Ausblenden konnte sich zurücksetzen
+* Trink-Erinnerung jetzt auch in der Housing-Instanz aktiv
+* Auto-Kauf Bestätigung: Skip-Option ergänzt
+
 ## 0.9.3
 
 **EN**
