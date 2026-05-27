@@ -1,5 +1,5 @@
 ## Interface: 120007, 120005
-## Title: AklimeModTools
+## Title: Aklime Mod Tools
 ## X-Curse-Project-ID: 1548949
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
@@ -7,6 +7,8 @@
 ## SavedVariables: AklimeModDB
 ## AddonCompartmentFunc: AklimeMod_OpenSettings
 ## IconTexture: Interface\AddOns\AklimeModTools\Assets\icon
+
+Locale\Locale.lua
 
 Templates\AklimeMod_Templates.xml
 

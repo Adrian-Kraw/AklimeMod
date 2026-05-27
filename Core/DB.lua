@@ -40,8 +40,10 @@ function AklimeMod_InitDB()
     def(db.reloadUI, "enabled", false)
 
     db.easyDelete = db.easyDelete or {}
-    def(db.easyDelete, "skipDelete",  false)
-    def(db.easyDelete, "skipConfirm", false)
+    def(db.easyDelete, "skipDelete",     false)
+    def(db.easyDelete, "skipConfirm",    false)
+    def(db.easyDelete, "skipUnlearn",    false)
+    def(db.easyDelete, "skipUnderstood", false)
 
     db.buyConfirm = db.buyConfirm or {}
     def(db.buyConfirm, "enabled", false)

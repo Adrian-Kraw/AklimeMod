@@ -152,17 +152,17 @@ local function AddContextEntry(owner, root, ctx)
     local label = name   -- Anzeige ohne Realm
 
     root:CreateDivider()
-    root:CreateTitle("AklimeMod")
+    root:CreateTitle("Aklime Mod Tools")
     if M:IsIgnored(key) or M:IsIgnored(name) then
         root:CreateButton("Erw. Ignore entfernen", function()
             M:Remove(key)
             M:Remove(name)
-            print("|cFFFFD100AklimeMod:|r " .. label .. " aus erweiterter Ignore-Liste entfernt.")
+            print("|cFFFFD100Aklime Mod Tools:|r " .. label .. " aus erweiterter Ignore-Liste entfernt.")
         end)
     else
         root:CreateButton("Zu erw. Ignore hinzufügen", function()
             M:Add(key)
-            print("|cFFFFD100AklimeMod:|r " .. label .. " zur erweiterten Ignore-Liste hinzugefügt.")
+            print("|cFFFFD100Aklime Mod Tools:|r " .. label .. " zur erweiterten Ignore-Liste hinzugefügt.")
         end)
     end
 end
@@ -345,7 +345,7 @@ local function BuildWin()
             if M:Add(name) then
                 RefreshWin()
             else
-                print("|cFFFFD100AklimeMod:|r " .. name .. " ist bereits ignoriert.")
+                print("|cFFFFD100Aklime Mod Tools:|r " .. name .. " ist bereits ignoriert.")
             end
         end
         self:SetText("")

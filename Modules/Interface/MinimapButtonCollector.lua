@@ -2,6 +2,8 @@
 -- Sammelt alle Addon-Minimap-Buttons und versteckt sie.
 -- Klick: aufklappen nach links.
 
+local L = AklimeModL or {}
+
 -- ============================================================
 -- Ignore-Liste
 -- ============================================================
@@ -346,12 +348,12 @@ local function CreateCollector()
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText("AklimeMod Button Sammler", 1, 0.82, 0, 1)
+        GameTooltip:SetText(L["mmc_title"] or "Aklime Mod Tools Button Collector", 1, 0.82, 0, 1)
         GameTooltip:AddLine(
-            isOpen and "Klick: Einklappen"
-                    or string.format("Klick: %d Button(s) aufklappen", #storedButtons),
+            isOpen and (L["mmc_click_collapse"] or "Click: Collapse")
+                    or string.format(L["mmc_click_expand"] or "Click: Expand %d Button(s)", #storedButtons),
             0.7, 0.7, 0.7)
-        GameTooltip:AddLine("Drag: Position ändern", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["minimap_drag"] or "Drag: Change position", 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -406,11 +408,11 @@ SlashCmdList["AKM_MMC"] = function(input)
         local angle = math.deg(math.atan2(tonumber(y), tonumber(x)))
         SetAngle(angle)
         UpdateCollectorPos()
-        print(string.format("|cFFFFD100AklimeMod MMC:|r Winkel gesetzt: %.1f°", angle))
+        print(string.format("|cFFFFD100Aklime Mod Tools MMC:|r Winkel gesetzt: %.1f°", angle))
     else
         local db = GetDB()
         print(string.format(
-            "|cFFFFD100AklimeMod MMC:|r Winkel: %.1f° | Buttons: %d | Offen: %s",
+            "|cFFFFD100Aklime Mod Tools MMC:|r Winkel: %.1f° | Buttons: %d | Offen: %s",
             GetAngle(), #storedButtons, tostring(isOpen)
         ))
         print("  Tipp: /akmmmc X Y — z.B. /akmmmc -80 60")

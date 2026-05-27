@@ -10,7 +10,7 @@ local function microColors()
     return {
         btn_normal_color    = { label="Normal",    r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 },
         btn_highlight_color = { label="Highlight", r=1,        g=1,        b=1,        a=1, order=2 },
-        btn_pushed_color    = { label="Gedrückt",  r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=3 },
+        btn_pushed_color    = { label="Pressed",   r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=3 },
     }
 end
 
@@ -66,17 +66,17 @@ C:Register("microChar", {
 -- Alle anderen Micro Buttons — identische Struktur
 -- ============================================================
 local microButtons = {
-    { key="microProfession", label="Berufe",                  btn="ProfessionMicroButton"    },
-    { key="microSpells",     label="Talente & Zauberbuch",    btn="PlayerSpellsMicroButton"  },
-    { key="microAchieve",    label="Erfolge",                 btn="AchievementMicroButton"   },
-    { key="microQuest",      label="Questlog",                btn="QuestLogMicroButton"      },
-    { key="microHousing",    label="Behausungs-Dashboard",    btn="HousingMicroButton"       },
-    { key="microGuild",      label="Gilde & Communities",     btn="GuildMicroButton",  emblem=true },
-    { key="microLFD",        label="Gruppensuche",            btn="LFDMicroButton"           },
-    { key="microCollect",    label="Warband-Sammlungen",      btn="CollectionsMicroButton"   },
-    { key="microEJ",         label="Abenteuerleitfaden",      btn="EJMicroButton"            },
+    { key="microProfession", label="Professions",             btn="ProfessionMicroButton"    },
+    { key="microSpells",     label="Talents & Spellbook",     btn="PlayerSpellsMicroButton"  },
+    { key="microAchieve",    label="Achievements",            btn="AchievementMicroButton"   },
+    { key="microQuest",      label="Quest Log",               btn="QuestLogMicroButton"      },
+    { key="microHousing",    label="Housing Dashboard",       btn="HousingMicroButton"       },
+    { key="microGuild",      label="Guild & Communities",     btn="GuildMicroButton",  emblem=true },
+    { key="microLFD",        label="Group Finder",            btn="LFDMicroButton"           },
+    { key="microCollect",    label="Warband Collections",     btn="CollectionsMicroButton"   },
+    { key="microEJ",         label="Adventure Guide",         btn="EJMicroButton"            },
     { key="microStore",      label="Shop",                    btn="StoreMicroButton"         },
-    { key="microMenu",       label="Spielmenü",               btn="MainMenuMicroButton"      },
+    { key="microMenu",       label="Game Menu",               btn="MainMenuMicroButton"      },
 }
 
 local microKeys = { "microChar" }

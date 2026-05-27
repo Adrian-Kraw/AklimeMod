@@ -1,4 +1,5 @@
 -- UI/ColorizerUI.lua
+local L = AklimeModL or {}
 -- Sub-Farben-UI für den Colorizer — exakt wie FrameColor:
 -- - Swatch-Button: rund, zeigt aktuelle Farbe (wie FrameColor colorPicker.backgroundTexture)
 -- - followClassColor-Checkbox: aktiviert Klassenfarbe, Swatch zeigt dann Klassen-Icon
@@ -103,8 +104,8 @@ local function globalColorInitializer(button, node)
         button.colorPicker:SetEnabled(true)
         button.colorPicker:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Globalfarbe wählen", 1, 1, 1)
-            GameTooltip:AddLine("Setzt diese Farbe für alle Farbslots aller Skins", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(L["color_global_title"] or "Set Global Color", 1, 1, 1)
+            GameTooltip:AddLine(L["color_global_desc"]  or "Sets this color for all color slots of all skins", 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
         button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -158,8 +159,8 @@ local function subColorInitializer(button, node)
         -- Tooltip
         button.followClassColor:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Klassenfarbe verwenden", 1, 1, 1)
-            GameTooltip:AddLine("Aktiviert: Swatch zeigt dein Klassenicon", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(L["color_use_class"]      or "Use Class Color", 1, 1, 1)
+            GameTooltip:AddLine(L["color_use_class_desc"] or "When active: swatch shows your class icon", 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
         button.followClassColor:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -193,7 +194,7 @@ local function subColorInitializer(button, node)
     if button.colorPicker then
         button.colorPicker:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Farbe wählen", 1, 1, 1)
+            GameTooltip:AddLine(L["color_choose"] or "Choose Color", 1, 1, 1)
             GameTooltip:Show()
         end)
         button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)

@@ -5,7 +5,7 @@
 -- ============================================================
 local frame = AklimeModFrame
 
-_G["AklimeModFrameTitleText"]:SetText("AklimeMod")
+_G["AklimeModFrameTitleText"]:SetText("Aklime Mod Tools")
 AklimeModFramePortrait:SetTexture("Interface\\AddOns\\AklimeModTools\\Assets\\icon")
 
 frame:SetFrameStrata("DIALOG")
@@ -78,7 +78,7 @@ searchBox:HookScript("OnEditFocusGained", function() searchBox.Instructions:Hide
 searchBox:HookScript("OnEditFocusLost", updateSearchPlaceholder)
 
 if searchBox.Instructions then
-    searchBox.Instructions:SetText("Suchen...")
+    searchBox.Instructions:SetText(AklimeModL and AklimeModL["search_placeholder"] or "Search...")
 end
 
 -- Globale Referenz damit Categories.lua zugreifen kann

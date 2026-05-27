@@ -1,5 +1,5 @@
 -- Modules/QoL/PreyPercent.lua
--- % Leiste oben mittig wenn Jagd aktiv.
+-- Phasen-Leiste oben mittig wenn Jagd aktiv.
 -- progressState direkt aus PreyHunt-Frame gelesen.
 
 local BAR_W      = 200
@@ -50,18 +50,18 @@ local function FindPreyFrame()
     return nil
 end
 
--- progressState: 0=25%, 1=50%, 2=75%, 3=100%
-local function GetPercent()
+-- progressState: 0=Phase1, 1=Phase2, 2=Phase3, 3=Phase4
+local function GetPhase()
     local f = FindPreyFrame()
     if not f then return nil end
     local ok, ps = pcall(function() return f.progressState end)
     if not ok or ps == nil then return nil end
     local n = tonumber(tostring(ps))
     if n == nil then return nil end
-    if n == 0 then return 25 end
-    if n == 1 then return 50 end
-    if n == 2 then return 75 end
-    if n >= 3 then return 100 end
+    if n == 0 then return 1 end
+    if n == 1 then return 2 end
+    if n == 2 then return 3 end
+    if n >= 3 then return 4 end
     return nil
 end
 
@@ -108,10 +108,11 @@ local function EnsureBar()
     barText:SetText("0%")
 end
 
-local function UpdateBar(pct)
+local function UpdateBar(phase)
     if not barFrame then return end
-    pct = math.min(math.max(pct or 0, 0), 100)
+    phase = math.min(math.max(phase or 1, 1), 4)
 
+    local pct    = phase * 25
     local innerW = BAR_W - 2 * FILL_INSET
     local fillW  = math.max(0, innerW * (pct / 100))
     if fillW > 0 then
@@ -123,21 +124,20 @@ local function UpdateBar(pct)
     end
 
     local r, g, b
-    if     pct >= 75 then r, g, b = 0.2,  0.85, 0.2
-    elseif pct >= 50 then r, g, b = 0.85, 0.75, 0.1
-    elseif pct >= 25 then r, g, b = 0.85, 0.45, 0.1
-    else                  r, g, b = 0.85, 0.2,  0.2
+    if     phase >= 4 then r, g, b = 0.2,  0.85, 0.2
+    elseif phase >= 3 then r, g, b = 0.85, 0.75, 0.1
+    elseif phase >= 2 then r, g, b = 0.85, 0.45, 0.1
+    else                   r, g, b = 0.85, 0.2,  0.2
     end
     barFill:SetColorTexture(r, g, b, 0.95)
 
-    local p = math.floor(pct + 0.5)
-    barText:SetText(p >= 100 and "100% " or (p .. "%"))
+    barText:SetText("Phase " .. phase)
 end
 
-local function ShowBar(pct)
+local function ShowBar(phase)
     if not IsEnabled() then return end
     EnsureBar()
-    UpdateBar(pct)
+    UpdateBar(phase)
     barFrame:Show()
     isShowing = true
 end
@@ -174,8 +174,8 @@ local function StartTicker()
             if isShowing then HideBar() end
             return
         end
-        local pct = GetPercent()
-        ShowBar(pct or 0)
+        local phase = GetPhase()
+        ShowBar(phase or 1)
     end)
 end
 

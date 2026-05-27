@@ -2,6 +2,8 @@
 -- Erinnert periodisch ans Trinken/Strecken.
 -- Eigenes Frame oben mittig, optisch wie Blizzard AlertFrame.
 
+local L = AklimeModL or {}
+
 -- ============================================================
 -- DB
 -- ============================================================
@@ -85,7 +87,7 @@ local function CreateAlertFrame()
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", 10, -8)
     title:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -8)
-    title:SetText("Trink was! Streck dich!")
+    title:SetText(L["drink_title"] or "Drink something! Stretch!")
     title:SetTextColor(1, 0.82, 0, 1)
     title:SetJustifyH("LEFT")
 
@@ -93,7 +95,7 @@ local function CreateAlertFrame()
     local desc = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
     desc:SetPoint("TOPRIGHT", title, "BOTTOMRIGHT", 0, -4)
-    desc:SetText("Zeit für eine kurze Pause.")
+    desc:SetText(L["drink_desc"] or "Time for a short break.")
     desc:SetTextColor(0.9, 0.9, 0.9, 1)
     desc:SetJustifyH("LEFT")
 
@@ -101,7 +103,7 @@ local function CreateAlertFrame()
     local btn = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
     btn:SetSize(110, 24)
     btn:SetPoint("TOP", f, "BOTTOM", 0, -4)
-    btn:SetText("Alles klar!")
+    btn:SetText(L["drink_btn"] or "Got it!")
     btn:SetScript("OnClick", function()
         f:Hide()
         btn:Hide()

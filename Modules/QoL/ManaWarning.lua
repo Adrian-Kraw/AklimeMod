@@ -126,7 +126,7 @@ SlashCmdList["AKM_MANA"] = function(input)
     if cmd == "test" then
         local ch = GetChatChannel()
         if not ch then
-            print("|cFFFF4444AklimeMod:|r Solo - kein Kanal verfuegbar.")
+            print("|cFFFF4444Aklime Mod Tools:|r Solo - kein Kanal verfuegbar.")
             return
         end
         SendChatMessage("BEWARE, I'M LOW ON MANA!", ch)
@@ -134,7 +134,7 @@ SlashCmdList["AKM_MANA"] = function(input)
     else
         local ch = GetChatChannel() or "nil (Solo)"
         print(string.format(
-            "|cFFFFD100AklimeMod Mana:|r Kanal: %s | Modul: %s | Hook: %s",
+            "|cFFFFD100Aklime Mod Tools Mana:|r Kanal: %s | Modul: %s | Hook: %s",
             ch,
             IsEnabled() and "|cFF00FF00aktiv|r" or "|cFFFF4444inaktiv|r",
             uiHooked    and "|cFF00FF00ja|r"     or "|cFFFF4444nein|r"

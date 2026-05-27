@@ -65,8 +65,8 @@ local DC = D.controls; local DT = D.tabs
 local function wc(extra)
     local t = {
         main       = { label="Main",        r=DM.r, g=DM.g, b=DM.b, a=1, order=1 },
-        background = { label="Hintergrund", r=DG.r, g=DG.g, b=DG.b, a=1, order=2 },
-        borders    = { label="Rahmen",      r=DR.r, g=DR.g, b=DR.b, a=1, order=3 },
+        background = { label="Background", r=DG.r, g=DG.g, b=DG.b, a=1, order=2 },
+        borders    = { label="Borders",      r=DR.r, g=DR.g, b=DR.b, a=1, order=3 },
         controls   = { label="Controls",   r=DC.r, g=DC.g, b=DC.b, a=1, order=4 },
         tabs       = { label="Tabs",       r=DT.r, g=DT.g, b=DT.b, a=1, order=5 },
     }
@@ -138,11 +138,11 @@ C:Register("winAchieve", {
 -- AddOn List
 -- ========================================================
 C:Register("winAddonList", {
-    label="AddOn-Liste", group="Windows",
+    label="AddOn List", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
-        borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},
-        background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=3},
+        borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},
+        background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=3},
         controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4},
     },
     apply=function(self)
@@ -167,10 +167,10 @@ C:Register("winAddonList", {
 -- Allied Races
 -- ========================================================
 C:Register("winAlliedRaces", {
-    label="Verbündete Völker", group="Windows",
+    label="Allied Races", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
-        background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},
+        background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},
         controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},
     },
     apply=function(self)
@@ -192,10 +192,10 @@ C:Register("winAlliedRaces", {
 -- Auction House
 -- ========================================================
 C:Register("winAH", {
-    label="Auktionshaus", group="Windows",
+    label="Auction House", group="Windows",
     colors=wc({
-        gold_border  ={label="Gold-Rahmen",  r=1.0, g=0.843,b=0.0,  a=1,order=6},
-        silver_border={label="Silber-Rahmen",r=0.753,g=0.753,b=0.753,a=1,order=7},
+        gold_border  ={label="Gold Border",  r=1.0, g=0.843,b=0.0,  a=1,order=6},
+        silver_border={label="Silver Border",r=0.753,g=0.753,b=0.753,a=1,order=7},
     }),
     apply=function(self)
         WL("Blizzard_AuctionHouseUI", function()
@@ -241,7 +241,7 @@ C:Register("winAH", {
 -- Azerite Respec
 -- ========================================================
 C:Register("winAzeriteRespec", {
-    label="Azerit Neubestimmung", group="Windows",
+    label="Azerite Reforging", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1}},
     apply=function(self)
         WL("Blizzard_AzeriteRespecUI", function()
@@ -292,7 +292,7 @@ C:Register("winBank", {
 -- Calendar
 -- ========================================================
 C:Register("winCalendar", {
-    label="Kalender", group="Windows",
+    label="Calendar", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=2}},
     apply=function(self)
         WL("Blizzard_Calendar", function()
@@ -326,11 +326,11 @@ C:Register("winCalendar", {
 -- Channel Frame (Blizzard_Communities)
 -- ========================================================
 C:Register("winChannel", {
-    label="Chat-Kanäle", group="Windows",
+    label="Chat Channels", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
-        background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},
-        borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},
+        background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},
+        borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},
         controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4},
     },
     apply=function(self)
@@ -358,11 +358,11 @@ C:Register("winChannel", {
 -- Character Frame
 -- ========================================================
 C:Register("winCharacter", {
-    label="Charakterinformationen", group="Windows",
+    label="Character Info", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
-        background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2,followClassColor=true},
-        borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},
+        background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2,followClassColor=true},
+        borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},
         controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4},
         tabs={label="Tabs",r=DT.r,g=DT.g,b=DT.b,a=1,order=5},
     },
@@ -416,8 +416,8 @@ C:Register("winCharacter", {
 -- Class Trainer
 -- ========================================================
 C:Register("winTrainer", {
-    label="Klassentrainer", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Class Trainer", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_TrainerUI", function()
             local mr,mg,mb,ma=col("winTrainer","main"); local br,bg2,bb,ba=col("winTrainer","background")
@@ -439,8 +439,8 @@ C:Register("winTrainer", {
 -- Click Binding
 -- ========================================================
 C:Register("winClickBind", {
-    label="Klick-Bindungen", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Key Bindings", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_ClickBindingUI", function()
             local mr,mg,mb,ma=col("winClickBind","main"); local br,bg2,bb,ba=col("winClickBind","background")
@@ -461,7 +461,7 @@ C:Register("winClickBind", {
 -- Collections Journal
 -- ========================================================
 C:Register("winCollections", {
-    label="Warband-Sammlungen", group="Windows", colors=wc(),
+    label="Warband Collections", group="Windows", colors=wc(),
     apply=function(self)
         WL("Blizzard_Collections", function()
             local mr,mg,mb,ma=col("winCollections","main"); local br,bg2,bb,ba=col("winCollections","background")
@@ -498,7 +498,7 @@ C:Register("winCollections", {
 -- Color Picker
 -- ========================================================
 C:Register("winColorPicker", {
-    label="Farbauswahl", group="Windows",
+    label="Color Picker", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=2}},
     apply=function(self)
         local mr,mg,mb,ma=col("winColorPicker","main"); local cr,cg,cb,ca=col("winColorPicker","controls")
@@ -517,7 +517,7 @@ C:Register("winColorPicker", {
 -- Cooldown Viewer Settings
 -- ========================================================
 C:Register("winCooldownSettings", {
-    label="Cooldown-Viewer Einstellungen", group="Windows", colors=wc(),
+    label="Cooldown Viewer Settings", group="Windows", colors=wc(),
     apply=function(self)
         local mr,mg,mb,ma=col("winCooldownSettings","main"); local br,bg2,bb,ba=col("winCooldownSettings","background")
         local ir,ig,ib,ia=col("winCooldownSettings","borders"); local cr,cg,cb,ca=col("winCooldownSettings","controls")
@@ -538,8 +538,8 @@ C:Register("winCooldownSettings", {
 -- Damage Meter
 -- ========================================================
 C:Register("winDamageMeter", {
-    label="Schadensmesser", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
+    label="Damage Meter", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
     apply=function(self)
         local mr,mg,mb,ma=col("winDamageMeter","main"); local ir,ig,ib,ia=col("winDamageMeter","borders")
         local cr,cg,cb,ca=col("winDamageMeter","controls")
@@ -569,8 +569,8 @@ C:Register("winDamageMeter", {
 -- Delves Companion
 -- ========================================================
 C:Register("winDelves", {
-    label="Tiefen-Begleiter", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
+    label="Delve Companion", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
     apply=function(self)
         local mr,mg,mb,ma=col("winDelves","main"); local br,bg2,bb,ba=col("winDelves","background")
         local cr,cg,cb,ca=col("winDelves","controls")
@@ -588,7 +588,7 @@ C:Register("winDelves", {
 -- Delves Difficulty Picker
 -- ========================================================
 C:Register("winDelvesDiff", {
-    label="Tiefen-Schwierigkeit", group="Windows",
+    label="Delve Difficulty", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=2}},
     apply=function(self)
         WL("Blizzard_DelvesDifficultyPicker", function()
@@ -607,8 +607,8 @@ C:Register("winDelvesDiff", {
 -- Dressing Room
 -- ========================================================
 C:Register("winDressup", {
-    label="Ankleidezimmer", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Dressing Room", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         local mr,mg,mb,ma=col("winDressup","main"); local ir,ig,ib,ia=col("winDressup","borders")
         local br,bg2,bb,ba=col("winDressup","background"); local cr,cg,cb,ca=col("winDressup","controls")
@@ -626,7 +626,7 @@ C:Register("winDressup", {
 -- Encounter Journal
 -- ========================================================
 C:Register("winEJ", {
-    label="Abenteuerleitfaden", group="Windows", colors=wc(),
+    label="Adventure Guide", group="Windows", colors=wc(),
     apply=function(self)
         WL("Blizzard_EncounterJournal", function()
             local mr,mg,mb,ma=col("winEJ","main"); local br,bg2,bb,ba=col("winEJ","background")
@@ -662,8 +662,8 @@ C:Register("winEJ", {
 -- Event Trace
 -- ========================================================
 C:Register("winEventLog", {
-    label="Event-Log", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Event Log", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_EventTrace", function()
             local mr,mg,mb,ma=col("winEventLog","main"); local br,bg2,bb,ba=col("winEventLog","background")
@@ -685,7 +685,7 @@ C:Register("winEventLog", {
 -- Flight Map
 -- ========================================================
 C:Register("winFlightMap", {
-    label="Flugkarte", group="Windows",
+    label="Flight Map", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1}},
     apply=function(self)
         WL("Blizzard_FlightMap", function()
@@ -703,8 +703,8 @@ C:Register("winFlightMap", {
 -- Friends Frame
 -- ========================================================
 C:Register("winFriends", {
-    label="Soziales", group="Windows", colors=wc(),
-    toggles={updateBgOnlineStatus={label="Hintergrund je nach Online-Status färben",default=true}},
+    label="Social", group="Windows", colors=wc(),
+    toggles={updateBgOnlineStatus={label="Color Background by Online Status",default=true}},
     apply=function(self)
         local mr,mg,mb,ma=col("winFriends","main"); local br,bg2,bb,ba=col("winFriends","background")
         local ir,ig,ib,ia=col("winFriends","borders"); local cr,cg,cb,ca=col("winFriends","controls")
@@ -768,10 +768,10 @@ C:Register("winFriends", {
 -- Game Menu
 -- ========================================================
 C:Register("winGameMenu", {
-    label="Spielmenü", group="Windows",
+    label="Game Menu", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
-        background={label="Hintergrund",r=0,g=0,b=0,a=0.7,order=2},
+        background={label="Background",r=0,g=0,b=0,a=0.7,order=2},
     },
     apply=function(self)
         local mr,mg,mb,ma = col("winGameMenu","main")
@@ -815,7 +815,7 @@ C:Register("winGameMenu", {
 -- ========================================================
 C:Register("winGossip", {
     label="Gossip", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         local mr,mg,mb,ma=col("winGossip","main"); local br,bg2,bb,ba=col("winGossip","background")
         local ir,ig,ib,ia=col("winGossip","borders"); local cr,cg,cb,ca=col("winGossip","controls")
@@ -831,7 +831,7 @@ C:Register("winGossip", {
 -- Guild Bank
 -- ========================================================
 C:Register("winGuildBank", {
-    label="Gildenbank", group="Windows",
+    label="Guild Bank", group="Windows",
     colors=wc({emblem={label="Emblem",r=1.0,g=0.843,b=0.0,a=1,order=0.1}}),
     apply=function(self)
         WL("Blizzard_GuildBankUI", function()
@@ -861,7 +861,7 @@ C:Register("winGuildBank", {
 -- Housing Dashboard
 -- ========================================================
 C:Register("winHousing", {
-    label="Behausungs-Dashboard", group="Windows", colors=wc(),
+    label="Housing Dashboard", group="Windows", colors=wc(),
     apply=function(self)
         WL("Blizzard_HousingDashboard", function()
             local mr,mg,mb,ma=col("winHousing","main"); local br,bg2,bb,ba=col("winHousing","background")
@@ -881,7 +881,7 @@ C:Register("winHousing", {
 -- Housing Model Preview
 -- ========================================================
 C:Register("winHousingPreview", {
-    label="Behausungs-Vorschau", group="Windows",
+    label="Housing Preview", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1}},
     apply=function(self)
         WL("Blizzard_HousingModelPreview", function()
@@ -899,8 +899,8 @@ C:Register("winHousingPreview", {
 -- Inspect Frame
 -- ========================================================
 C:Register("winInspect", {
-    label="Inspizieren", group="Windows", colors=wc(),
-    toggles={follow_unit_class={label="Hintergrundfarbe der Klasse anpassen",default=true}},
+    label="Inspect", group="Windows", colors=wc(),
+    toggles={follow_unit_class={label="Adjust Background Color by Class",default=true}},
     apply=function(self)
         WL("Blizzard_InspectUI", function()
             local mr,mg,mb,ma=col("winInspect","main"); local br,bg2,bb,ba=col("winInspect","background")
@@ -937,7 +937,7 @@ C:Register("winInspect", {
 -- Islands Queue
 -- ========================================================
 C:Register("winIslandsQueue", {
-    label="Insel-Warteschlange", group="Windows",
+    label="Island Queue", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1}},
     apply=function(self)
         WL("Blizzard_IslandsQueueUI", function()
@@ -956,8 +956,8 @@ C:Register("winIslandsQueue", {
 -- Item Interaction
 -- ========================================================
 C:Register("winItemInteraction", {
-    label="Gegenstand-Interaktion", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3}},
+    label="Item Interaction", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3}},
     apply=function(self)
         WL("Blizzard_ItemInteractionUI", function()
             local mr,mg,mb,ma=col("winItemInteraction","main"); local br,bg2,bb,ba=col("winItemInteraction","background")
@@ -978,8 +978,8 @@ C:Register("winItemInteraction", {
 -- Item Socketing
 -- ========================================================
 C:Register("winItemSocket", {
-    label="Edelstein-Einsetzen", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Socket Gem", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_ItemSocketingUI", function()
             local mr,mg,mb,ma=col("winItemSocket","main"); local br,bg2,bb,ba=col("winItemSocket","background")
@@ -1000,8 +1000,8 @@ C:Register("winItemSocket", {
 -- Item Text Frame
 -- ========================================================
 C:Register("winBook", {
-    label="Buch", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Book", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         local mr,mg,mb,ma=col("winBook","main"); local br,bg2,bb,ba=col("winBook","background")
         local ir,ig,ib,ia=col("winBook","borders"); local cr,cg,cb,ca=col("winBook","controls")
@@ -1017,8 +1017,8 @@ C:Register("winBook", {
 -- Item Upgrade
 -- ========================================================
 C:Register("winItemUpgrade", {
-    label="Gegenstand verbessern", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Item Upgrade", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_ItemUpgradeUI", function()
             local mr,mg,mb,ma=col("winItemUpgrade","main"); local br,bg2,bb,ba=col("winItemUpgrade","background")
@@ -1042,8 +1042,8 @@ C:Register("winItemUpgrade", {
 -- Loot Frame
 -- ========================================================
 C:Register("winLoot", {
-    label="Beute", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
+    label="Loot", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
     apply=function(self)
         local mr,mg,mb,ma=col("winLoot","main"); local br,bg2,bb,ba=col("winLoot","background")
         local cr,cg,cb,ca=col("winLoot","controls")
@@ -1062,7 +1062,7 @@ C:Register("winLoot", {
 -- Macro Frame
 -- ========================================================
 C:Register("winMacro", {
-    label="Makros", group="Windows", colors=wc(),
+    label="Macros", group="Windows", colors=wc(),
     apply=function(self)
         WL("Blizzard_MacroUI", function()
             local mr,mg,mb,ma=col("winMacro","main"); local br,bg2,bb,ba=col("winMacro","background")
@@ -1091,8 +1091,8 @@ C:Register("winMacro", {
 -- Mail Frame
 -- ========================================================
 C:Register("winMail", {
-    label="Post", group="Windows",
-    colors=wc({gold_border={label="Gold-Rahmen",r=1.0,g=0.843,b=0.0,a=1,order=6},silver_border={label="Silber-Rahmen",r=0.753,g=0.753,b=0.753,a=1,order=7},copper_border={label="Kupfer-Rahmen",r=0.722,g=0.451,b=0.200,a=1,order=8}}),
+    label="Mail", group="Windows",
+    colors=wc({gold_border={label="Gold Border",r=1.0,g=0.843,b=0.0,a=1,order=6},silver_border={label="Silver Border",r=0.753,g=0.753,b=0.753,a=1,order=7},copper_border={label="Copper Border",r=0.722,g=0.451,b=0.200,a=1,order=8}}),
     apply=function(self)
         local mr,mg,mb,ma=col("winMail","main"); local br,bg2,bb,ba=col("winMail","background")
         local ir,ig,ib,ia=col("winMail","borders"); local cr,cg,cb,ca=col("winMail","controls")
@@ -1126,7 +1126,7 @@ C:Register("winMail", {
 -- Merchant Frame
 -- ========================================================
 C:Register("winMerchant", {
-    label="Händler", group="Windows", colors=wc(),
+    label="Merchant", group="Windows", colors=wc(),
     apply=function(self)
         local mr,mg,mb,ma=col("winMerchant","main"); local br,bg2,bb,ba=col("winMerchant","background")
         local ir,ig,ib,ia=col("winMerchant","borders"); local cr,cg,cb,ca=col("winMerchant","controls")
@@ -1149,8 +1149,8 @@ C:Register("winMerchant", {
 -- Order Hall Mission
 -- ========================================================
 C:Register("winOrderHall", {
-    label="Ordenssaal-Missionen", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},corner_textures={label="Ecktexturen",r=0.8,g=0.8,b=0.8,a=1,order=4}},
+    label="Order Hall Missions", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},corner_textures={label="Corner Textures",r=0.8,g=0.8,b=0.8,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_GarrisonUI", function()
             local mr,mg,mb,ma=col("winOrderHall","main"); local ir,ig,ib,ia=col("winOrderHall","borders")
@@ -1170,8 +1170,8 @@ C:Register("winOrderHall", {
 -- PVE Frame
 -- ========================================================
 C:Register("winPVE", {
-    label="Gruppensuche", group="Windows",
-    colors=wc({filligree={label="Filigran-Überlagerung",r=0,g=0,b=0,a=1,order=6}}),
+    label="Group Finder", group="Windows",
+    colors=wc({filligree={label="Filigree Overlay",r=0,g=0,b=0,a=1,order=6}}),
     apply=function(self)
         local mr,mg,mb,ma=col("winPVE","main"); local br,bg2,bb,ba=col("winPVE","background")
         local ir,ig,ib,ia=col("winPVE","borders"); local cr,cg,cb,ca=col("winPVE","controls")
@@ -1214,8 +1214,8 @@ C:Register("winPVE", {
 -- Player Spells Frame
 -- ========================================================
 C:Register("winSpellbook", {
-    label="Talente & Zauberbuch", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},tabs={label="Tabs",r=DT.r,g=DT.g,b=DT.b,a=1,order=4}},
+    label="Talents & Spellbook", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},tabs={label="Tabs",r=DT.r,g=DT.g,b=DT.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_PlayerSpells", function()
             local mr,mg,mb,ma=col("winSpellbook","main"); local br,bg2,bb,ba=col("winSpellbook","background")
@@ -1242,8 +1242,8 @@ C:Register("winSpellbook", {
 -- Professions Book
 -- ========================================================
 C:Register("winProfessionsBook", {
-    label="Berufsbuch", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3}},
+    label="Profession Book", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3}},
     apply=function(self)
         WL("Blizzard_ProfessionsBook", function()
             local mr,mg,mb,ma=col("winProfessionsBook","main"); local br,bg2,bb,ba=col("winProfessionsBook","background")
@@ -1262,8 +1262,8 @@ C:Register("winProfessionsBook", {
 -- Professions Customer Orders
 -- ========================================================
 C:Register("winCraftingOrders", {
-    label="Handwerksaufträge", group="Windows",
-    colors=wc({gold_border={label="Gold-Rahmen",r=1.0,g=0.843,b=0.0,a=1,order=6},silver_border={label="Silber-Rahmen",r=0.753,g=0.753,b=0.753,a=1,order=7}}),
+    label="Crafting Orders", group="Windows",
+    colors=wc({gold_border={label="Gold Border",r=1.0,g=0.843,b=0.0,a=1,order=6},silver_border={label="Silver Border",r=0.753,g=0.753,b=0.753,a=1,order=7}}),
     apply=function(self)
         WL("Blizzard_ProfessionsCustomerOrders", function()
             local mr,mg,mb,ma=col("winCraftingOrders","main"); local br,bg2,bb,ba=col("winCraftingOrders","background")
@@ -1285,7 +1285,7 @@ C:Register("winCraftingOrders", {
 -- Professions Frame
 -- ========================================================
 C:Register("winProfessions", {
-    label="Berufe", group="Windows", colors=wc(),
+    label="Professions", group="Windows", colors=wc(),
     apply=function(self)
         WL("Blizzard_Professions", function()
             local mr,mg,mb,ma=col("winProfessions","main"); local br,bg2,bb,ba=col("winProfessions","background")
@@ -1308,7 +1308,7 @@ C:Register("winProfessions", {
 -- ========================================================
 C:Register("winQuest", {
     label="Quest", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         local mr,mg,mb,ma=col("winQuest","main"); local br,bg2,bb,ba=col("winQuest","background")
         local ir,ig,ib,ia=col("winQuest","borders"); local cr,cg,cb,ca=col("winQuest","controls")
@@ -1344,7 +1344,7 @@ C:Register("winQuest", {
 -- Ready Check
 -- ========================================================
 C:Register("winReadyCheck", {
-    label="Bereit-Check", group="Windows",
+    label="Ready Check", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1}},
     apply=function(self)
         local mr,mg,mb,ma=col("winReadyCheck","main")
@@ -1357,8 +1357,8 @@ C:Register("winReadyCheck", {
 -- Scrapping Machine
 -- ========================================================
 C:Register("winScrap", {
-    label="Zerlegungs-Automat", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
+    label="Scrapping Machine", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=4}},
     apply=function(self)
         WL("Blizzard_ScrappingMachineUI", function()
             local mr,mg,mb,ma=col("winScrap","main"); local br,bg2,bb,ba=col("winScrap","background")
@@ -1380,7 +1380,7 @@ C:Register("winScrap", {
 -- Settings Panel
 -- ========================================================
 C:Register("winSettings", {
-    label="Einstellungen", group="Windows", colors=wc(),
+    label="Settings", group="Windows", colors=wc(),
     apply=function(self)
         local mr,mg,mb,ma=col("winSettings","main"); local br,bg2,bb,ba=col("winSettings","background")
         local ir,ig,ib,ia=col("winSettings","borders"); local cr,cg,cb,ca=col("winSettings","controls")
@@ -1409,8 +1409,8 @@ C:Register("winSettings", {
 -- Stable Frame
 -- ========================================================
 C:Register("winStable", {
-    label="Stall", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
+    label="Stable", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
     apply=function(self)
         local mr,mg,mb,ma=col("winStable","main"); local ir,ig,ib,ia=col("winStable","borders")
         local cr,cg,cb,ca=col("winStable","controls")
@@ -1428,7 +1428,7 @@ C:Register("winStable", {
 -- Stopwatch
 -- ========================================================
 C:Register("winStopwatch", {
-    label="Stoppuhr", group="Windows",
+    label="Stopwatch", group="Windows",
     colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1}},
     apply=function(self)
         WL("Blizzard_TimeManager", function()
@@ -1448,9 +1448,9 @@ C:Register("winStopwatch", {
 -- Trade Frame
 -- ========================================================
 C:Register("winTrade", {
-    label="Handel", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Rahmen",r=DR.r,g=DR.g,b=DR.b,a=1,order=3}},
-    toggles={follow_unit_class={label="Empfänger-Hintergrund je nach Klasse",default=true}},
+    label="Trade", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},borders={label="Borders",r=DR.r,g=DR.g,b=DR.b,a=1,order=3}},
+    toggles={follow_unit_class={label="Recipient Background by Class",default=true}},
     apply=function(self)
         local mr,mg,mb,ma=col("winTrade","main"); local br,bg2,bb,ba=col("winTrade","background")
         local ir,ig,ib,ia=col("winTrade","borders")
@@ -1475,7 +1475,7 @@ C:Register("winTrade", {
 -- Transmog Frame
 -- ========================================================
 C:Register("winTransmog", {
-    label="Transmogrifikation", group="Windows", colors=wc(),
+    label="Transmogrification", group="Windows", colors=wc(),
     apply=function(self)
         WL("Blizzard_Transmog", function()
             local mr,mg,mb,ma=col("winTransmog","main"); local br,bg2,bb,ba=col("winTransmog","background")
@@ -1499,7 +1499,7 @@ C:Register("winTransmog", {
 -- World Map Frame
 -- ========================================================
 C:Register("winMap", {
-    label="Weltkarte & Questlog", group="Windows", colors=wc(),
+    label="World Map & Quest Log", group="Windows", colors=wc(),
     apply=function(self)
         local mr,mg,mb,ma=col("winMap","main"); local br,bg2,bb,ba=col("winMap","background")
         local ir,ig,ib,ia=col("winMap","borders"); local cr,cg,cb,ca=col("winMap","controls")
@@ -1524,8 +1524,8 @@ C:Register("winMap", {
 -- Bags (Container Frame)
 -- ========================================================
 C:Register("winBags", {
-    label="Taschen", group="Windows",
-    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Hintergrund",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
+    label="Bags", group="Windows",
+    colors={main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},background={label="Background",r=DG.r,g=DG.g,b=DG.b,a=1,order=2},controls={label="Controls",r=DC.r,g=DC.g,b=DC.b,a=1,order=3}},
     apply=function(self)
         local mr,mg,mb,ma=col("winBags","main"); local br,bg2,bb,ba=col("winBags","background")
         local cr,cg,cb,ca=col("winBags","controls")
@@ -1560,7 +1560,7 @@ C:Register("winBags", {
 -- ========================================================
 C:Register("winCommunities", {
     label="Communities", group="Windows",
-    colors=wc({filligree={label="Filigran",r=1,g=1,b=1,a=1,order=6}}),
+    colors=wc({filligree={label="Filigree",r=1,g=1,b=1,a=1,order=6}}),
     apply=function(self)
         WL("Blizzard_Communities", function()
             local mr,mg,mb,ma=col("winCommunities","main"); local br,bg2,bb,ba=col("winCommunities","background")
@@ -1588,12 +1588,12 @@ C:Register("winCommunities", {
 -- AklimeMod selbst (eigenes Fenster färben)
 -- ========================================================
 C:Register("winAklimeMod", {
-    label  = "AklimeMod",
+    label  = "Aklime Mod Tools",
     group  = "Addons",
     colors = {
-        main       = { label="Rahmen",      r=DM.r, g=DM.g, b=DM.b, a=1,   order=1 },
-        background = { label="Hintergrund", r=DG.r, g=DG.g, b=DG.b, a=0.9, order=2 },
-        borders    = { label="Inset-Rahmen",r=DR.r, g=DR.g, b=DR.b, a=1,   order=3 },
+        main       = { label="Frame",        r=DM.r, g=DM.g, b=DM.b, a=1,   order=1 },
+        background = { label="Background", r=DG.r, g=DG.g, b=DG.b, a=0.9, order=2 },
+        borders    = { label="Inset Borders",r=DR.r, g=DR.g, b=DR.b, a=1,   order=3 },
         controls   = { label="Controls",   r=DC.r, g=DC.g, b=DC.b, a=1,   order=4 },
     },
     apply = function(self)

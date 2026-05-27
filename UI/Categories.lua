@@ -1,5 +1,7 @@
 -- UI/Categories.lua
 
+local L = AklimeModL or {}
+
 local RSV = function() return AklimeMod_RightScrollView end
 local LSV = function() return AklimeMod_LeftScrollView  end
 
@@ -111,12 +113,12 @@ local function actionInitializer(frame, node)
     if data.label == "RELOAD_BUTTONS" then
         if not reloadBtns then
             local lbl1 = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-            lbl1:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -8); lbl1:SetText("Reload:")
+            lbl1:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -8); lbl1:SetText(L["reload_label_rl"])
             local b1 = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
             b1:SetSize(80, 26); b1:SetPoint("LEFT", lbl1, "RIGHT", 10, 0); b1:SetText("/rl")
             b1:SetScript("OnClick", function() if AklimeModDB.reloadUI.enabled then ReloadUI() end end)
             local lbl2 = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-            lbl2:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -42); lbl2:SetText("Neuladen:")
+            lbl2:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -42); lbl2:SetText(L["reload_label_nl"])
             local b2 = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
             b2:SetSize(80, 26); b2:SetPoint("LEFT", lbl2, "RIGHT", 10, 0); b2:SetText("/nl")
             b2:SetScript("OnClick", function() if AklimeModDB.reloadUI.enabled then ReloadUI() end end)
@@ -221,7 +223,7 @@ local function mouseColorInitializer(button, node)
     if not AklimeMod_MouseEffects then return end
     local data = node:GetData()
     local isTrail = data.mouseTrailColor == true
-    local label = isTrail and "Spurfarbe" or "Ringfarbe"
+    local label = isTrail and L["color_trail"] or L["color_ring"]
     local classKey = isTrail and "trailClassColor" or "classColor"
     local getColor = isTrail and AklimeMod_MouseEffects.GetTrailColor or AklimeMod_MouseEffects.GetCustomColor
     local setColor = isTrail and AklimeMod_MouseEffects.SetTrailColor or AklimeMod_MouseEffects.SetCustomColor
@@ -244,7 +246,7 @@ local function mouseColorInitializer(button, node)
     if button.followClassColor then
         button.followClassColor:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Klassenfarbe verwenden", 1, 1, 1)
+            GameTooltip:AddLine(L["color_use_class"], 1, 1, 1)
             GameTooltip:Show()
         end)
         button.followClassColor:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -258,7 +260,7 @@ local function mouseColorInitializer(button, node)
         button.colorPicker:SetScript("OnEnter", function(self)
             local r, g, b = getColor()
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Farbe wählen", 1, 1, 1)
+            GameTooltip:AddLine(L["color_choose"], 1, 1, 1)
             GameTooltip:AddLine(ColorToHex(r, g, b), 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
@@ -376,18 +378,18 @@ local function GetOrCreateDashboard(parent)
     end
 
     local y = -40
-    Label("|cFFFFD100Kontakt|r", y, "GameFontNormalLarge"); y = y - 28
+    Label("|cFFFFD100" .. L["dash_contact"] .. "|r", y, "GameFontNormalLarge"); y = y - 28
     Separator(y); y = y - 18
     Label("|cFF00CCFFIngame:|r", y); y = y - 22
     Label("  Yodabär-Blackmoore", y); y = y - 22
     Label("  Aklime-Blackmoore", y); y = y - 22
     Label("  Sattarnna-Un'Goro", y); y = y - 30
     Separator(y); y = y - 18
-    Label("|cFFFFD100Befehle|r", y, "GameFontNormalLarge"); y = y - 28
+    Label("|cFFFFD100" .. L["dash_commands"] .. "|r", y, "GameFontNormalLarge"); y = y - 28
     Separator(y); y = y - 18
     local cmds = AklimeMod_Commands or {
-        { cmd="/akm",      desc="Addon öffnen / schließen" },
-        { cmd="/akm help", desc="Alle Befehle im Chat anzeigen" },
+        { cmd="/akm",      desc=L["dash_cmd_open"] },
+        { cmd="/akm help", desc=L["dash_cmd_help"] },
     }
     for _, e in ipairs(cmds) do
         local row = dashboardPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -424,7 +426,7 @@ local currentBuildFn = nil
 
 -- Nur die nicht-Colorizer-Module (fuer globale Suche nutzbar)
 local function addInterfaceNodes(dp)
-    local eliteNode = addModule(dp, "Elite Frame",
+    local eliteNode = addModule(dp, L["mod_elite_frame"],
         function() return AklimeModDB.eliteFrame.enabled end,
         function(v)
             AklimeModDB.eliteFrame.enabled = v
@@ -433,10 +435,10 @@ local function addInterfaceNodes(dp)
         end
     )
     local eliteStyles = {
-        { key="silver",     label="Silberner Drachen"             },
-        { key="silverWing", label="Silberner Drachen mit Flügeln" },
-        { key="gold",       label="Goldener Drachen"              },
-        { key="goldWing",   label="Goldener Drachen mit Flügeln"  },
+        { key="silver",     label=L["elite_silver"]      },
+        { key="silverWing", label=L["elite_silver_wing"] },
+        { key="gold",       label=L["elite_gold"]        },
+        { key="goldWing",   label=L["elite_gold_wing"]   },
     }
     for _, s in ipairs(eliteStyles) do
         local key = s.key
@@ -454,62 +456,62 @@ local function addInterfaceNodes(dp)
         )
     end
 
-    local rareNode = addModule(dp, "Seltene Gegner",
+    local rareNode = addModule(dp, L["mod_rare_enemies"],
         function() return AklimeModDB.rareFrame.enabled end,
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
     )
-    addToggle(rareNode, "Stern durch Silbernen Drachen ergänzen",
+    addToggle(rareNode, L["toggle_star_silver"],
         function() return AklimeModDB.rareFrame.enabled end,
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
     )
 
-    local dungeonEyeNode = addModule(dp, "Dungeon Eye",
+    local dungeonEyeNode = addModule(dp, L["mod_dungeon_eye"],
         function() return AklimeMod_DungeonEye.IsEnabled() end,
         function(v) AklimeMod_DungeonEye.SetEnabled(v) end
     )
-    addToggle(dungeonEyeNode, "An Minimap-Rand fixieren",
+    addToggle(dungeonEyeNode, L["toggle_lock_minimap"],
         function() return AklimeMod_DungeonEye.IsLocked() end,
         function(v) AklimeMod_DungeonEye.SetLocked(v) end
     )
 
-    local raidCenterNode = addModule(dp, "Raid Frame Zentrierung",
+    local raidCenterNode = addModule(dp, L["mod_raid_center"],
         function() return AklimeMod_RaidFrameCenter.IsEnabled() end,
         function(v) AklimeMod_RaidFrameCenter.SetEnabled(v) end
     )
-    addInfo(raidCenterNode, "Zentriert Raid-Frames dynamisch.")
+    addInfo(raidCenterNode, L["info_raid_center_short"])
 
-    local hideMacroNode = addModule(dp, "Makro-Namen ausblenden",
+    local hideMacroNode = addModule(dp, L["mod_hide_macro"],
         function() return AklimeMod_HideMacroNames.IsEnabled() end,
         function(v) AklimeMod_HideMacroNames.SetEnabled(v) end
     )
-    addInfo(hideMacroNode, "Versteckt die Makro-Namen auf allen Action Buttons.")
+    addInfo(hideMacroNode, L["info_hide_macro_short"])
 
-    local dmCollapseNode = addModule(dp, "Schadensanzeige: nach unten klappen",
+    local dmCollapseNode = addModule(dp, L["mod_dm_collapse"],
         function() return AklimeMod_DamageMeterCollapseDown.IsEnabled() end,
         function(v) AklimeMod_DamageMeterCollapseDown.SetEnabled(v) end
     )
-    addInfo(dmCollapseNode, "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.")
+    addInfo(dmCollapseNode, L["info_dm_collapse_short"])
 
     if AklimeMod_MinimapCollector then
-        local mmNode = addModule(dp, "Minimap Button Sammler",
+        local mmNode = addModule(dp, L["mod_mm_collector"],
             function() return AklimeMod_MinimapCollector.IsEnabled() end,
             function(v) AklimeMod_MinimapCollector.SetEnabled(v) end
         )
-        addToggle(mmNode, "Eigenen AklimeMod-Button einschließen",
+        addToggle(mmNode, L["toggle_include_own"],
             function() return AklimeMod_MinimapCollector.IncludeOwn() end,
             function(v) AklimeMod_MinimapCollector.SetIncludeOwn(v) end
         )
     end
 
     if AklimeMod_MinimapElementHider then
-        local hideNode = addModule(dp, "Minimap-Elemente ausblenden",
+        local hideNode = addModule(dp, L["mod_mm_hider"],
             function() return AklimeMod_MinimapElementHider.IsEnabled() end,
             function(v) AklimeMod_MinimapElementHider.SetEnabled(v) end
         )
         for _, kv in ipairs({
-            { "Verfolgungssymbol", "tracking" }, { "Zoneninfo", "zoneInfo" },
-            { "Uhr", "clock" }, { "Kalender", "calendar" },
-            { "Post-Symbol", "mail" }, { "Addonfach", "addonCompartment" },
+            { L["toggle_mm_tracking"], "tracking" }, { L["toggle_mm_zone"], "zoneInfo" },
+            { L["toggle_mm_clock"], "clock" }, { L["toggle_mm_calendar"], "calendar" },
+            { L["toggle_mm_mail"], "mail" }, { L["toggle_mm_compartment"], "addonCompartment" },
         }) do
             local lbl, key = kv[1], kv[2]
             addToggle(hideNode, lbl,
@@ -520,41 +522,31 @@ local function addInterfaceNodes(dp)
     end
 
     if AklimeMod_MouseEffects then
-        local mouseNode = addModule(dp, "Mausring und Mausspur",
+        local mouseNode = addModule(dp, L["mod_mouse_effects"],
             function() return AklimeMod_MouseEffects.IsEnabled() end,
             function(v) AklimeMod_MouseEffects.SetEnabled(v) end
         )
-        addInfo(mouseNode, "Ring und Spur um den Mauszeiger.")
+        addInfo(mouseNode, L["info_mouse_effects"])
     end
 
     if AklimeMod_GearCheck then
-        local gcNode = addModule(dp, "Ausrüstungs-Prüfung",
+        local gcNode = addModule(dp, L["mod_gear_check"],
             function() return AklimeMod_GearCheck.IsEnabled() end,
             function(v) AklimeMod_GearCheck.SetEnabled(v) end
         )
-        addInfo(gcNode,
-            "Zeigt an jedem Equipment-Slot:\n" ..
-            "  • Sockel-Icons neben dem Slot (Edelstein oder leere Fassung)\n" ..
-            "  • Itemlevel unten rechts am Slot, in Qualitätsfarbe\n" ..
-            "  • Verzauberungsstatus als Text neben dem Slot\n" ..
-            "Gilt für Charakter-Fenster und Betrachten-Fenster."
-        )
+        addInfo(gcNode, L["info_gear_check"])
     end
 
     if AklimeMod_CombatTooltip then
-        local ttNode = addModule(dp, "Tooltip im Kampf ausblenden",
+        local ttNode = addModule(dp, L["mod_combat_tooltip"],
             function() return AklimeMod_CombatTooltip:IsEnabled() end,
             function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
         )
-        addInfo(ttNode,
-            "Versteckt den HUD-Tooltip während des Kampfes.\n" ..
-            "Sobald der Kampf endet erscheint er beim nächsten\n" ..
-            "Drüberbewegen automatisch wieder."
-        )
+        addInfo(ttNode, L["info_combat_tooltip"])
     end
 
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_hud_fading"], centered = true })
     end
     do
         local fade = AklimeModDB.interfaceFade
@@ -571,16 +563,16 @@ local function addInterfaceNodes(dp)
                 setEnabled = function(v) fade[k].enabled = v end
             end
             local modeName
-            if i == 1 then modeName = "Chillmodus in Ruhezonen"
-            elseif i == 2 then modeName = "Offene Welt"
-            elseif i == 3 then modeName = "Housing"
-            else modeName = "Platzhalter " .. i
+            if i == 1 then modeName = L["mod_hud_chill"]
+            elseif i == 2 then modeName = L["mod_hud_openworld"]
+            elseif i == 3 then modeName = L["mod_hud_housing"]
+            else modeName = "Mode " .. i
             end
             local modeNode = addModule(dp, modeName,
                 function() return fade[k].enabled end,
                 setEnabled
             )
-            addSlider(modeNode, "Transparenz", 0, 100, 1,
+            addSlider(modeNode, L["slider_transparency"], 0, 100, 1,
                 function() return fade[k].alpha end,
                 function(v)
                     fade[k].alpha = v
@@ -591,34 +583,34 @@ local function addInterfaceNodes(dp)
                 function(v) return v .. "%" end
             )
             if i == 1 or i == 2 or i == 3 then
-                addSlider(modeNode, "Bewegdauer bis Einblenden", 0, 10, 1,
+                addSlider(modeNode, L["slider_move_delay"], 0, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
-                    function(v) return v == 0 and "sofort" or v .. " s" end
+                    function(v) return v == 0 and L["fmt_instant"] or v .. " s" end
                 )
-                addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
+                addSlider(modeNode, L["slider_idle_delay"], 5, 60, 1,
                     function() return fade[k].idleDelay end,
                     function(v) fade[k].idleDelay = v end,
                     function(v) return v .. " s" end
                 )
-                addSlider(modeNode, "Chat eingeblendet für", 5, 60, 1,
+                addSlider(modeNode, L["slider_chat_delay"], 5, 60, 1,
                     function() return fade[k].chatDelay end,
                     function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
                 )
-                addInfo(modeNode, "Immer bei 100% sichtbar:")
+                addInfo(modeNode, L["info_always_visible"])
                 local ex = fade[k].exclude
                 local function refresh() if AklimeMod_HUDFader then AklimeMod_HUDFader:Refresh() end end
-                addToggle(modeNode, "Chat",            function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
-                addToggle(modeNode, "Minimap",         function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
-                addToggle(modeNode, "Quest / Ziele",   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
-                addToggle(modeNode, "Mikromenü",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
-                addToggle(modeNode, "Taschen",         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
-                addToggle(modeNode, "Aktionsleisten",  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
-                addToggle(modeNode, "HP-Anzeigen",     function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
-                addToggle(modeNode, "Buffs / Debuffs", function() return ex.buffs       end, function(v) ex.buffs       = v; refresh() end)
-                addToggle(modeNode, "Rufbar",          function() return ex.repBar      end, function(v) ex.repBar      = v; refresh() end)
-                addToggle(modeNode, "Schadensanzeige", function() return ex.damageMeter end, function(v) ex.damageMeter = v; refresh() end)
+                addToggle(modeNode, L["toggle_chat"],          function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
+                addToggle(modeNode, L["toggle_minimap"],       function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
+                addToggle(modeNode, L["toggle_objectives"],    function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
+                addToggle(modeNode, L["toggle_micromenu"],     function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
+                addToggle(modeNode, L["toggle_bags"],          function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
+                addToggle(modeNode, L["toggle_action_bars"],   function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
+                addToggle(modeNode, L["toggle_unit_frames"],   function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
+                addToggle(modeNode, L["toggle_buffs"],         function() return ex.buffs       end, function(v) ex.buffs       = v; refresh() end)
+                addToggle(modeNode, L["toggle_rep_bar"],       function() return ex.repBar      end, function(v) ex.repBar      = v; refresh() end)
+                addToggle(modeNode, L["toggle_damage_meter"],  function() return ex.damageMeter end, function(v) ex.damageMeter = v; refresh() end)
             end
         end
     end
@@ -635,31 +627,7 @@ local function BuildInterfaceContent(filter)
 
     local dp = CreateTreeDataProvider()
 
-    -- Elite Frame
-    local eliteNode = dp:Insert({
-        Template   = "AklimeMod_SkinHeaderTemplate",
-        skinKey    = "__eliteFrame",  -- pseudo-key
-        name       = "Elite Frame",
-    })
-    eliteNode:SetCollapsed(true)
-
-    -- Wir bauen Elite Frame als normales Modul über Colorizer-Factory —
-    -- aber da es kein Colorizer-Skin ist, braucht es einen Wrapper.
-    -- Stattdessen: direkt nach dem Colorizer-DP die Elite-Module voranstellen.
-    -- Lösung: separater DP mit gemischten Templates.
-
-    -- DataProvider neu aufbauen: Elite + Rare als Module, dann Colorizer
-    local dp2 = CreateTreeDataProvider()
-
-    -- Elite Frame (bleibt als normaler Modul-Header mit eigenem Initializer)
-    -- Wir nutzen einen Trick: Template ist SkinHeaderTemplate, aber skinKey ist nil
-    -- und wir überschreiben den Initializer in der Factory.
-    -- Sauberer: wir bauen Elite/Rare als AklimeMod_ModuleHeaderTemplate
-    -- und registrieren sie in der ColorizerRightFactory.
-
     -- Erweiterte Factory (Elite + Rare Support)
-    -- Wird direkt hier gesetzt bevor SetDataProvider.
-
     local function extendedFactory(factory, node)
         local d = node:GetData()
         if d.Template == "AklimeMod_ModuleHeaderTemplate" then
@@ -678,7 +646,7 @@ local function BuildInterfaceContent(filter)
     local dp3 = CreateTreeDataProvider()
 
     -- Elite Frame
-    local eliteNode3 = addModule(dp3, "Elite Frame",
+    local eliteNode3 = addModule(dp3, L["mod_elite_frame"],
         function() return AklimeModDB.eliteFrame.enabled end,
         function(v)
             AklimeModDB.eliteFrame.enabled = v
@@ -687,10 +655,10 @@ local function BuildInterfaceContent(filter)
         end
     )
     local eliteStyles = {
-        { key="silver",     label="Silberner Drachen"             },
-        { key="silverWing", label="Silberner Drachen mit Flügeln" },
-        { key="gold",       label="Goldener Drachen"              },
-        { key="goldWing",   label="Goldener Drachen mit Flügeln"  },
+        { key="silver",     label=L["elite_silver"]      },
+        { key="silverWing", label=L["elite_silver_wing"] },
+        { key="gold",       label=L["elite_gold"]        },
+        { key="goldWing",   label=L["elite_gold_wing"]   },
     }
     for _, s in ipairs(eliteStyles) do
         local key = s.key
@@ -709,47 +677,47 @@ local function BuildInterfaceContent(filter)
     end
 
     -- Seltene Gegner
-    local rareNode = addModule(dp3, "Seltene Gegner",
+    local rareNode = addModule(dp3, L["mod_rare_enemies"],
         function() return AklimeModDB.rareFrame.enabled end,
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
     )
-    addToggle(rareNode, "Stern durch Silbernen Drachen ergänzen",
+    addToggle(rareNode, L["toggle_star_silver"],
         function() return AklimeModDB.rareFrame.enabled end,
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
     )
 
     -- Dungeon Eye
-    local dungeonEyeNode = addModule(dp3, "Dungeon Eye",
+    local dungeonEyeNode = addModule(dp3, L["mod_dungeon_eye"],
         function() return AklimeMod_DungeonEye.IsEnabled() end,
         function(v) AklimeMod_DungeonEye.SetEnabled(v) end
     )
-    addToggle(dungeonEyeNode, "An Minimap-Rand fixieren",
+    addToggle(dungeonEyeNode, L["toggle_lock_minimap"],
         function() return AklimeMod_DungeonEye.IsLocked() end,
         function(v) AklimeMod_DungeonEye.SetLocked(v) end
     )
-    addInfo(dungeonEyeNode, "Kein Haken = frei per Drag ziehbar.\nHaken = springt an den Minimap-Rand.")
+    addInfo(dungeonEyeNode, L["info_dungeon_eye"])
 
     -- Raid Frame Zentrierung
-    local raidCenterNode = addModule(dp3, "Raid Frame Zentrierung",
+    local raidCenterNode = addModule(dp3, L["mod_raid_center"],
         function() return AklimeMod_RaidFrameCenter.IsEnabled() end,
         function(v) AklimeMod_RaidFrameCenter.SetEnabled(v) end
     )
-    addInfo(raidCenterNode, "Zentriert Raid-Frames dynamisch.\nGruppen werden immer um die Bildschirmmitte angeordnet.\nIm Bearbeitungsmodus inaktiv.")
+    addInfo(raidCenterNode, L["info_raid_center"])
 
-    local hideMacroNode = addModule(dp3, "Makro-Namen ausblenden",
+    local hideMacroNode = addModule(dp3, L["mod_hide_macro"],
         function() return AklimeMod_HideMacroNames.IsEnabled() end,
         function(v) AklimeMod_HideMacroNames.SetEnabled(v) end
     )
-    addInfo(hideMacroNode, "Versteckt die Makro-Namen auf allen Action Buttons.\nNeu erstellte Makros werden ebenfalls sofort ausgeblendet.")
+    addInfo(hideMacroNode, L["info_hide_macro"])
 
-    local dmCollapseNode = addModule(dp3, "Schadensanzeige: nach unten klappen",
+    local dmCollapseNode = addModule(dp3, L["mod_dm_collapse"],
         function() return AklimeMod_DamageMeterCollapseDown.IsEnabled() end,
         function(v) AklimeMod_DamageMeterCollapseDown.SetEnabled(v) end
     )
-    addInfo(dmCollapseNode, "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.\nMit diesem Toggle klappt sie nach unten statt nach oben.")
+    addInfo(dmCollapseNode, L["info_dm_collapse"])
 
     if AklimeMod_MinimapCollector then
-        local mmCollectorNode = addModule(dp3, "Minimap Button Sammler",
+        local mmCollectorNode = addModule(dp3, L["mod_mm_collector"],
             function()
                 if not AklimeMod_MinimapCollector then return false end
                 return AklimeMod_MinimapCollector.IsEnabled()
@@ -759,8 +727,8 @@ local function BuildInterfaceContent(filter)
                 AklimeMod_MinimapCollector.SetEnabled(v)
             end
         )
-        addInfo(mmCollectorNode, "Versteckt alle Addon-Minimap-Buttons in einem eigenen Button.\nKlick: aufklappen. Drag: Position verschieben, wird gespeichert.")
-        addToggle(mmCollectorNode, "Eigenen AklimeMod-Button einschließen",
+        addInfo(mmCollectorNode, L["info_mm_collector"])
+        addToggle(mmCollectorNode, L["toggle_include_own"],
             function()
                 if not AklimeMod_MinimapCollector then return false end
                 return AklimeMod_MinimapCollector.IncludeOwn()
@@ -773,74 +741,74 @@ local function BuildInterfaceContent(filter)
     end
 
     if AklimeMod_MinimapElementHider then
-        local hideNode = addModule(dp3, "Minimap-Elemente ausblenden",
+        local hideNode = addModule(dp3, L["mod_mm_hider"],
             function() return AklimeMod_MinimapElementHider.IsEnabled() end,
             function(v) AklimeMod_MinimapElementHider.SetEnabled(v) end
         )
-        addToggle(hideNode, "Verfolgungssymbol",
+        addToggle(hideNode, L["toggle_mm_tracking"],
             function() return AklimeMod_MinimapElementHider.Get("tracking") end,
             function(v) AklimeMod_MinimapElementHider.Set("tracking", v) end
         )
-        addToggle(hideNode, "Zoneninfo",
+        addToggle(hideNode, L["toggle_mm_zone"],
             function() return AklimeMod_MinimapElementHider.Get("zoneInfo") end,
             function(v) AklimeMod_MinimapElementHider.Set("zoneInfo", v) end
         )
-        addToggle(hideNode, "Uhr",
+        addToggle(hideNode, L["toggle_mm_clock"],
             function() return AklimeMod_MinimapElementHider.Get("clock") end,
             function(v) AklimeMod_MinimapElementHider.Set("clock", v) end
         )
-        addToggle(hideNode, "Kalender",
+        addToggle(hideNode, L["toggle_mm_calendar"],
             function() return AklimeMod_MinimapElementHider.Get("calendar") end,
             function(v) AklimeMod_MinimapElementHider.Set("calendar", v) end
         )
-        addToggle(hideNode, "Post-Symbol",
+        addToggle(hideNode, L["toggle_mm_mail"],
             function() return AklimeMod_MinimapElementHider.Get("mail") end,
             function(v) AklimeMod_MinimapElementHider.Set("mail", v) end
         )
-        addToggle(hideNode, "Addonfach",
+        addToggle(hideNode, L["toggle_mm_compartment"],
             function() return AklimeMod_MinimapElementHider.Get("addonCompartment") end,
             function(v) AklimeMod_MinimapElementHider.Set("addonCompartment", v) end
         )
     end
 
     if AklimeMod_MouseEffects then
-        local mouseNode = addModule(dp3, "Mausring und Mausspur",
+        local mouseNode = addModule(dp3, L["mod_mouse_effects"],
             function() return AklimeMod_MouseEffects.IsEnabled() end,
             function(v) AklimeMod_MouseEffects.SetEnabled(v) end
         )
-        addToggle(mouseNode, "Mausspur aktivieren",
+        addToggle(mouseNode, L["toggle_trail"],
             function() return AklimeMod_MouseEffects.Get("trail") end,
             function(v) AklimeMod_MouseEffects.Set("trail", v) end
         )
-        addToggle(mouseNode, "Klassenfarbe verwenden",
+        addToggle(mouseNode, L["toggle_class_color"],
             function() return AklimeMod_MouseEffects.Get("classColor") end,
             function(v) AklimeMod_MouseEffects.Set("classColor", v) end
         )
-        addToggle(mouseNode, "Mausspur in Klassenfarbe",
+        addToggle(mouseNode, L["toggle_trail_class"],
             function() return AklimeMod_MouseEffects.Get("trailClassColor") end,
             function(v) AklimeMod_MouseEffects.Set("trailClassColor", v) end
         )
-        addToggle(mouseNode, "Punkt in der Mitte ausblenden",
+        addToggle(mouseNode, L["toggle_hide_dot"],
             function() return AklimeMod_MouseEffects.Get("hideDot") end,
             function(v) AklimeMod_MouseEffects.Set("hideDot", v) end
         )
-        addToggle(mouseNode, "Kreis ausblenden",
+        addToggle(mouseNode, L["toggle_hide_ring"],
             function() return AklimeMod_MouseEffects.Get("hideRing") end,
             function(v) AklimeMod_MouseEffects.Set("hideRing", v) end
         )
-        addToggle(mouseNode, "Ring nur im Kampf",
+        addToggle(mouseNode, L["toggle_ring_combat"],
             function() return AklimeMod_MouseEffects.Get("onlyCombat") end,
             function(v) AklimeMod_MouseEffects.Set("onlyCombat", v) end
         )
-        addToggle(mouseNode, "Ring nur bei Rechtsklick",
+        addToggle(mouseNode, L["toggle_ring_rightclick"],
             function() return AklimeMod_MouseEffects.Get("onlyRightClick") end,
             function(v) AklimeMod_MouseEffects.Set("onlyRightClick", v) end
         )
-        addToggle(mouseNode, "Mausspur nur im Kampf",
+        addToggle(mouseNode, L["toggle_trail_combat"],
             function() return AklimeMod_MouseEffects.Get("trailOnlyCombat") end,
             function(v) AklimeMod_MouseEffects.Set("trailOnlyCombat", v) end
         )
-        addSlider(mouseNode, "Ringgröße", 40, 150, 2,
+        addSlider(mouseNode, L["slider_ring_size"], 40, 150, 2,
             function() return AklimeMod_MouseEffects.GetSize() end,
             function(v) AklimeMod_MouseEffects.SetSize(v) end,
             function(v) return v .. " px" end
@@ -854,41 +822,32 @@ local function BuildInterfaceContent(filter)
             mouseTrailColor = true,
         })
         local trailPresets = { "low", "medium", "high", "ultra" }
-        local trailLabels  = { "Niedrig", "Mittel", "Hoch", "Ultra" }
+        local trailLabels  = { L["trail_low"], L["trail_medium"], L["trail_high"], L["trail_ultra"] }
         local trailIndex   = { low = 1, medium = 2, high = 3, ultra = 4 }
-        addSlider(mouseNode, "Mausspur-Dichte", 1, 4, 1,
+        addSlider(mouseNode, L["slider_trail_density"], 1, 4, 1,
             function() return trailIndex[AklimeMod_MouseEffects.GetTrailPreset()] or 2 end,
             function(v) AklimeMod_MouseEffects.SetTrailPreset(trailPresets[v]) end,
             function(v) return trailLabels[v] or "" end
         )
     end
+
     if AklimeMod_GearCheck then
-        local gcNode = addModule(dp3, "Ausrüstungs-Prüfung",
+        local gcNode = addModule(dp3, L["mod_gear_check"],
             function() return AklimeMod_GearCheck.IsEnabled() end,
             function(v) AklimeMod_GearCheck.SetEnabled(v) end
         )
-        addInfo(gcNode,
-            "Zeigt an jedem Equipment-Slot:\n" ..
-            "  • Sockel-Icons neben dem Slot (Edelstein oder leere Fassung)\n" ..
-            "  • Itemlevel unten rechts am Slot, in Qualitätsfarbe\n" ..
-            "  • Verzauberungsstatus als Text neben dem Slot\n" ..
-            "Gilt für Charakter-Fenster und Betrachten-Fenster."
-        )
+        addInfo(gcNode, L["info_gear_check"])
     end
 
     if AklimeMod_CombatTooltip then
-        local ttNode = addModule(dp3, "Tooltip im Kampf ausblenden",
+        local ttNode = addModule(dp3, L["mod_combat_tooltip"],
             function() return AklimeMod_CombatTooltip:IsEnabled() end,
             function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
         )
-        addInfo(ttNode,
-            "Versteckt den HUD-Tooltip während des Kampfes.\n" ..
-            "Sobald der Kampf endet erscheint er beim nächsten\n" ..
-            "Drüberbewegen automatisch wieder."
-        )
+        addInfo(ttNode, L["info_combat_tooltip"])
     end
 
-    dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Interface Ausblendung", centered = true })
+    dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_hud_fading"], centered = true })
     do
         local fade = AklimeModDB.interfaceFade
         for i = 1, 3 do
@@ -904,16 +863,16 @@ local function BuildInterfaceContent(filter)
                 setEnabled = function(v) fade[k].enabled = v end
             end
             local modeName
-            if i == 1 then modeName = "Chillmodus in Ruhezonen"
-            elseif i == 2 then modeName = "Offene Welt"
-            elseif i == 3 then modeName = "Housing"
-            else modeName = "Platzhalter " .. i
+            if i == 1 then modeName = L["mod_hud_chill"]
+            elseif i == 2 then modeName = L["mod_hud_openworld"]
+            elseif i == 3 then modeName = L["mod_hud_housing"]
+            else modeName = "Mode " .. i
             end
             local modeNode = addModule(dp3, modeName,
                 function() return fade[k].enabled end,
                 setEnabled
             )
-            addSlider(modeNode, "Transparenz", 0, 100, 1,
+            addSlider(modeNode, L["slider_transparency"], 0, 100, 1,
                 function() return fade[k].alpha end,
                 function(v)
                     fade[k].alpha = v
@@ -924,34 +883,34 @@ local function BuildInterfaceContent(filter)
                 function(v) return v .. "%" end
             )
             if i == 1 or i == 2 or i == 3 then
-                addSlider(modeNode, "Bewegdauer bis Einblenden", 0, 10, 1,
+                addSlider(modeNode, L["slider_move_delay"], 0, 10, 1,
                     function() return fade[k].moveDelay end,
                     function(v) fade[k].moveDelay = v end,
-                    function(v) return v == 0 and "sofort" or v .. " s" end
+                    function(v) return v == 0 and L["fmt_instant"] or v .. " s" end
                 )
-                addSlider(modeNode, "Ausblenden nach", 5, 60, 1,
+                addSlider(modeNode, L["slider_idle_delay"], 5, 60, 1,
                     function() return fade[k].idleDelay end,
                     function(v) fade[k].idleDelay = v end,
                     function(v) return v .. " s" end
                 )
-                addSlider(modeNode, "Chat eingeblendet für", 5, 60, 1,
+                addSlider(modeNode, L["slider_chat_delay"], 5, 60, 1,
                     function() return fade[k].chatDelay end,
                     function(v) fade[k].chatDelay = v end,
                     function(v) return v .. " s" end
                 )
-                addInfo(modeNode, "Immer bei 100% sichtbar:")
+                addInfo(modeNode, L["info_always_visible"])
                 local ex = fade[k].exclude
                 local function refresh() if AklimeMod_HUDFader then AklimeMod_HUDFader:Refresh() end end
-                addToggle(modeNode, "Chat",            function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
-                addToggle(modeNode, "Minimap",         function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
-                addToggle(modeNode, "Quest / Ziele",   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
-                addToggle(modeNode, "Mikromenü",      function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
-                addToggle(modeNode, "Taschen",         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
-                addToggle(modeNode, "Aktionsleisten",  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
-                addToggle(modeNode, "HP-Anzeigen",     function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
-                addToggle(modeNode, "Buffs / Debuffs", function() return ex.buffs       end, function(v) ex.buffs       = v; refresh() end)
-                addToggle(modeNode, "Rufbar",          function() return ex.repBar      end, function(v) ex.repBar      = v; refresh() end)
-                addToggle(modeNode, "Schadensanzeige", function() return ex.damageMeter end, function(v) ex.damageMeter = v; refresh() end)
+                addToggle(modeNode, L["toggle_chat"],         function() return ex.chat        end, function(v) ex.chat        = v; refresh() end)
+                addToggle(modeNode, L["toggle_minimap"],      function() return ex.minimap     end, function(v) ex.minimap     = v; refresh() end)
+                addToggle(modeNode, L["toggle_objectives"],   function() return ex.objectives  end, function(v) ex.objectives  = v; refresh() end)
+                addToggle(modeNode, L["toggle_micromenu"],    function() return ex.microMenu   end, function(v) ex.microMenu   = v; refresh() end)
+                addToggle(modeNode, L["toggle_bags"],         function() return ex.bags        end, function(v) ex.bags        = v; refresh() end)
+                addToggle(modeNode, L["toggle_action_bars"],  function() return ex.actionBars  end, function(v) ex.actionBars  = v; refresh() end)
+                addToggle(modeNode, L["toggle_unit_frames"],  function() return ex.unitFrames  end, function(v) ex.unitFrames  = v; refresh() end)
+                addToggle(modeNode, L["toggle_buffs"],        function() return ex.buffs       end, function(v) ex.buffs       = v; refresh() end)
+                addToggle(modeNode, L["toggle_rep_bar"],      function() return ex.repBar      end, function(v) ex.repBar      = v; refresh() end)
+                addToggle(modeNode, L["toggle_damage_meter"], function() return ex.damageMeter end, function(v) ex.damageMeter = v; refresh() end)
             end
         end
     end
@@ -962,7 +921,7 @@ local function BuildInterfaceContent(filter)
 
         targetDP:Insert({
             Template = "AklimeMod_SeparatorTemplate",
-            label    = "Farbliche Anpassungen",
+            label    = L["sec_colorizer"],
             centered = true,
         })
 
@@ -994,7 +953,7 @@ local function BuildInterfaceContent(filter)
 
         local allNode = targetDP:Insert({
             Template   = "AklimeMod_ModuleHeaderTemplate",
-            name       = "Alle aktivieren / deaktivieren",
+            name       = L["mod_colorizer_all"],
             getEnabled = AllEnabled,
             setEnabled = SetAll,
         })
@@ -1005,7 +964,7 @@ local function BuildInterfaceContent(filter)
         })
         allNode:Insert({
             Template = "AklimeMod_ActionButtonTemplate",
-            label    = "Standard wiederherstellen",
+            label    = L["action_restore_default"],
             onClick  = function()
                 local d = AklimeMod_Colorizer.defaults.main
                 AklimeMod_Colorizer.ApplyGlobalColor(d.r, d.g, d.b, d.a)
@@ -1057,7 +1016,7 @@ local function BuildInterfaceContent(filter)
                 end
                 targetDP:Insert({
                     Template   = "AklimeMod_ModuleHeaderTemplate",
-                    name       = "Alle " .. group.label .. " an/aus",
+                    name       = string.format(L["colorizer_group_toggle"], group.label),
                     getEnabled = GroupAllEnabled,
                     setEnabled = SetGroup,
                 })
@@ -1127,10 +1086,10 @@ local function addQoLNodes(dp)
     -- Chat und Social
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Chat und Social", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_chat_social"], centered = true })
     end
 
-    local chatNode = addModule(dp, "Chat Interaktion",
+    local chatNode = addModule(dp, L["mod_chat_interaction"],
         function()
             return AklimeMod_ChatInteraction.IsCopyPasteEnabled()
                 or AklimeMod_ChatInteraction.IsClickLinksEnabled()
@@ -1142,7 +1101,7 @@ local function addQoLNodes(dp)
     )
     chatNode:Insert({
         Template = "AklimeMod_ToggleTemplate",
-        name     = "Chat kopieren aktivieren  (\"C\"-Button, verschiebbar)",
+        name     = L["toggle_copy_chat"],
         getVal   = function() return AklimeMod_ChatInteraction.IsCopyPasteEnabled() end,
         setVal   = function(v)
             AklimeMod_ChatInteraction.SetCopyPasteEnabled(v)
@@ -1152,30 +1111,30 @@ local function addQoLNodes(dp)
     })
     chatNode:Insert({
         Template     = "AklimeMod_ToggleTemplate",
-        name         = "C-Button Position fixieren (kein Drag)",
+        name         = L["toggle_lock_cbtn"],
         getVal       = function() return AklimeMod_ChatInteraction.IsBtnLocked() end,
         setVal       = function(v) AklimeMod_ChatInteraction.SetBtnLocked(v) end,
         isDisabled   = function() return not AklimeMod_ChatInteraction.IsCopyPasteEnabled() end,
     })
     chatNode:Insert({
         Template = "AklimeMod_ToggleTemplate",
-        name     = "Links klickbar machen",
+        name     = L["toggle_links_clickable"],
         getVal   = function() return AklimeMod_ChatInteraction.IsClickLinksEnabled() end,
         setVal   = function(v) AklimeMod_ChatInteraction.SetClickLinksEnabled(v) end,
     })
-    addInfo(chatNode, "C-Button: frei verschiebbar per Drag.\nLinks im Chat öffnen ein Kopierfenster.")
+    addInfo(chatNode, L["info_chat_interaction"])
 
     if AklimeMod_ChatFade then
-        local chatFadeNode = addModule(dp, "Chat verblassen",
+        local chatFadeNode = addModule(dp, L["mod_chat_fade"],
             function() return AklimeMod_ChatFade.IsEnabled() end,
             function(v) AklimeMod_ChatFade.SetEnabled(v) end
         )
-        addInfo(chatFadeNode, "Sichtbar (Sekunden):")
+        addInfo(chatFadeNode, L["info_fade_visible"])
         for _, opt in ipairs({
-            { label = "15 Sekunden",  val = 15  },
-            { label = "30 Sekunden",  val = 30  },
-            { label = "60 Sekunden",  val = 60  },
-            { label = "120 Sekunden", val = 120 },
+            { label = L["toggle_chat_15s"],  val = 15  },
+            { label = L["toggle_chat_30s"],  val = 30  },
+            { label = L["toggle_chat_60s"],  val = 60  },
+            { label = L["toggle_chat_120s"], val = 120 },
         }) do
             local v = opt.val
             addToggle(chatFadeNode, opt.label,
@@ -1183,11 +1142,11 @@ local function addQoLNodes(dp)
                 function(on) if on then AklimeMod_ChatFade.SetTimeVisible(v); AklimeMod_RefreshRightToggles() end end
             )
         end
-        addInfo(chatFadeNode, "Verblassdauer:")
+        addInfo(chatFadeNode, L["info_fade_duration"])
         for _, opt in ipairs({
-            { label = "1 Sekunde",  val = 1 },
-            { label = "3 Sekunden", val = 3 },
-            { label = "5 Sekunden", val = 5 },
+            { label = L["toggle_fade_1s"], val = 1 },
+            { label = L["toggle_fade_3s"], val = 3 },
+            { label = L["toggle_fade_5s"], val = 5 },
         }) do
             local v = opt.val
             addToggle(chatFadeNode, opt.label,
@@ -1198,147 +1157,126 @@ local function addQoLNodes(dp)
     end
 
     if AklimeMod_ChatHistory then
-        local chatHistNode = addModule(dp, "Chatverlauf speichern",
+        local chatHistNode = addModule(dp, L["mod_chat_history"],
             function() return AklimeMod_ChatHistory:IsEnabled() end,
             function(v) AklimeMod_ChatHistory:SetEnabled(v) end
         )
-        addSlider(chatHistNode, "Max. Nachrichten pro Fenster", 50, 500, 50,
+        addSlider(chatHistNode, L["slider_max_messages"], 50, 500, 50,
             function() return AklimeMod_ChatHistory:GetMaxMessages() end,
             function(v) AklimeMod_ChatHistory:SetMaxMessages(v) end,
             tostring
         )
-        addInfo(chatHistNode,
-            "Speichert den Chatverlauf sitzungsübergreifend.\n" ..
-            "Beim Login werden die letzten Nachrichten wiederhergestellt.\n\n" ..
-            "Gespeichert in SavedVariables unter:\n" ..
-            "AklimeModDB.chatHistory.messages"
-        )
-        addAction(chatHistNode, "Alle Fenster leeren", function()
+        addInfo(chatHistNode, L["info_chat_history"])
+        addAction(chatHistNode, L["action_clear_all_windows"], function()
             AklimeMod_ChatHistory:ClearAll()
         end)
-        addAction(chatHistNode, "Aktives Fenster leeren", function()
+        addAction(chatHistNode, L["action_clear_active"], function()
             AklimeMod_ChatHistory:ClearActive()
         end)
     end
 
     if AklimeMod_ExtendedIgnore then
-        local ignoreNode = addModule(dp, "Erweiterte Ignore-Liste",
+        local ignoreNode = addModule(dp, L["mod_ext_ignore"],
             function() return AklimeMod_ExtendedIgnore:IsEnabled() end,
             function(v) AklimeMod_ExtendedIgnore:SetEnabled(v) end
         )
-        addInfo(ignoreNode,
-            "Ignoriert Spieler über WoWs 50er-Limit hinaus.\n" ..
-            "Blendet ihre Chat-Nachrichten vollständig aus.\n\n" ..
-            "Hinzufügen: Rechtsklick auf Spieler im Spiel.\n" ..
-            "Verwaltung: /akm ignore"
-        )
-        addAction(ignoreNode, "Liste öffnen (/akm ignore)", function()
+        addInfo(ignoreNode, L["info_ext_ignore"])
+        addAction(ignoreNode, L["action_open_ignore"], function()
             AklimeMod_ExtendedIgnore:ToggleWindow()
         end)
-        addAction(ignoreNode, "Alle entfernen", function()
+        addAction(ignoreNode, L["action_remove_all"], function()
             AklimeMod_ExtendedIgnore:ClearAll()
-            print("|cFFFFD100AklimeMod:|r Erweiterte Ignore-Liste geleert.")
+            print("|cFFFFD100Aklime Mod Tools:|r " .. L["msg_ignore_cleared"])
         end)
     end
 
-    local leaveServiceNode = addModule(dp, "Dienste-Channel verlassen",
+    local leaveServiceNode = addModule(dp, L["mod_leave_channel"],
         function() return AklimeMod_LeaveServiceChannel.IsEnabled() end,
         function(v) AklimeMod_LeaveServiceChannel.SetEnabled(v) end
     )
-    addInfo(leaveServiceNode, "Verlässt automatisch den Dienste-Channel beim Login/Reload.\nDie Kanal-Nummer ändert sich — wird immer per Name gesucht.")
+    addInfo(leaveServiceNode, L["info_leave_channel"])
 
     if AklimeMod_BlockRequests then
-        local blockDuelNode = addModule(dp, "Duellanfragen blockieren",
+        local blockDuelNode = addModule(dp, L["mod_block_duel"],
             function() return AklimeMod_BlockRequests:IsDuelBlocked() end,
             function(v) AklimeMod_BlockRequests:SetBlockDuels(v) end
         )
-        addInfo(blockDuelNode, "Lehnt eingehende Duellanfragen automatisch ab.")
+        addInfo(blockDuelNode, L["info_block_duel"])
 
-        local blockPetNode = addModule(dp, "Haustierkampf-Duelle blockieren",
+        local blockPetNode = addModule(dp, L["mod_block_petbattle"],
             function() return AklimeMod_BlockRequests:IsPetBattleBlocked() end,
             function(v) AklimeMod_BlockRequests:SetBlockPetBattles(v) end
         )
-        addInfo(blockPetNode, "Lehnt eingehende Haustierkampf-Duellanfragen automatisch ab.")
+        addInfo(blockPetNode, L["info_block_petbattle"])
     end
 
     if AklimeMod_GroupInvites then
-        local blockInviteNode = addModule(dp, "Gruppeneinladungen blockieren",
+        local blockInviteNode = addModule(dp, L["mod_block_invite"],
             function() return AklimeMod_GroupInvites:IsBlockEnabled() end,
             function(v) AklimeMod_GroupInvites:SetBlock(v) end
         )
-        addToggle(blockInviteNode, "Ausnahme: Gildenmitglieder durchlassen",
+        addToggle(blockInviteNode, L["toggle_guild_exception"],
             function() return AklimeMod_GroupInvites:IsBlockExceptGuild() end,
             function(v) AklimeMod_GroupInvites:SetBlockExceptGuild(v) end
         )
-        addToggle(blockInviteNode, "Ausnahme: BNet-Freunde durchlassen",
+        addToggle(blockInviteNode, L["toggle_friend_exception"],
             function() return AklimeMod_GroupInvites:IsBlockExceptFriend() end,
             function(v) AklimeMod_GroupInvites:SetBlockExceptFriend(v) end
         )
-        addInfo(blockInviteNode, "Lehnt alle Gruppeneinladungen automatisch ab.\nAusnahmen erlauben Einladungen von Gilde oder Freunden\ntrotz aktivem Block.")
+        addInfo(blockInviteNode, L["info_block_invite"])
 
-        local autoAcceptNode = addModule(dp, "Gruppeneinladungen automatisch annehmen",
+        local autoAcceptNode = addModule(dp, L["mod_auto_invite"],
             function() return AklimeMod_GroupInvites:IsAutoAcceptEnabled() end,
             function(v) AklimeMod_GroupInvites:SetAutoAccept(v) end
         )
-        addToggle(autoAcceptNode, "Von Gildenmitgliedern",
+        addToggle(autoAcceptNode, L["toggle_guild_only"],
             function() return AklimeMod_GroupInvites:IsGuildOnly() end,
             function(v) AklimeMod_GroupInvites:SetGuildOnly(v) end
         )
-        addToggle(autoAcceptNode, "Von Freunden (BNet + Freundesliste)",
+        addToggle(autoAcceptNode, L["toggle_friend_only"],
             function() return AklimeMod_GroupInvites:IsFriendOnly() end,
             function(v) AklimeMod_GroupInvites:SetFriendOnly(v) end
         )
-        addInfo(autoAcceptNode,
-            "Nimmt Gruppeneinladungen automatisch an.\n" ..
-            "Kein Filter aktiv: jede Einladung wird angenommen.\n" ..
-            "Mit Filtern: Gilde und Freunde können gleichzeitig aktiv sein."
-        )
+        addInfo(autoAcceptNode, L["info_auto_invite"])
     end
 
     if AklimeMod_Summons then
-        local summonsNode = addModule(dp, "Beschwörungen automatisch annehmen",
+        local summonsNode = addModule(dp, L["mod_auto_summon"],
             function() return AklimeMod_Summons:IsEnabled() end,
             function(v) AklimeMod_Summons:SetEnabled(v) end
         )
-        addInfo(summonsNode,
-            "Nimmt eingehende Beschwörungsanfragen automatisch an.\n" ..
-            "Eine Meldung im Chat zeigt wer beschworen hat und wohin."
-        )
+        addInfo(summonsNode, L["info_auto_summon"])
     end
 
     if AklimeMod_FriendsListDecor then
-        local friendsNode = addModule(dp, "Verbesserte Freundesliste",
+        local friendsNode = addModule(dp, L["mod_friends_decor"],
             function() return AklimeMod_FriendsListDecor:IsEnabled() end,
             function(v) AklimeMod_FriendsListDecor:SetEnabled(v) end
         )
-        addToggle(friendsNode, "Zone und Realm anzeigen",
+        addToggle(friendsNode, L["toggle_show_location"],
             function() return AklimeMod_FriendsListDecor:Get("showLocation") end,
             function(v) AklimeMod_FriendsListDecor:Set("showLocation", v) end
         )
-        addToggle(friendsNode, "Eigenen Realm ausblenden",
+        addToggle(friendsNode, L["toggle_hide_own_realm"],
             function() return AklimeMod_FriendsListDecor:Get("hideOwnRealm") end,
             function(v) AklimeMod_FriendsListDecor:Set("hideOwnRealm", v) end
         )
-        addInfo(friendsNode,
-            "Färbt Freundesnamen in Klassenfarbe.\n" ..
-            "Zeigt Level, Zone und Status (AFK/DND/Offline).\n" ..
-            "BNet-Freunde: Spiel-Icon und Fraktionsflagge."
-        )
+        addInfo(friendsNode, L["info_friends_decor"])
     end
 
     -- ============================================================
     -- Allgemein
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Allgemein", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_general"], centered = true })
     end
 
-    local vaultNode = addModule(dp, "Wöchentliche Schatzkammer",
+    local vaultNode = addModule(dp, L["mod_weekly_vault"],
         function() return true end,
         function(v) end
     )
-    addInfo(vaultNode, "Öffnet die wöchentliche Schatzkammer.\nAuch über das Radialmenü am Minimap-Icon erreichbar.")
-    addAction(vaultNode, "Schatzkammer öffnen", function()
+    addInfo(vaultNode, L["info_weekly_vault"])
+    addAction(vaultNode, L["action_open_vault"], function()
         C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
         if WeeklyRewardsFrame:IsShown() then
             WeeklyRewardsFrame:Hide()
@@ -1348,40 +1286,40 @@ local function addQoLNodes(dp)
     end)
 
     if AklimeMod_ReadyCheck then
-        local rcNode = addModule(dp, "Bereitschaftsabfrage automatisch annehmen",
+        local rcNode = addModule(dp, L["mod_ready_check"],
             function() return AklimeMod_ReadyCheck.IsEnabled() end,
             function(v) AklimeMod_ReadyCheck.SetEnabled(v) end
         )
-        addSlider(rcNode, "Verzögerung", 1, 6, 1,
+        addSlider(rcNode, L["slider_delay"], 1, 6, 1,
             function() return AklimeMod_ReadyCheck.GetDelay() end,
             function(v) AklimeMod_ReadyCheck.SetDelay(v) end,
-            function(v) return v .. " Sek." end
+            function(v) return v .. L["fmt_sec"] end
         )
-        addInfo(rcNode, "Nimmt Bereitschaftsabfragen automatisch an.\nDer Countdown ist am Ja-Button sichtbar.")
+        addInfo(rcNode, L["info_ready_check"])
     end
 
     if AklimeMod_SkipCinematic then
-        local scNode = addModule(dp, "Cutscenes und Cinematics überspringen",
+        local scNode = addModule(dp, L["mod_skip_cinematic"],
             function() return AklimeMod_SkipCinematic.IsEnabled() end,
             function(v) AklimeMod_SkipCinematic.SetEnabled(v) end
         )
-        addInfo(scNode, "Überspringt automatisch In-Engine Cutscenes\nsowie vorgerenderte Videosequenzen.")
+        addInfo(scNode, L["info_skip_cinematic"])
     end
 
-    local repairNode = addModule(dp, "Auto Repair",
+    local repairNode = addModule(dp, L["mod_auto_repair"],
         function() return AklimeModDB.autoRepair.enabled end,
         function(v) AklimeModDB.autoRepair.enabled = v end
     )
-    addToggle(repairNode, "Gildenbank verwenden (wenn Rechte vorhanden)",
+    addToggle(repairNode, L["toggle_guild_repair"],
         function() return AklimeModDB.autoRepair.useGuild end,
         function(v) AklimeModDB.autoRepair.useGuild = v end
     )
-    addToggle(repairNode, "Eigene Tasche verwenden",
+    addToggle(repairNode, L["toggle_gold_repair"],
         function() return AklimeModDB.autoRepair.useGold end,
         function(v) AklimeModDB.autoRepair.useGold = v end
     )
 
-    local reloadNode = addModule(dp, "Interface Neuladen",
+    local reloadNode = addModule(dp, L["mod_reload_ui"],
         function() return AklimeModDB.reloadUI.enabled end,
         function(v)
             AklimeModDB.reloadUI.enabled = v
@@ -1394,148 +1332,136 @@ local function addQoLNodes(dp)
             end
         end
     )
-    addInfo(reloadNode, "Lädt das Interface komplett neu.")
+    addInfo(reloadNode, L["info_reload_ui"])
     addAction(reloadNode, "RELOAD_BUTTONS", nil)
 
     local deleteNode
     local function easyDeleteMainEnabled()
         local db = AklimeModDB.easyDelete
         return db.skipDelete == true or db.skipConfirm == true
+            or db.skipUnlearn == true or db.skipUnderstood == true
     end
     local function refreshDeleteNode()
         deleteNode:SetCollapsed(true); deleteNode:SetCollapsed(false)
     end
-    deleteNode = addModule(dp, "Einfaches Bestätigen und Löschen",
+    deleteNode = addModule(dp, L["mod_easy_delete"],
         easyDeleteMainEnabled,
         function(v)
-            AklimeModDB.easyDelete.skipDelete  = v
-            AklimeModDB.easyDelete.skipConfirm = v
+            AklimeModDB.easyDelete.skipDelete     = v
+            AklimeModDB.easyDelete.skipConfirm    = v
+            AklimeModDB.easyDelete.skipUnlearn    = v
+            AklimeModDB.easyDelete.skipUnderstood = v
             refreshDeleteNode()
         end
     )
-    addToggle(deleteNode, "Nicht mehr LÖSCHEN schreiben",
+    addToggle(deleteNode, L["toggle_no_delete"],
         function() return AklimeModDB.easyDelete.skipDelete == true end,
         function(v)
             AklimeModDB.easyDelete.skipDelete = v
-            if not v and not AklimeModDB.easyDelete.skipConfirm then
-                AklimeModDB.easyDelete.skipDelete = false; AklimeModDB.easyDelete.skipConfirm = false
-            end
             refreshDeleteNode()
         end
     )
-    addToggle(deleteNode, "Nicht mehr BESTÄTIGEN schreiben",
+    addToggle(deleteNode, L["toggle_no_confirm"],
         function() return AklimeModDB.easyDelete.skipConfirm == true end,
         function(v)
             AklimeModDB.easyDelete.skipConfirm = v
-            if not v and not AklimeModDB.easyDelete.skipDelete then
-                AklimeModDB.easyDelete.skipDelete = false; AklimeModDB.easyDelete.skipConfirm = false
-            end
+            refreshDeleteNode()
+        end
+    )
+    addToggle(deleteNode, L["toggle_no_unlearn"],
+        function() return AklimeModDB.easyDelete.skipUnlearn == true end,
+        function(v)
+            AklimeModDB.easyDelete.skipUnlearn = v
+            refreshDeleteNode()
+        end
+    )
+    addToggle(deleteNode, L["toggle_no_understood"],
+        function() return AklimeModDB.easyDelete.skipUnderstood == true end,
+        function(v)
+            AklimeModDB.easyDelete.skipUnderstood = v
             refreshDeleteNode()
         end
     )
 
     if AklimeMod_BuyConfirm then
-        local buyNode = addModule(dp, "Kaufbestätigung automatisch annehmen",
+        local buyNode = addModule(dp, L["mod_buy_confirm"],
             function() return AklimeMod_BuyConfirm.IsEnabled() end,
             function(v) AklimeMod_BuyConfirm.SetEnabled(v) end
         )
-        addInfo(buyNode, "Bestätigt automatisch Kaufdialoge bei nicht umtauschbaren\nItems und Token-Käufen (Ja/Nein-Dialoge ohne Texteingabe).")
+        addInfo(buyNode, L["info_buy_confirm"])
     end
 
-    local sellJunkNode = addModule(dp, "Graue Items automatisch verkaufen",
+    local sellJunkNode = addModule(dp, L["mod_auto_sell"],
         function() return AklimeMod_AutoSellJunk.IsEnabled() end,
         function(v) AklimeMod_AutoSellJunk.SetEnabled(v) end
     )
-    addInfo(sellJunkNode, "Verkauft automatisch alle grauen Items wenn du einen Händler öffnest.\nNutzt Blizzards eingebauten Verkaufs-Button.")
+    addInfo(sellJunkNode, L["info_auto_sell"])
 
-    local preyPctNode = addModule(dp, "Jagd % Anzeige (statt Kristall)",
+    local preyPctNode = addModule(dp, L["mod_prey_percent"],
         function() return AklimeMod_PreyPercent and AklimeMod_PreyPercent.IsEnabled() end,
         function(v)
             if AklimeMod_PreyPercent then AklimeMod_PreyPercent.SetEnabled(v) end
         end
     )
-    addInfo(preyPctNode,
-        "Versteckt den Blizzard-Kristall bei aktiver Jagd und zeigt\n" ..
-        "stattdessen den Fortschritt als % Text an.\n\n" ..
-        "Die Farbe wechselt automatisch:\n" ..
-        "Rot < 25%  \183  Orange < 50%  \183  Gold < 75%  \183  Gruen >= 75%"
-    )
+    addInfo(preyPctNode, L["info_prey_percent"])
 
-    local clock24hNode = addModule(dp, "24-Stunden-Uhr",
+    local clock24hNode = addModule(dp, L["mod_clock24h"],
         function() return AklimeMod_Clock24h.IsEnabled() end,
         function(v) AklimeMod_Clock24h.SetEnabled(v) end
     )
-    addInfo(clock24hNode, "Setzt die Blizzard-Uhr auf 24-Stunden-Format.\nWird beim Login automatisch aktiviert wenn nicht bereits gesetzt.")
+    addInfo(clock24hNode, L["info_clock24h"])
 
-    local mapCoordsNode = addModule(dp, "Karten-Koordinaten",
+    local mapCoordsNode = addModule(dp, L["mod_map_coords"],
         function() return AklimeMod_MapCoords.IsEnabled() end,
         function(v) AklimeMod_MapCoords.SetEnabled(v) end
     )
-    addInfo(mapCoordsNode, "Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.\nFormat: Maus: X / Y  -  Spieler: X / Y")
+    addInfo(mapCoordsNode, L["info_map_coords"])
 
     if AklimeMod_ChatLearnFilter then
-        local learnNode = addModule(dp, "Lernen-/Vergessen-Meldungen ausblenden",
+        local learnNode = addModule(dp, L["mod_learn_filter"],
             function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
             function(v) AklimeMod_ChatLearnFilter:SetEnabled(v) end
         )
-        addInfo(learnNode,
-            "Versteckt Systemmeldungen wie:\n" ..
-            "\"Du hast den Zauber X gelernt.\"\n" ..
-            "\"Du hast X verlernt.\""
-        )
+        addInfo(learnNode, L["info_learn_filter"])
     end
 
     if AklimeMod_ChatIcons then
-        local chatIconsNode = addModule(dp, "Item- und Währungssymbole im Chat",
+        local chatIconsNode = addModule(dp, L["mod_chat_icons"],
             function() return AklimeMod_ChatIcons:IsEnabled() end,
             function(v) AklimeMod_ChatIcons:SetEnabled(v) end
         )
-        addInfo(chatIconsNode,
-            "Zeigt vor jedem Item-Link das Item-Icon.\n" ..
-            "Bei Beute- und Währungsnachrichten auch das Währungs-Icon."
-        )
+        addInfo(chatIconsNode, L["info_chat_icons"])
     end
 
     if AklimeMod_ChatIcons then
-        local itemLevelNode = addModule(dp, "Itemlevel in Chat-Links",
+        local itemLevelNode = addModule(dp, L["mod_item_level"],
             function() return AklimeMod_ChatIcons:IsItemLevelEnabled() end,
             function(v) AklimeMod_ChatIcons:SetItemLevelEnabled(v) end
         )
-        addToggle(itemLevelNode, "Ausrüstungsplatz anzeigen",
+        addToggle(itemLevelNode, L["toggle_show_slot"],
             function() return AklimeMod_ChatIcons:IsShowSlotEnabled() end,
             function(v) AklimeMod_ChatIcons:SetShowSlotEnabled(v) end
         )
-        addInfo(itemLevelNode,
-            "Hängt das Itemlevel an jeden ausrüstbaren Link im Chat an.\n" ..
-            "Beispiel: [Schwert des Helden (680)] oder [Schwert des Helden (Einhand 680)]."
-        )
+        addInfo(itemLevelNode, L["info_item_level"])
     end
 
     if AklimeMod_Mailbox then
-        local mailboxNode = addModule(dp, "Adressbuch für Post",
+        local mailboxNode = addModule(dp, L["mod_mailbox"],
             function() return AklimeMod_Mailbox:IsEnabled() end,
             function(v) AklimeMod_Mailbox:SetEnabled(v) end
         )
-        addToggle(mailboxNode, "Letzten Empfänger merken",
+        addToggle(mailboxNode, L["toggle_remember_recipient"],
             function() return AklimeMod_Mailbox:IsRememberLastRecipient() end,
             function(v) AklimeMod_Mailbox:SetRememberLastRecipient(v) end
         )
-        addInfo(mailboxNode,
-            "Zeigt ein Adressbuch neben dem Schreibfenster.\n" ..
-            "Klick auf einen Eintrag setzt den Empfänger.\n" ..
-            "Rechtsklick auf einen Eintrag: Entfernen.\n\n" ..
-            "Empfänger werden automatisch gespeichert\n" ..
-            "wenn du eine Mail sendest.\n\n" ..
-            "Letzter Empfänger: wird beim nächsten Öffnen\n" ..
-            "des Postfachs automatisch eingetragen."
-        )
-        addAction(mailboxNode, "Kontakte leeren", function()
+        addInfo(mailboxNode, L["info_mailbox"])
+        addAction(mailboxNode, L["action_clear_contacts"], function()
             AklimeMod_Mailbox:ClearContacts()
         end)
     end
 
     if AklimeMod_Merchant then
-        local merchantNode = addModule(dp, "Händlerfenster - 20 Gegenstände pro Seite",
+        local merchantNode = addModule(dp, L["mod_merchant"],
             function() return AklimeMod_Merchant:IsEnabled() end,
             function(v)
                 if v then
@@ -1547,48 +1473,37 @@ local function addQoLNodes(dp)
                 end
             end
         )
-        addInfo(merchantNode,
-            "Zeigt 20 statt 10 Gegenstände pro Händler-Seite.\n" ..
-            "Der Händler-Rahmen wird auf zwei Spalten verbreitert.\n" ..
-            "Kann jederzeit ohne Neustart deaktiviert werden."
-        )
+        addInfo(merchantNode, L["info_merchant"])
     end
 
     -- ============================================================
     -- Gameplay
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gameplay", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_gameplay"], centered = true })
     end
 
-    local manaNode = addModule(dp, "Mana Warnung (Work in Progress)",
+    local manaNode = addModule(dp, L["mod_mana_warning"],
         function() return AklimeMod_ManaWarning.IsEnabled() end,
         function(v) AklimeMod_ManaWarning.SetEnabled(v) end
     )
-    addInfo(manaNode,
-        "Sendet eine Nachricht im Gruppen- / Instanz-Chat wenn Mana niedrig ist.\n" ..
-        "Nur aktiv wenn du in einer Gruppe oder Instanz bist.\n\n" ..
-        "Im Kampf: Warnung bei Low Mana (~20%) und Out of Mana.\n" ..
-        "Außerhalb Kampf: Nur Out of Mana bei fehlgeschlagenem Spell.\n\n" ..
-        "Hinweis: Blizzard sperrt Mana-Werte (Secret Values) in 12.0.\n" ..
-        "Schwellwert-Warnungen außerhalb Kampf sind technisch nicht möglich."
-    )
+    addInfo(manaNode, L["info_mana_warning"])
 
     if AklimeMod_HeroismTracker then
-        local htNode = addModule(dp, "HT-Anzeige (Heldentum / Trommeln)",
+        local htNode = addModule(dp, L["mod_heroism_tracker"],
             function() return AklimeMod_HeroismTracker:IsEnabled() end,
             function(v) AklimeMod_HeroismTracker:SetEnabled(v) end
         )
-        addToggle(htNode, "Position fixieren",
+        addToggle(htNode, L["toggle_lock_position"],
             function() return AklimeMod_HeroismTracker:IsLocked() end,
             function(v) AklimeMod_HeroismTracker:SetLocked(v) end
         )
-        addSlider(htNode, "Schriftgröße", 0, 100, 1,
+        addSlider(htNode, L["slider_font_size"], 0, 100, 1,
             function() return AklimeMod_HeroismTracker:GetFontSizeSlider() end,
             function(v) AklimeMod_HeroismTracker:SetFontSizeSlider(v) end,
-            function(v) return v == 0 and "Standard" or tostring(v) end
+            function(v) return v == 0 and L["fmt_default"] or tostring(v) end
         )
-        addAction(htNode, "Vorschau ein/aus", function()
+        addAction(htNode, L["action_preview"], function()
             if AklimeMod_HeroismTracker.previewing then
                 AklimeMod_HeroismTracker.previewing = false
                 AklimeMod_HeroismTracker:HidePreview()
@@ -1597,93 +1512,72 @@ local function addQoLNodes(dp)
                 AklimeMod_HeroismTracker:ShowPreview()
             end
         end)
-        addInfo(htNode,
-            "Zeigt \"HT AKTIV\" auf dem Bildschirm solange Heldentum,\n" ..
-            "Bloodlust, Zeitsprung, Trommeln oder der zugehörige\n" ..
-            "Erschöpfungs-Debuff aktiv ist (bis zu 10 Minuten).\n\n" ..
-            "Frei verschiebbar per Drag. Position wird gespeichert.\n" ..
-            "Festsetzenhaken: verhindert versehentliches Verschieben."
-        )
+        addInfo(htNode, L["info_heroism_tracker"])
     end
 
     if AklimeMod_DeathSound then
-        local deathNode = addModule(dp, "Todessound",
+        local deathNode = addModule(dp, L["mod_death_sound"],
             function() return AklimeMod_DeathSound:IsEnabled() end,
             function(v) AklimeMod_DeathSound:SetEnabled(v) end
         )
-        addInfo(deathNode,
-            "Spielt einen Sound ab wenn der Charakter stirbt.\n" ..
-            "Wird pro Tod nur einmal abgespielt."
-        )
+        addInfo(deathNode, L["info_death_sound"])
     end
 
     if AklimeMod_TalentReminder then
-        local talentNode = addModule(dp, "Talent-Erinnerung beim Dungeon-Eintritt",
+        local talentNode = addModule(dp, L["mod_talent_reminder"],
             function() return AklimeMod_TalentReminder:IsEnabled() end,
             function(v) AklimeMod_TalentReminder:SetEnabled(v) end
         )
-        addInfo(talentNode,
-            "Zeigt beim Betreten einer Instanz ein Popup:\n" ..
-            "\"Passen die Talente für diese Instanz?\"\n\n" ..
-            "Schaltfläche \"Talente öffnen\" öffnet direkt das Talentfenster.\n" ..
-            "Erscheint nicht beim Login oder Interface-Neuladen."
-        )
+        addInfo(talentNode, L["info_talent_reminder"])
     end
 
     -- ============================================================
     -- Quest
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Quest", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_quest"], centered = true })
     end
 
     if AklimeMod_QuestAutomation then
-        local autoQuestNode = addModule(dp, "Quest automatisch annehmen / abgeben",
+        local autoQuestNode = addModule(dp, L["mod_auto_quest"],
             function() return AklimeMod_QuestAutomation:IsEnabled() end,
             function(v) AklimeMod_QuestAutomation:SetEnabled(v) end
         )
-        addToggle(autoQuestNode, "Normale Quests annehmen",
+        addToggle(autoQuestNode, L["toggle_normal_quests"],
             function() return AklimeMod_QuestAutomation:IsAcceptNormal() end,
             function(v) AklimeMod_QuestAutomation:SetAcceptNormal(v) end
         )
-        addToggle(autoQuestNode, "Tagesquests annehmen",
+        addToggle(autoQuestNode, L["toggle_daily_quests"],
             function() return AklimeMod_QuestAutomation:IsAcceptDailies() end,
             function(v) AklimeMod_QuestAutomation:SetAcceptDailies(v) end
         )
-        addToggle(autoQuestNode, "Triviale Quests überspringen",
+        addToggle(autoQuestNode, L["toggle_trivial_quests"],
             function() return AklimeMod_QuestAutomation:IsIgnoreTrivial() end,
             function(v) AklimeMod_QuestAutomation:SetIgnoreTrivial(v) end
         )
-        addToggle(autoQuestNode, "Warband-abgeschlossene Quests überspringen",
+        addToggle(autoQuestNode, L["toggle_warband_quests"],
             function() return AklimeMod_QuestAutomation:IsIgnoreWarband() end,
             function(v) AklimeMod_QuestAutomation:SetIgnoreWarband(v) end
         )
-        addToggle(autoQuestNode, "Abgeben: Quests automatisch abschließen",
+        addToggle(autoQuestNode, L["toggle_auto_turnin"],
             function() return AklimeMod_QuestAutomation:IsAutoTurnIn() end,
             function(v) AklimeMod_QuestAutomation:SetAutoTurnIn(v) end
         )
-        addToggle(autoQuestNode, "Abgeben: Tagesquests überspringen",
+        addToggle(autoQuestNode, L["toggle_skip_daily_turnin"],
             function() return AklimeMod_QuestAutomation:IsIgnoreDailiesTurnIn() end,
             function(v) AklimeMod_QuestAutomation:SetIgnoreDailiesTurnIn(v) end
         )
-        addToggle(autoQuestNode, "Abgeben: Wochenquests überspringen",
+        addToggle(autoQuestNode, L["toggle_skip_weekly_turnin"],
             function() return AklimeMod_QuestAutomation:IsIgnoreWeekliesTurnIn() end,
             function(v) AklimeMod_QuestAutomation:SetIgnoreWeekliesTurnIn(v) end
         )
-        addInfo(autoQuestNode,
-            "Nimmt verfügbare Quests beim NPC automatisch an und gibt\n" ..
-            "abgeschlossene Quests ab.\n\n" ..
-            "Modifier zum Unterbrechen:\n" ..
-            "NONE = Shift gedrückt hält an\n" ..
-            "SHIFT / CTRL / ALT = Taste muss gehalten werden zum Auslösen\n\n" ..
-            "NPCs ignorieren: Ziel rechtsklicken > \"NPC zu Ignoreliste hinzufügen\""
-        )
-        addInfo(autoQuestNode, "Modifier:")
+        addInfo(autoQuestNode, L["info_auto_quest"])
+        addInfo(autoQuestNode, L["info_modifier"])
         for _, opt in ipairs({
-            { label = "Kein Modifier (Shift hält an)", val = "NONE"  },
-            { label = "Shift",                         val = "SHIFT" },
-            { label = "Strg",                          val = "CTRL"  },
-            { label = "Alt",                           val = "ALT"   },
+            { label = L["modifier_none"],  val = "NONE"  },
+            { label = L["modifier_shift"], val = "SHIFT" },
+            { label = L["modifier_ctrl"],  val = "CTRL"  },
+            { label = L["modifier_alt"],   val = "ALT"   },
         }) do
             local v = opt.val
             addToggle(autoQuestNode, opt.label,
@@ -1691,24 +1585,21 @@ local function addQoLNodes(dp)
                 function(on) if on then AklimeMod_QuestAutomation:SetModifier(v); AklimeMod_RefreshRightToggles() end end
             )
         end
-        addAction(autoQuestNode, "Ignoreliste leeren", function()
+        addAction(autoQuestNode, L["action_clear_ignore"], function()
             AklimeMod_QuestAutomation:ClearIgnoredNPCs()
         end)
     end
 
     if AklimeMod_QuestAutomation then
-        local wowheadNode = addModule(dp, "Wowhead-URL im Quest-Menü",
+        local wowheadNode = addModule(dp, L["mod_wowhead_url"],
             function() return AklimeMod_QuestAutomation:IsWowheadLink() end,
             function(v) AklimeMod_QuestAutomation:SetWowheadLink(v) end
         )
-        addInfo(wowheadNode,
-            "Fügt \"Wowhead-URL kopieren\" zum Rechtsklick-Menü\n" ..
-            "auf Quests im Tracker und auf der Karte hinzu."
-        )
+        addInfo(wowheadNode, L["info_wowhead_url"])
     end
 
     if AklimeMod_QuestTracker then
-        local trackerNode = addModule(dp, "Quest-Tracker Erweiterungen",
+        local trackerNode = addModule(dp, L["mod_quest_tracker"],
             function()
                 return AklimeMod_QuestTracker:IsShowQuestCountEnabled()
                     or AklimeMod_QuestTracker:IsMinimizeButtonOnly()
@@ -1720,60 +1611,50 @@ local function addQoLNodes(dp)
                 AklimeMod_QuestTracker:SetRememberState(v)
             end
         )
-        addToggle(trackerNode, "Quest-Anzahl im Header anzeigen (z.B. 15/25)",
+        addToggle(trackerNode, L["toggle_quest_count"],
             function() return AklimeMod_QuestTracker:IsShowQuestCountEnabled() end,
             function(v) AklimeMod_QuestTracker:SetShowQuestCount(v) end
         )
-        addToggle(trackerNode, "Nur Minimieren-Button wenn zugeklappt",
+        addToggle(trackerNode, L["toggle_minimize_only"],
             function() return AklimeMod_QuestTracker:IsMinimizeButtonOnly() end,
             function(v) AklimeMod_QuestTracker:SetMinimizeButtonOnly(v) end
         )
-        addToggle(trackerNode, "Zugeklappten Zustand merken",
+        addToggle(trackerNode, L["toggle_remember_state"],
             function() return AklimeMod_QuestTracker:IsRememberStateEnabled() end,
             function(v) AklimeMod_QuestTracker:SetRememberState(v) end
         )
-        addInfo(trackerNode,
-            "Quest-Anzahl: goldene Zahl im Tracker-Header.\n" ..
-            "Nur Button: Header-Text/Hintergrund verschwinden wenn zugeklappt.\n" ..
-            "Zustand merken: der Tracker bleibt zwischen Sessions ein- oder ausgeklappt."
-        )
+        addInfo(trackerNode, L["info_quest_tracker"])
     end
 
     -- ============================================================
     -- Gesundheit
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Gesundheit", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_health"], centered = true })
     end
 
-    local drinkNode = addModule(dp, "Trinkerinnerung",
+    local drinkNode = addModule(dp, L["mod_drink_reminder"],
         function() return AklimeMod_DrinkReminder.IsEnabled() end,
         function(v) AklimeMod_DrinkReminder.SetEnabled(v) end
     )
-    addInfo(drinkNode,
-        "Erinnert dich regelmäßig daran zu trinken und dich zu strecken.\n" ..
-        "Erscheint als Ingame-Popup oben mittig. In Instanzen wird die\n" ..
-        "Meldung zurückgehalten und kommt wenn du wieder draußen bist."
-    )
-    addToggle(drinkNode, "Nicht in Instanzen",
+    addInfo(drinkNode, L["info_drink_reminder"])
+    addToggle(drinkNode, L["toggle_no_instance"],
         function() return AklimeMod_DrinkReminder.GetDisableInInstance() end,
         function(v) AklimeMod_DrinkReminder.SetDisableInInstance(v) end
     )
-    addInfo(drinkNode, "Intervall:")
-    local intervals = {
-        { label = "30 Minuten", minutes = 30  },
-        { label = "1 Stunde",   minutes = 60  },
-        { label = "2 Stunden",  minutes = 120 },
-    }
-    for _, opt in ipairs(intervals) do
+    addInfo(drinkNode, L["info_interval"])
+    for _, opt in ipairs({
+        { label = L["toggle_drink_30m"], minutes = 30  },
+        { label = L["toggle_drink_1h"],  minutes = 60  },
+        { label = L["toggle_drink_2h"],  minutes = 120 },
+    }) do
         local m = opt.minutes
-        addToggle(drinkNode,
-            opt.label,
+        addToggle(drinkNode, opt.label,
             function() return AklimeMod_DrinkReminder.GetInterval() == m end,
             function(v) if v then AklimeMod_DrinkReminder.SetInterval(m); AklimeMod_RefreshRightToggles() end end
         )
     end
-    addAction(drinkNode, "Jetzt testen", function()
+    addAction(drinkNode, L["action_test_now"], function()
         AklimeMod_DrinkReminder.ShowNow()
     end)
 
@@ -1781,26 +1662,23 @@ local function addQoLNodes(dp)
     -- Spielzeit
     -- ============================================================
     if currentSearchFilter == "" then
-        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = "Spielzeit", centered = true })
+        dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_playtime"], centered = true })
     end
 
     if AklimeMod_PlayedTime then
-        local playedNode = addModule(dp, "Gespielte Zeit",
+        local playedNode = addModule(dp, L["mod_played_time"],
             function() return AklimeModDB.playedTime.enabled end,
             function(v) AklimeModDB.playedTime.enabled = v end
         )
-        addInfo(playedNode,
-            "Erfasst die Spielzeit aller Chars beim Login automatisch.\n" ..
-            "Öffnen: /akm played"
-        )
-        addAction(playedNode, "Char löschen...", function()
+        addInfo(playedNode, L["info_played_time"])
+        addAction(playedNode, L["action_delete_char"], function()
             local chars = AklimeMod_PlayedTime:GetSavedChars()
             local menu = _G["AklimeModPlayedDeleteMenu"]
                 or CreateFrame("Frame", "AklimeModPlayedDeleteMenu", UIParent, "UIDropDownMenuTemplate")
             UIDropDownMenu_Initialize(menu, function()
                 if #chars == 0 then
                     local info = UIDropDownMenu_CreateInfo()
-                    info.text     = "Keine Daten vorhanden"
+                    info.text     = L["played_no_data"]
                     info.disabled = true
                     UIDropDownMenu_AddButton(info)
                     return
@@ -1818,7 +1696,7 @@ local function addQoLNodes(dp)
             end, "MENU")
             ToggleDropDownMenu(1, nil, menu, "cursor", 0, 0)
         end)
-        addAction(playedNode, "Alle Daten löschen", function()
+        addAction(playedNode, L["action_delete_all"], function()
             AklimeMod_PlayedTime:DeleteAll()
         end)
     end
@@ -1842,27 +1720,21 @@ AklimeMod_BuildQoLContent = BuildQoLContent  -- global fuer Module
 -- PvP
 -- ============================================================
 local function addPvPNodes(dp)
-    local npNode = addModule(dp, "Namensplaketten einfärben",
+    local npNode = addModule(dp, L["mod_nameplate_color"],
         function() return AklimeMod_PvPNameplateColor and AklimeMod_PvPNameplateColor.IsEnabled() end,
         function(v)
             if AklimeMod_PvPNameplateColor then AklimeMod_PvPNameplateColor.SetEnabled(v) end
         end
     )
-    addInfo(npNode,
-        "Färbt Namensplaketten in PvP-Instanzen (Arena & Schlachtfeld):\n" ..
-        "|cFF00FF00Grün|r  = eigene Gruppe / Team\n" ..
-        "|cFFFF3333Rot|r   = Gegner"
-    )
+    addInfo(npNode, L["info_nameplate_color"])
 
-    local chatBlockNode = addModule(dp, "Chat im PvP blockieren",
+    local chatBlockNode = addModule(dp, L["mod_pvp_chat_block"],
         function() return AklimeMod_PvPChatBlock and AklimeMod_PvPChatBlock.IsEnabled() end,
         function(v)
             if AklimeMod_PvPChatBlock then AklimeMod_PvPChatBlock.SetEnabled(v) end
         end
     )
-    addInfo(chatBlockNode,
-        "Verhindert das Öffnen der Chat-Eingabe (Enter) in Arenen und Schlachtfeldern."
-    )
+    addInfo(chatBlockNode, L["info_pvp_chat"])
 end
 
 local function BuildPvPContent()
@@ -1894,7 +1766,7 @@ local function BuildCollectingContent()
     lastCategoryFn = BuildCollectingContent
     currentBuildFn = nil
     if _G["AklimeModSearchBox"] then _G["AklimeModSearchBox"]:SetText("") end
-    AklimeMod_SetRightHeader("Collecting")
+    AklimeMod_SetRightHeader(L["cat_collecting"])
     ShowScrollView()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     local dp = newDP()
@@ -1902,13 +1774,13 @@ local function BuildCollectingContent()
     -- ── Währungen ─────────────────────────────────────────────
     dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
-        label    = "Währungen",
+        label    = L["sec_currencies"],
         centered = true,
     })
 
     local ALL_CURR_EXP = {
-        {15,"Saison"},{14,"Dungeon & Schlachtzug"},{13,"Spieler gegen Spieler"},
-        {12,"Verschiedenes"},{11,"Midnight"},{10,"The War Within"},{9,"Dragonflight"},
+        {15,L["curr_cat_season"]},{14,L["curr_cat_raids"]},{13,L["curr_cat_pvp"]},
+        {12,L["curr_cat_misc"]},{11,"Midnight"},{10,"The War Within"},{9,"Dragonflight"},
         {8,"Shadowlands"},{7,"Battle for Azeroth"},{6,"Legion"},
         {5,"Warlords of Draenor"},{4,"Mists of Pandaria"},{3,"Cataclysm"},{2,"WotLK"},
         {1,"TBC"},{0,"Classic"},
@@ -1976,10 +1848,24 @@ local function BuildCollectingContent()
             if ok and info and info.name ~= "" then
                 local icon = info.iconFileID
                 local iconStr = icon and ("|T" .. icon .. ":14:14:0:0|t ") or ""
-                return iconStr .. info.name
+                return iconStr .. info.name, info.name
             end
         end
-        return "ID:" .. id
+        return "ID:" .. id, "ID:" .. id
+    end
+
+    -- Umlaut-normalisierter Sortierschlüssel für A-Z auch auf DE-Client
+    local function CurrSortKey(s)
+        if not s then return "" end
+        s = s:lower()
+        s = s:gsub("\195\164", "a")  -- ä
+        s = s:gsub("\195\182", "o")  -- ö
+        s = s:gsub("\195\188", "u")  -- ü
+        s = s:gsub("\195\159", "ss") -- ß
+        s = s:gsub("\195\132", "a")  -- Ä
+        s = s:gsub("\195\150", "o")  -- Ö
+        s = s:gsub("\195\156", "u")  -- Ü
+        return s
     end
 
     for _, pair in ipairs(ALL_CURR_EXP) do
@@ -1990,12 +1876,13 @@ local function BuildCollectingContent()
                 Template = "AklimeMod_InfoTextTemplate",
                 text     = "|cFF888888" .. expLabel .. "|r",
             })
-            -- Währungen innerhalb der Erweiterung A-Z sortieren
+            -- Währungen innerhalb der Erweiterung A-Z sortieren (nach Rohname, umlautnormalisiert)
             local sorted = {}
             for _, id in ipairs(ids) do
-                sorted[#sorted+1] = { id = id, name = GetCurrNameLocal(id) }
+                local display, raw = GetCurrNameLocal(id)
+                sorted[#sorted+1] = { id = id, name = display, sortKey = CurrSortKey(raw) }
             end
-            table.sort(sorted, function(a, b) return a.name < b.name end)
+            table.sort(sorted, function(a, b) return a.sortKey < b.sortKey end)
 
             for _, entry in ipairs(sorted) do
                 local cid  = entry.id
@@ -2035,7 +1922,7 @@ end
 -- ============================================================
 local function BuildGlobalSearch(filter)
     currentBuildFn = nil
-    AklimeMod_SetRightHeader("Suche: \"" .. filter .. "\"")
+    AklimeMod_SetRightHeader(string.format(L["search_header"], filter))
     ShowScrollView()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
 
@@ -2086,7 +1973,7 @@ local categories = {
     { order=1, name="Dashboard",       callback=BuildDashboardContent                        },
     { order=2, name="Interface",       callback=BuildInterfaceContent                        },
     { order=3, name="Quality of Life", callback=BuildQoLContent                              },
-    { order=4, name="Collecting",      callback=BuildCollectingContent                       },
+    { order=4, name=L["cat_collecting"], callback=BuildCollectingContent                      },
     { order=5, name="PvP",             callback=function() AklimeMod_BuildPvPContent() end   },
 }
 

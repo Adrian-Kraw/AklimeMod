@@ -38,11 +38,11 @@ C:Register("playerFrame", {
     colors = {
         main            = { label="Main",             r=D.main.r,     g=D.main.g,     b=D.main.b,     a=1, order=1 },
         corner_icon     = { label="Corner Icon",      r=D.main.r,     g=D.main.g,     b=D.main.b,     a=1, order=2, followClassColor=true },
-        class_power_bar = { label="Klassen-Power-Bar",r=D.main.r,     g=D.main.g,     b=D.main.b,     a=1, order=3 },
+        class_power_bar = { label="Class Power Bar",  r=D.main.r,     g=D.main.g,     b=D.main.b,     a=1, order=3 },
         cast_bar        = { label="Cast Bar",         r=D.main.r,     g=D.main.g,     b=D.main.b,     a=1, order=4 },
     },
     toggles = {
-        hide_pulsing_resting = { label="Rast-Animation ausblenden", default=true },
+        hide_pulsing_resting = { label="Hide Rest Animation", default=true },
     },
     apply = function(self)
         local mr,mg,mb,ma = col("playerFrame","main")
@@ -105,11 +105,11 @@ C:Register("targetFrame", {
     colors = {
         main       = { label="Main",          r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 },
         cast_bar   = { label="Cast Bar",      r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=2 },
-        buff_border= { label="Buff-Rahmen",   r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=3 },
+        buff_border= { label="Buff Border",   r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=3 },
     },
     toggles = {
-        follow_unit_class = { label="Einheitenklasse/-reaktion übernehmen", default=false },
-        show_buff_border  = { label="Buff-Rahmen anzeigen",                  default=true  },
+        follow_unit_class = { label="Color by Class / Reaction", default=false },
+        show_buff_border  = { label="Show Buff Border",                  default=true  },
     },
     apply = function(self)
         local mr,mg,mb,ma   = col("targetFrame","main")
@@ -176,7 +176,7 @@ C:Register("targetOfTarget", {
         main = { label="Main", r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 },
     },
     toggles = {
-        follow_unit_class = { label="Einheitenklasse/-reaktion übernehmen", default=false },
+        follow_unit_class = { label="Color by Class / Reaction", default=false },
     },
     apply = function(self)
         local mr,mg,mb,ma = col("targetOfTarget","main")
@@ -204,11 +204,11 @@ C:Register("focusFrame", {
     colors = {
         main        = { label="Main",        r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 },
         cast_bar    = { label="Cast Bar",    r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=2 },
-        buff_border = { label="Buff-Rahmen", r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=3 },
+        buff_border = { label="Buff Border", r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=3 },
     },
     toggles = {
-        follow_unit_class = { label="Einheitenklasse/-reaktion übernehmen", default=false },
-        show_buff_border  = { label="Buff-Rahmen anzeigen",                  default=true  },
+        follow_unit_class = { label="Color by Class / Reaction", default=false },
+        show_buff_border  = { label="Show Buff Border",                  default=true  },
     },
     apply = function(self)
         local mr,mg,mb,ma     = col("focusFrame","main")
@@ -275,7 +275,7 @@ C:Register("focusFrameToT", {
         main = { label="Main", r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 },
     },
     toggles = {
-        follow_unit_class = { label="Einheitenklasse/-reaktion übernehmen", default=false },
+        follow_unit_class = { label="Color by Class / Reaction", default=false },
     },
     apply = function(self)
         local mr,mg,mb,ma = col("focusFrameToT","main")

@@ -4,6 +4,8 @@
 -- Verzauberung: ENCHANTED_TOOLTIP_LINE Pattern (locale-unabhaengig)
 -- Linke Spalte: Indikatoren rechts vom Slot. Rechte Spalte: links vom Slot.
 
+local L = AklimeModL or {}
+
 local GetItemInfoInstant = (C_Item and C_Item.GetItemInfoInstant)       and C_Item.GetItemInfoInstant       or GetItemInfo
 local GetDetailedItemLvl = (C_Item and C_Item.GetDetailedItemLevelInfo) and C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
 local GetInvItemQuality  = (C_Item and C_Item.GetInventoryItemQuality)  and C_Item.GetInventoryItemQuality  or GetInventoryItemQuality
@@ -36,9 +38,10 @@ local ENCHANT_SLOTS_BY_EXP = {
 }
 
 -- Linke Spalte des Charakterfensters: Indikatoren erscheinen rechts vom Slot.
--- Rechte Spalte und Waffen: Indikatoren links vom Slot.
--- Linke Spalte: Helm(1), Hals(2), Schultern(3), Ruecken(15), Brust(5), Hemd(4), Handgelenk(9), Wappenrock(19), Hauptwaffe(16)
--- Rechte Spalte: Handschuhe(10), Guertel(6), Beine(7), Fuesse(8), Ringe(11,12), Schmuck(13,14), Nebenwaffe(17)
+-- Rechte Spalte: Indikatoren erscheinen links vom Slot.
+-- Waffen unten: Hauptwaffe links → Text links (auswärts), Nebenwaffe rechts → Text rechts (auswärts).
+-- Linke Spalte: Helm(1), Hals(2), Schultern(3), Ruecken(15), Brust(5), Hemd(4), Handgelenk(9), Wappenrock(19), Nebenwaffe(17)
+-- Rechte Spalte: Handschuhe(10), Guertel(6), Beine(7), Fuesse(8), Ringe(11,12), Schmuck(13,14), Hauptwaffe(16)
 local LEFT_COLUMN = {
     [1]=true,  -- Helm
     [2]=true,  -- Hals
@@ -47,7 +50,7 @@ local LEFT_COLUMN = {
     [5]=true,  -- Brust
     [9]=true,  -- Handgelenk
     [15]=true, -- Ruecken
-    [16]=true, -- Hauptwaffe
+    [17]=true, -- Nebenwaffe
     [19]=true, -- Wappenrock
 }
 
@@ -217,10 +220,10 @@ local function UpdateSlotForReal(unit, slotID, button)
 
     local enchStatus = GetEnchantStatus(unit, slotID)
     if enchStatus == true then
-        button._gearEnchant:SetText("|cFF00DD00Verzaubert|r")
+        button._gearEnchant:SetText("|cFF00DD00" .. (L["gc_enchanted"] or "Enchanted") .. "|r")
         button._gearEnchant:Show()
     elseif enchStatus == false then
-        button._gearEnchant:SetText("|cFFFF3333Nicht verzaubert|r")
+        button._gearEnchant:SetText("|cFFFF3333" .. (L["gc_not_enchanted"] or "Not enchanted") .. "|r")
         button._gearEnchant:Show()
     else
         button._gearEnchant:Hide()

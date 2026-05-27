@@ -2,6 +2,8 @@
 -- Charakter-Tracker: Raids + Währungen aus SavedInstancesDB.
 -- Vollständig dynamisch. Hover-Tooltip auf Charakter-Namen.
 
+local L = AklimeModL or {}
+
 -- ============================================================
 -- Hidden/DNT Currencies die NICHT angezeigt werden sollen
 -- (aus SI Currency.lua Kommentare + hiddenCurrency Logik)
@@ -91,11 +93,114 @@ local EXP_NAMES = {
     [9]  = "Dragonflight",
     [10] = "The War Within",
     [11] = "Midnight",
-    [12] = "Verschiedenes",
-    [13] = "Spieler gegen Spieler",
-    [14] = "Dungeon & Schlachtzug",
-    [15] = "Saison",
+    [12] = L["curr_cat_misc"]   or "Miscellaneous",
+    [13] = L["curr_cat_pvp"]    or "Player vs. Player",
+    [14] = L["curr_cat_raids"]  or "Dungeons & Raids",
+    [15] = L["curr_cat_season"] or "Season",
 }
+
+local RAID_NAME_EN = {
+    -- Classic
+    ["Der Geschmolzener Kern"]                 = "Molten Core",
+    ["Pechschwingenhort"]                      = "Blackwing Lair",
+    ["Ruinen von Ahn'Qiraj"]                   = "Ruins of Ahn'Qiraj",
+    ["Tempel von Ahn'Qiraj"]                   = "Temple of Ahn'Qiraj",
+    ["Schwarzfelstiefen"]                       = "Blackrock Depths",
+
+    -- The Burning Crusade
+    ["Karazhan"]                               = "Karazhan",
+    ["Gruuls Unterschlupf"]                    = "Gruul's Lair",
+    ["Magtheridons Kammer"]                    = "Magtheridon's Lair",
+    ["H\195\182hle des Schlangenschreins"]     = "Serpentshrine Cavern",
+    ["Das Auge"]                               = "The Eye",
+    ["Die Schlachten um den Hyjal"]            = "The Battle for Mount Hyjal",
+    ["Der Schwarze Tempel"]                    = "Black Temple",
+    ["Sonnenbrunnenplateau"]                   = "Sunwell Plateau",
+
+    -- Wrath of the Lich King
+    ["Das Auge der Ewigkeit"]                  = "The Eye of Eternity",
+    ["Das Obsidiansanktum"]                    = "The Obsidian Sanctum",
+    ["Pr\195\188fung des Kreuzfahrers"]        = "Trial of the Crusader",
+    ["Das Rubinsanktum"]                       = "The Ruby Sanctum",
+    ["Archavons Kammer"]                       = "Vault of Archavon",
+    ["Ulduar"]                                 = "Ulduar",
+    ["Naxxramas"]                              = "Naxxramas",
+    ["Onyxias Hort"]                           = "Onyxia's Lair",
+    ["Die Eiskronenzitadelle"]                 = "Icecrown Citadel",
+
+    -- Cataclysm
+    ["Baradinfestung"]                         = "Baradin Hold",
+    ["Pechschwingenabstieg"]                   = "Blackwing Descent",
+    ["Die Bastion der D\195\164mmerung"]       = "The Bastion of Twilight",
+    ["Thron der Vier Winde"]                   = "Throne of the Four Winds",
+    ["Feuerlande"]                             = "Firelands",
+    ["Drachenseele"]                           = "Dragon Soul",
+
+    -- Mists of Pandaria
+    ["Mogu'shan-Gew\195\182lbe"]               = "Mogu'shan Vaults",
+    ["Das Herz der Angst"]                     = "Heart of Fear",
+    ["Terrasse des endlosen Fr\195\188hlings"] = "Terrace of Endless Spring",
+    ["Thron des Donners"]                      = "Throne of Thunder",
+    ["Belagerung von Orgrimmar"]               = "Siege of Orgrimmar",
+
+    -- Warlords of Draenor
+    ["Hochfels"]                               = "Highmaul",
+    ["Schwarzfelsgießerei"]                    = "Blackrock Foundry",
+    ["H\195\182llenfeuerzitadelle"]            = "Hellfire Citadel",
+
+    -- Legion
+    ["Der Smaragdgrüne Alptraum"]              = "The Emerald Nightmare",
+    ["Die Pr\195\188fung der Tapferkeit"]      = "Trial of Valor",
+    ["Die Nachtfestung"]                       = "The Nighthold",
+    ["Das Grab des Sargeras"]                  = "Tomb of Sargeras",
+    ["Antorus, der Brennende Thron"]           = "Antorus, the Burning Throne",
+
+    -- Battle for Azeroth
+    ["Uldir"]                                  = "Uldir",
+    ["Schlacht von Dazar'alor"]                = "Battle of Dazar'alor",
+    ["Tiegel der St\195\188rme"]               = "Crucible of Storms",
+    ["Der Ewige Palast"]                       = "The Eternal Palace",
+    ["Ny'alotha, die Erwachte Stadt"]          = "Ny'alotha, the Waking City",
+
+    -- Shadowlands
+    ["Schloss Nathria"]                        = "Castle Nathria",
+    ["Sanktum der Herrschaft"]                 = "Sanctum of Domination",
+    ["Mausoleum der Ersten"]                   = "Sepulcher of the First Ones",
+
+    -- Dragonflight
+    ["Gew\195\182lbe der Inkarnationen"]       = "Vault of the Incarnates",
+    ["Aberrus, Schmelztiegel der Schatten"]    = "Aberrus, the Shadowed Crucible",
+    ["Amirdrassil, Hoffnung des Traums"]       = "Amirdrassil, the Dream's Hope",
+
+    -- The War Within
+    ["Palast der Nerub'ar"]                    = "Nerub-ar Palace",
+    ["Befreiung von Lorenhall"]                = "Liberation of Undermine",
+    ["Manaschmiede Omega"]                     = "Manaforge Omega",
+
+    -- Midnight
+    ["Die Leerenspitze"]                           = "The Voidspire",
+    ["Der Traumriss"]                              = "The Dreamrift",
+    ["Marsch auf Quel'Danas"]                  = "March on Quel'Danas",
+}
+
+local function TranslateRaidName(name)
+    if not name then return name end
+    -- Direct match
+    local t = RAID_NAME_EN[name]
+    if t then return t end
+    -- Normalize typographic apostrophe U+2019 (0xE2 0x80 0x99) to ASCII apostrophe.
+    -- WoW returns typographic apostrophes in some instance names on deDE clients.
+    local norm = name:gsub("\226\128\153", "'")
+    t = RAID_NAME_EN[norm]
+    if t then return t end
+    -- Try without leading article (Die/Der/Das) as some instances omit it via the API.
+    local stripped = norm:match("^D[aei][ers]? (.+)$")
+    if stripped then
+        t = RAID_NAME_EN[stripped]
+        if t then return t end
+    end
+    return name
+end
 
 -- SI speichert expansionLevel direkt als 0-11 — kein Mapping nötig
 -- Nur als Sicherheitsnetz falls alte/fehlerhafte Werte vorkommen
@@ -272,6 +377,21 @@ local function FormatAmount(a)
     return tostring(a)
 end
 
+-- Sort key: lowercase + umlaut normalization so A-Z works for both DE and EN names.
+-- Lua's < operator compares bytes; UTF-8 umlauts (C3 xx) sort after z without this.
+local function SortKey(s)
+    if not s then return "" end
+    s = s:lower()
+    s = s:gsub("\195\164", "a")   -- ä
+    s = s:gsub("\195\182", "o")   -- ö
+    s = s:gsub("\195\188", "u")   -- ü
+    s = s:gsub("\195\159", "ss")  -- ß
+    s = s:gsub("\195\132", "a")   -- Ä
+    s = s:gsub("\195\150", "o")   -- Ö
+    s = s:gsub("\195\156", "u")   -- Ü
+    return s
+end
+
 local function GetSelectedChars()
     local db   = GetDB()
     local siDB = GetDataDB()
@@ -311,7 +431,7 @@ local function BuildRaids(sel)
             if hasSave then
                 if not byExp[exp] then byExp[exp] = {} end
                 byExp[exp][#byExp[exp]+1] = {
-                    name      = instName,
+                    name      = TranslateRaidName(instName),
                     lfdid     = inst.LFDID,
                     recLevel  = inst.RecLevel or 0,
                     diffs     = diffs,
@@ -369,7 +489,7 @@ local function BuildCurrencies(sel)
 
     table.sort(result, function(a, b)
         if a.exp ~= b.exp then return a.exp > b.exp end
-        return a.name < b.name
+        return SortKey(a.name) < SortKey(b.name)
     end)
     return result
 end
@@ -423,7 +543,7 @@ local function CreateUI()
 
     local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", mainFrame, "TOP", 0, -10)
-    title:SetText(NORMAL_FONT_COLOR_CODE .. "Charakter-Tracker" .. FONT_COLOR_CODE_CLOSE)
+    title:SetText(NORMAL_FONT_COLOR_CODE .. (L["ct_title"] or "Character Tracker") .. FONT_COLOR_CODE_CLOSE)
 
     -- Gold-Summary oben links
     local goldBtn = CreateFrame("Button", nil, mainFrame)
@@ -432,7 +552,7 @@ local function CreateUI()
     local goldLabel = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldLabel:SetAllPoints(goldBtn)
     goldLabel:SetJustifyH("LEFT")
-    goldLabel:SetText("|cFFFFD100Gold-Übersicht|r")
+    goldLabel:SetText("|cFFFFD100" .. (L["ct_gold_overview"] or "Gold Overview") .. "|r")
 
     mainFrame.goldBtn   = goldBtn
     mainFrame.goldLabel = goldLabel
@@ -460,9 +580,9 @@ local function CreateUI()
         local cnt = CountRecentInst()
         if cnt > 0 then
             local color = cnt >= 8 and "|cFFFF4444" or cnt >= 5 and "|cFFFFD100" or "|cFF00FF00"
-            instLabel:SetText(color .. cnt .. "/10|r Instanzen")
+            instLabel:SetText(color .. cnt .. "/10|r " .. (L["ct_inst_word"] or "Instances"))
         else
-            instLabel:SetText("|cFFAAAAAA0/10 Instanzen|r")
+            instLabel:SetText("|cFFAAAAAA0/10 " .. (L["ct_inst_word"] or "Instances") .. "|r")
         end
     end
     UpdateInstLabel()
@@ -472,7 +592,7 @@ local function CreateUI()
         UpdateInstLabel()
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
         GameTooltip:ClearLines()
-        GameTooltip:AddLine("|cFFFFD100Kürzliche Instanzen|r")
+        GameTooltip:AddLine("|cFFFFD100" .. (L["ct_inst_recent"] or "Recent Instances") .. "|r")
         GameTooltip:AddLine(" ")
 
         local history = GetInstHistory()
@@ -491,23 +611,23 @@ local function CreateUI()
                 local remaining = e.t + 3600 - now
                 local m = math.floor(remaining / 60)
                 local s = remaining % 60
-                local timeStr = string.format("|cFFFF4444%d Min. %d Sek.|r", m, s)
+                local timeStr = "|cFFFF4444" .. string.format(L["ct_inst_time"] or "%d min. %d sec.", m, s) .. "|r"
                 GameTooltip:AddDoubleLine(timeStr, e.name or "?", 1,1,1, 0.8,0.8,0.8)
             end
             GameTooltip:AddLine(" ")
             if #recent >= 10 then
                 local freeIn = recent[1].t + 3600 - now
                 local m = math.floor(freeIn / 60)
-                GameTooltip:AddLine(string.format("Nächster Slot frei in: |cFF00FF00%d Min.|r", m))
+                GameTooltip:AddLine(string.format(L["ct_inst_next_free"] or "Next slot free in: |cFF00FF00%d min.|r", m))
             else
-                GameTooltip:AddLine(string.format("Noch |cFF00FF00%d|r Instanzen verfügbar", 10 - #recent))
+                GameTooltip:AddLine(string.format(L["ct_inst_avail"] or "Still |cFF00FF00%d|r instances available", 10 - #recent))
             end
         else
-            GameTooltip:AddLine("Keine kürzlichen Instanzen.", 0.6,0.6,0.6)
+            GameTooltip:AddLine(L["ct_inst_none"] or "No recent instances.", 0.6,0.6,0.6)
         end
 
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Limit: 10 Instanzen pro Stunde (Account)", 0.5,0.5,0.5)
+        GameTooltip:AddLine(L["ct_inst_limit"] or "Limit: 10 instances per hour (account)", 0.5,0.5,0.5)
         GameTooltip:Show()
     end)
     instBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -518,7 +638,7 @@ local function CreateUI()
 
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
         GameTooltip:ClearLines()
-        GameTooltip:AddLine("|cFFFFD100Gold-Übersicht|r")
+        GameTooltip:AddLine("|cFFFFD100" .. (L["ct_gold_overview"] or "Gold Overview") .. "|r")
 
         -- ALLE bekannten Chars (nicht nur ausgewählte)
         local byRealm = {}
@@ -555,7 +675,7 @@ local function CreateUI()
             end
             -- Realm-Summe
             GameTooltip:AddDoubleLine(
-                "|cFFFFFFFF  Gesamt|r",
+                "|cFFFFFFFF" .. (L["ct_realm_total"] or "  Total") .. "|r",
                 "|cFFFFD100" .. (FormatAmount(data.total) or "0") .. " g|r",
                 1,1,1, 1,1,1)
             GameTooltip:AddLine(" ")
@@ -570,7 +690,7 @@ local function CreateUI()
         end
         if guildTotal > 0 then
             GameTooltip:AddDoubleLine(
-                "|cFFCCCCCCKriegsmeutengeld|r",
+                "|cFFCCCCCC" .. (L["ct_warband_gold"] or "Warband Gold") .. "|r",
                 "|cFFFFD100" .. (FormatAmount(guildTotal) or "0") .. " g|r",
                 1,1,1, 1,1,1)
             grandTotal = grandTotal + guildTotal
@@ -578,7 +698,7 @@ local function CreateUI()
 
         GameTooltip:AddLine(" ")
         GameTooltip:AddDoubleLine(
-            "|cFFFFFFFFGesamt Geld|r",
+            "|cFFFFFFFF" .. (L["ct_grand_total"] or "Total Gold") .. "|r",
             "|cFFFFD100" .. (FormatAmount(grandTotal) or "0") .. " g|r",
             1,1,1, 1,1,1)
         GameTooltip:Show()
@@ -592,15 +712,15 @@ local function CreateUI()
     local charBtn = CreateFrame("Button", nil, mainFrame, "UIPanelButtonTemplate")
     charBtn:SetSize(110, 20)
     charBtn:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -28, -8)
-    charBtn:SetText("Charaktere")
+    charBtn:SetText(L["ct_btn_chars"] or "Characters")
     charBtn:SetScript("OnClick", function()
         if view == "main" then
             view = "chars"
-            charBtn:SetText("Übersicht")
+            charBtn:SetText(L["ct_btn_overview"] or "Overview")
             AklimeMod_CT_ShowChars()
         else
             view = "main"
-            charBtn:SetText("Charaktere")
+            charBtn:SetText(L["ct_btn_chars"] or "Characters")
             AklimeMod_CT_Refresh()
         end
     end)
@@ -683,7 +803,7 @@ local function MkCharHeader(parent, y, colX, sel, siDB)
                 GameTooltip:AddDoubleLine("Level", tostring(t.Level), 0.8,0.8,0.8, 1,0.82,0)
             end
             if t.IL then
-                GameTooltip:AddDoubleLine("Gegenstandsstufe", string.format("%.1f", t.IL), 0.8,0.8,0.8, 1,0.82,0)
+                GameTooltip:AddDoubleLine(L["ct_item_level"] or "Item Level", string.format("%.1f", t.IL), 0.8,0.8,0.8, 1,0.82,0)
             end
             if t.Money and t.Money > 0 then
                 local gold   = math.floor(t.Money / 10000)
@@ -695,7 +815,7 @@ local function MkCharHeader(parent, y, colX, sel, siDB)
             end
             if t.LastSeen then
                 local d = date("%d.%m.%Y %H:%M", t.LastSeen)
-                GameTooltip:AddDoubleLine("Zuletzt gesehen", d, 0.8,0.8,0.8, 0.7,0.7,0.7)
+                GameTooltip:AddDoubleLine(L["ct_last_seen"] or "Last seen", d, 0.8,0.8,0.8, 0.7,0.7,0.7)
             end
             GameTooltip:Show()
         end)
@@ -713,13 +833,13 @@ function AklimeMod_CT_Refresh()
     CreateUI()
     ClearContent()
     view = "main"
-    if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText("Charaktere") end
+    if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText(L["ct_btn_chars"] or "Characters") end
 
     local siDB = GetDataDB()
     if not siDB then
         local fs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fs:SetPoint("CENTER", contentFrame, "CENTER")
-        fs:SetText("Keine Daten. Logge dich mit deinen Charakteren ein.")
+        fs:SetText(L["ct_no_data"] or "No data. Log in with your characters.")
         fs:SetTextColor(0.7, 0.7, 0.7, 1)
         contentFrame:Show(); return
     end
@@ -728,7 +848,7 @@ function AklimeMod_CT_Refresh()
     if #sel == 0 then
         local fs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fs:SetPoint("CENTER", contentFrame, "CENTER")
-        fs:SetText("Keine Charaktere ausgewählt.\nKlicke auf 'Charaktere'.")
+        fs:SetText(L["ct_no_chars"] or "No characters selected.\nClick 'Characters'.")
         fs:SetTextColor(0.7, 0.7, 0.7, 1)
         contentFrame:Show(); return
     end
@@ -757,13 +877,13 @@ function AklimeMod_CT_Refresh()
         local vHdr = MkHdr(contentFrame, y)
         local vFs = vHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         vFs:SetPoint("LEFT", vHdr, "LEFT", 8, 0)
-        vFs:SetText(NORMAL_FONT_COLOR_CODE .. "Große Schatzkammer" .. FONT_COLOR_CODE_CLOSE)
+        vFs:SetText(NORMAL_FONT_COLOR_CODE .. (L["vault_header"] or "Great Vault") .. FONT_COLOR_CODE_CLOSE)
         y = y + ROW_H
 
         local VAULT_ROWS = {
-            { key = "raid",    label = "Schlachtzüge" },
-            { key = "dungeon", label = "Dungeons" },
-            { key = "world",   label = "Weltaktivitäten" },
+            { key = "raid",    label = L["vault_raids"]    or "Raids"            },
+            { key = "dungeon", label = L["vault_dungeons"] or "Dungeons"         },
+            { key = "world",   label = L["vault_world"]    or "World Activities" },
         }
         for ri, vr in ipairs(VAULT_ROWS) do
             local row = MkRow(contentFrame, y, ri%2==0)
@@ -790,14 +910,14 @@ function AklimeMod_CT_Refresh()
 
         -- Vierte Zeile: offen = Belohnung verfügbar aber noch nicht abgeholt
         local rewardRow = MkRow(contentFrame, y, false)
-        MkTxt(rewardRow, NORMAL_FONT_COLOR_CODE .. "Belohnung" .. FONT_COLOR_CODE_CLOSE,
+        MkTxt(rewardRow, NORMAL_FONT_COLOR_CODE .. (L["vault_reward"] or "Reward") .. FONT_COLOR_CODE_CLOSE,
             8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
         for ci, ch in ipairs(sel) do
             local toon = siDB.Toons[ch]
             local vault = toon and toon.weeklyVault
             local txt
             if vault and vault.hasRewards then
-                txt = GREEN_FONT_COLOR_CODE .. "offen" .. FONT_COLOR_CODE_CLOSE
+                txt = GREEN_FONT_COLOR_CODE .. (L["vault_open"] or "Open") .. FONT_COLOR_CODE_CLOSE
             else
                 txt = GRAY_FONT_COLOR_CODE .. "-" .. FONT_COLOR_CODE_CLOSE
             end
@@ -817,7 +937,7 @@ function AklimeMod_CT_Refresh()
         local raidHdr = MkHdr(contentFrame, y)
         local secFs = raidHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         secFs:SetPoint("LEFT", raidHdr, "LEFT", 8, 0)
-        secFs:SetText(NORMAL_FONT_COLOR_CODE .. "Schlachtzüge" .. FONT_COLOR_CODE_CLOSE)
+        secFs:SetText(NORMAL_FONT_COLOR_CODE .. (L["ct_sec_raids"] or "Raids") .. FONT_COLOR_CODE_CLOSE)
         y = y + ROW_H
 
         for _, exp in ipairs(expIDs) do
@@ -909,7 +1029,7 @@ function AklimeMod_CT_Refresh()
                                     local secs = saveRef.Expires - time()
                                     local h = math.floor(secs / 3600)
                                     local m = math.floor((secs % 3600) / 60)
-                                    GameTooltip:AddDoubleLine("Verbleibende Zeit:",
+                                    GameTooltip:AddDoubleLine(L["ct_raid_expires"] or "Time remaining:",
                                         string.format("%d Std. %d Min.", h, m),
                                         0.8,0.8,0.8, 1,0.82,0)
                                 end
@@ -918,9 +1038,9 @@ function AklimeMod_CT_Refresh()
                                 if saveRef.bosses and #saveRef.bosses > 0 then
                                     for _, boss in ipairs(saveRef.bosses) do
                                         if boss.killed then
-                                            GameTooltip:AddDoubleLine(boss.name, "Bezwungen", 1,1,1, 1,0.2,0.2)
+                                            GameTooltip:AddDoubleLine(boss.name, L["ct_boss_killed"] or "Defeated", 1,1,1, 1,0.2,0.2)
                                         else
-                                            GameTooltip:AddDoubleLine(boss.name, "Verfügbar", 1,1,1, 0.2,1,0.2)
+                                            GameTooltip:AddDoubleLine(boss.name, L["ct_boss_avail"] or "Available", 1,1,1, 0.2,1,0.2)
                                         end
                                     end
                                 elseif saveRef.Link then
@@ -959,7 +1079,7 @@ function AklimeMod_CT_Refresh()
         local wHdr = MkHdr(contentFrame, y)
         local wFs  = wHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         wFs:SetPoint("LEFT", wHdr, "LEFT", 8, 0)
-        wFs:SetText(NORMAL_FONT_COLOR_CODE .. "Währungen" .. FONT_COLOR_CODE_CLOSE)
+        wFs:SetText(NORMAL_FONT_COLOR_CODE .. (L["ct_sec_currencies"] or "Currencies") .. FONT_COLOR_CODE_CLOSE)
         y = y + ROW_H
 
         local lastExp = -999  -- Sentinel der nie matcht
@@ -1034,7 +1154,7 @@ function AklimeMod_CT_Refresh()
                     if total > 0 then
                         GameTooltip:AddLine(" ")
                         GameTooltip:AddDoubleLine(
-                            "|cFFFFFFFFSumme|r",
+                            "|cFFFFFFFF" .. (L["ct_currency_total"] or "Total") .. "|r",
                             "|cFFFFD100" .. FormatAmount(total) .. FONT_COLOR_CODE_CLOSE,
                             1,1,1, 1,1,1)
                     end
@@ -1058,7 +1178,7 @@ function AklimeMod_CT_ShowChars()
     CreateUI()
     ClearContent()
     view = "chars"
-    if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText("Übersicht") end
+    if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText(L["ct_btn_overview"] or "Overview") end
 
     local siDB = GetDataDB()
     local myDB = GetDB()
@@ -1081,13 +1201,13 @@ function AklimeMod_CT_ShowChars()
     local y = 10
     local hdr = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     hdr:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 8, -y)
-    hdr:SetText(NORMAL_FONT_COLOR_CODE .. "Charaktere auswählen" .. FONT_COLOR_CODE_CLOSE
-        .. "  — Haken = in Übersicht anzeigen")
-    y = y + 24
+    hdr:SetWidth(contentFrame:GetWidth() - 16)
+    hdr:SetText(NORMAL_FONT_COLOR_CODE .. (L["ct_char_hint"] or "Selecting a character sets the checkmark. Checked characters are shown in the overview.") .. FONT_COLOR_CODE_CLOSE)
+    y = y + 30
 
     local chdr = MkHdr(contentFrame, y)
-    MkTxt(chdr, "Charakter", 36, 200, "GameFontNormal")
-    MkTxt(chdr, "Klasse",   240, 130, "GameFontNormal")
+    MkTxt(chdr, L["ct_col_char"] or "Character", 36, 200, "GameFontNormal")
+    MkTxt(chdr, L["ct_col_class"] or "Class",   240, 130, "GameFontNormal")
     MkTxt(chdr, "Level",    375,  50, "GameFontNormal")
     MkTxt(chdr, "iLvl",     430,  55, "GameFontNormal")
     y = y + ROW_H + 2
@@ -1119,13 +1239,30 @@ function AklimeMod_CT_ShowChars()
 
         local row = MkRow(contentFrame, y, ri%2==0)
 
+        -- Auswahl-Highlight (grünlich wenn ausgewählt)
+        local selBg = row:CreateTexture(nil, "BACKGROUND")
+        selBg:SetAllPoints()
+        selBg:SetColorTexture(0.08, 0.35, 0.08, 0.45)
+        selBg:SetShown(myDB.chars[name] == true)
+
         local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
         cb:SetSize(18, 18)
         cb:SetPoint("LEFT", row, "LEFT", 8, 0)
         cb:SetChecked(myDB.chars[name] == true)
         local n = name
+        local function toggleChar()
+            local newVal = not (myDB.chars[n] == true)
+            myDB.chars[n] = newVal and true or nil
+            cb:SetChecked(newVal)
+            selBg:SetShown(newVal)
+        end
         cb:SetScript("OnClick", function(self)
             myDB.chars[n] = self:GetChecked() and true or nil
+            selBg:SetShown(self:GetChecked())
+        end)
+        row:EnableMouse(true)
+        row:SetScript("OnMouseUp", function(_, btn)
+            if btn == "LeftButton" then toggleChar() end
         end)
 
         local dispName = ShortName(name)
@@ -1142,7 +1279,7 @@ function AklimeMod_CT_ShowChars()
         local delBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
         delBtn:SetSize(60, 16)
         delBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        delBtn:SetText("Löschen")
+        delBtn:SetText(L["ct_btn_delete"] or "Delete")
         delBtn:GetFontString():SetTextColor(1, 0.3, 0.3)
         local delName = name
         delBtn:SetScript("OnClick", function()
@@ -1165,7 +1302,7 @@ function AklimeMod_CT_ShowChars()
     y = y + 8
     local btnAll = CreateFrame("Button", nil, contentFrame, "UIPanelButtonTemplate")
     btnAll:SetSize(130, 22); btnAll:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 8, -y)
-    btnAll:SetText("Alle auswählen")
+    btnAll:SetText(L["ct_btn_select_all"] or "Select all")
     btnAll:SetScript("OnClick", function()
         for _, e in ipairs(toons) do myDB.chars[e.name] = true end
         AklimeMod_CT_ShowChars()
@@ -1173,14 +1310,14 @@ function AklimeMod_CT_ShowChars()
 
     local btnNone = CreateFrame("Button", nil, contentFrame, "UIPanelButtonTemplate")
     btnNone:SetSize(130, 22); btnNone:SetPoint("LEFT", btnAll, "RIGHT", 6, 0)
-    btnNone:SetText("Alle abwählen")
+    btnNone:SetText(L["ct_btn_deselect_all"] or "Deselect all")
     btnNone:SetScript("OnClick", function()
         myDB.chars = {}; AklimeMod_CT_ShowChars()
     end)
 
     local btnOK = CreateFrame("Button", nil, contentFrame, "UIPanelButtonTemplate")
     btnOK:SetSize(110, 22); btnOK:SetPoint("LEFT", btnNone, "RIGHT", 6, 0)
-    btnOK:SetText("Übernehmen")
+    btnOK:SetText(L["ct_btn_apply"] or "Apply")
     btnOK:SetScript("OnClick", function()
         view = "main"; AklimeMod_CT_Refresh()
     end)
