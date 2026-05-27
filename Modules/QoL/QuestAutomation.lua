@@ -86,6 +86,7 @@ local function OnGossipShow()
     -- Kein automatisches Auswaehlen im Housing (verhindert VisitHouse()-Taint).
     local inInst, instType = IsInInstance()
     if inInst and (instType == "interior" or instType == "neighborhood") then return end
+    if _G["HouseListFrame"] and _G["HouseListFrame"]:IsShown() then return end
 
     local hasActive    = C_GossipInfo.GetNumActiveQuests() > 0
     local available    = C_GossipInfo.GetAvailableQuests()
