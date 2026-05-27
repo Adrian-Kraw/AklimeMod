@@ -2,6 +2,8 @@
 -- Persistente ToDo-Liste. Aufruf: /akm todo
 -- Gespeichert in AklimeModDB.todoList.items = { "Text1", "Text2", ... }
 
+local L = AklimeModL or {}
+
 local M = {}
 AklimeMod_TodoList = M
 
@@ -226,7 +228,7 @@ local function BuildFrame()
 
     emptyLabel = listContent:CreateFontString(nil, "OVERLAY", "GameFontDisable")
     emptyLabel:SetPoint("TOP", 0, -24)
-    emptyLabel:SetText("Keine Einträge")
+    emptyLabel:SetText(L["todo_empty"] or "No entries")
     emptyLabel:Hide()
 
     -- Trennlinie ueber Eingabebereich
@@ -281,7 +283,7 @@ local function BuildFrame()
     -- Hinweistext
     local hint = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("BOTTOM", 0, 8)
-    hint:SetText("Enter = Hinzufügen    |    Klick = Erledigt")
+    hint:SetText(L["todo_hint"] or "Enter = Add    |    Click = Done")
 
     -- Resize-Handle
     local resizeHandle = CreateFrame("Button", nil, mainFrame)

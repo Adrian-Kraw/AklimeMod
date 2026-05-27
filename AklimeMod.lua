@@ -1,5 +1,7 @@
 -- AklimeMod.lua — Entry Point
 
+local L = AklimeModL or {}
+
 local RADIUS = 99
 local menuOpen = false
 local menuButtons = {}
@@ -77,20 +79,20 @@ end)
 local MENU_ITEMS = {
     {   -- oben: PvP Chat Block
         icon    = "Interface\\Icons\\achievement_pvp_a_14",
-        tooltip = "PvP Chat blockieren",
+        tooltip = L["menu_pvp_block"] or "Block PvP Chat",
         onClick = function()
             if not AklimeMod_PvPChatBlock then return end
             local now = AklimeMod_PvPChatBlock.Toggle()
             if now then
-                print("|cFFFFD100AklimeMod:|r |cFF00FF00Chatblockade aktiviert|r")
+                print("|cFFFFD100Aklime Mod Tools:|r |cFF00FF00" .. (L["menu_pvp_on"]  or "Chat block activated")   .. "|r")
             else
-                print("|cFFFFD100AklimeMod:|r |cFFFF4444Chatblockade deaktiviert|r")
+                print("|cFFFFD100Aklime Mod Tools:|r |cFFFF4444" .. (L["menu_pvp_off"] or "Chat block deactivated") .. "|r")
             end
         end,
     },
     {   -- oben-mitte: Vault
         icon    = "Interface\\Icons\\inv_cape_special_treasure_c_01",
-        tooltip = "Wöchentliche Schatzkammer",
+        tooltip = L["menu_vault"] or "Weekly Vault",
         onClick = function()
             C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
             if WeeklyRewardsFrame:IsShown() then WeeklyRewardsFrame:Hide()
@@ -103,26 +105,26 @@ local MENU_ITEMS = {
     },
     {   -- mitte: Todo
         icon    = C_Item.GetItemIconByID(32620) or "Interface\\Icons\\INV_Misc_Note_01",
-        tooltip = "ToDo-Liste",
+        tooltip = L["menu_todo"] or "ToDo List",
         onClick = function()
             if AklimeMod_TodoList then AklimeMod_TodoList:Toggle() end
         end,
     },
     {   -- unten-mitte: Charakter-Tracker
         icon    = C_Item.GetItemIconByID(272339) or "Interface\\GossipFrame\\DailyActiveQuestIcon",
-        tooltip = "Charakter-Tracker",
+        tooltip = L["menu_char_tracker"] or "Character Tracker",
         onClick = function() AklimeMod_CT_Toggle() end,
     },
     {   -- unten-mitte: Playtime
         icon    = C_Item.GetItemIconByID(162690) or "Interface\\Icons\\Achievement_BG_returnxflags_def_WSG",
-        tooltip = "Gespielte Zeit",
+        tooltip = L["menu_played_time"] or "Played Time",
         onClick = function()
             if AklimeMod_PlayedTime then AklimeMod_PlayedTime:Toggle() end
         end,
     },
     {   -- unten: Settings
         icon    = "Interface\\Icons\\trade_engineering",
-        tooltip = "AklimeMod Einstellungen",
+        tooltip = L["menu_settings"] or "AklimeMod Settings",
         onClick = function() AklimeMod_OpenSettings() end,
     },
 }
@@ -195,9 +197,9 @@ end)
 
 minimapBtn:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:SetText("AklimeMod", 1, 0.82, 0, 1)
-    GameTooltip:AddLine("Klick: Menü öffnen/schließen", 0.7, 0.7, 0.7)
-    GameTooltip:AddLine("Drag: Position ändern", 0.7, 0.7, 0.7)
+    GameTooltip:SetText("Aklime Mod Tools", 1, 0.82, 0, 1)
+    GameTooltip:AddLine(L["minimap_click"] or "Click: Open / close menu", 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(L["minimap_drag"]  or "Drag: Change position",   0.7, 0.7, 0.7)
     GameTooltip:Show()
 end)
 minimapBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)

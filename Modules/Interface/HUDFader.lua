@@ -481,11 +481,10 @@ ef:SetScript("OnEvent", function(_, event)
 
     if event == "PLAYER_ENTERING_WORLD" then
         inCombat = false
-        -- Minimap ggf. aus Housing-Idle-Zustand wieder einblenden.
-        if Minimap and not Minimap:IsShown() then
-            Minimap:Show()
-            Minimap:SetAlpha(1.0)
-        end
+        -- Minimap-Idle-Zustand zuruecksetzen bevor Show() aufgerufen wird.
+        -- Sonst wuerde der hooksecurefunc-Hook Minimap sofort wieder verstecken.
+        ShowMinimapOverlays()
+        if Minimap then Minimap:SetAlpha(1.0) end
         for _, m in ipairs(ALL_MODES) do m:OnEnteringWorld() end
 
     elseif event == "PLAYER_REGEN_DISABLED" then

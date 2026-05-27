@@ -83,6 +83,10 @@ local function OnGossipShow()
     if not ShouldAutoQuest() then return end
     if IsNPCIgnored() then return end
 
+    -- Kein automatisches Auswaehlen im Housing (verhindert VisitHouse()-Taint).
+    local inInst, instType = IsInInstance()
+    if inInst and (instType == "interior" or instType == "neighborhood") then return end
+
     local hasActive    = C_GossipInfo.GetNumActiveQuests() > 0
     local available    = C_GossipInfo.GetAvailableQuests()
     local hasAvailable = #available > 0
@@ -278,7 +282,7 @@ local function HookMenus()
         local db = GetDB()
         db.ignoredNPCs = db.ignoredNPCs or {}
         root:CreateDivider()
-        root:CreateTitle("AklimeMod")
+        root:CreateTitle("Aklime Mod Tools")
         if db.ignoredNPCs[npcID] then
             root:CreateButton("NPC aus Ignoreliste entfernen", function()
                 db.ignoredNPCs[npcID] = nil

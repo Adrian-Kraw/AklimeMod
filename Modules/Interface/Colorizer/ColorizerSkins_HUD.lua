@@ -196,13 +196,13 @@ C:Register("chatFrame", {
     group  = "HUD",
     colors = {
         main             = { label="Main",                r=D.main.r,     g=D.main.g,     b=D.main.b,     a=1, order=1 },
-        background       = { label="Hintergrund",         r=0.1,          g=0.1,          b=0.1,          a=1, order=2 },
-        borders          = { label="Rahmen",              r=0.2,          g=0.2,          b=0.2,          a=0.6, order=3 },
+        background       = { label="Background",           r=0.1,          g=0.1,          b=0.1,          a=1, order=2 },
+        borders          = { label="Borders",             r=0.2,          g=0.2,          b=0.2,          a=0.6, order=3 },
         controls         = { label="Controls",            r=D.controls.r, g=D.controls.g, b=D.controls.b, a=1, order=4 },
         tabs             = { label="Tabs",                r=D.tabs.r,     g=D.tabs.g,     b=D.tabs.b,     a=1, order=5 },
         btn_normal_color = { label="Button Normal",       r=0.5,          g=0.5,          b=0.5,          a=1, order=6 },
         btn_highlight    = { label="Button Highlight",    r=1,            g=1,            b=1,            a=1, order=7 },
-        btn_pushed       = { label="Button Gedrückt",     r=0.3,          g=0.3,          b=0.3,          a=1, order=8 },
+        btn_pushed       = { label="Button Pressed",      r=0.3,          g=0.3,          b=0.3,          a=1, order=8 },
     },
     apply = function(self)
         local mc  = {col("chatFrame","main")}
@@ -297,7 +297,7 @@ C:Register("spellFlyout", {
     group  = "HUD",
     colors = { main = { label="Main", r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 } },
     toggles = {
-        follow_parent_color = { label="Farbe des übergeordneten Buttons übernehmen", default=true },
+        follow_parent_color = { label="Use Parent Button Color", default=true },
     },
     apply = function(self)
         local mr,mg,mb,ma = col("spellFlyout","main")
@@ -444,7 +444,7 @@ C:Register("compactRaidFrameManager", {
 -- Menu Style (Rechtsklick-Menü)
 -- ============================================================
 C:Register("menuStyle", {
-    label  = "Kontextmenü",
+    label  = "Context Menu",
     group  = "HUD",
     colors = { main = { label="Main", r=D.main.r, g=D.main.g, b=D.main.b, a=1, order=1 } },
     apply = function(self)

@@ -36,5 +36,5 @@ eventFrame:SetScript("OnEvent", function(_, event)
     ConfirmSummon()
     StaticPopup_Hide("CONFIRM_SUMMON")
 
-    print("|cFFFFD100AklimeMod:|r Beschwörung von " .. summoner .. " nach " .. area .. " automatisch angenommen.")
+    print("|cFFFFD100Aklime Mod Tools:|r Beschwörung von " .. summoner .. " nach " .. area .. " automatisch angenommen.")
 end)

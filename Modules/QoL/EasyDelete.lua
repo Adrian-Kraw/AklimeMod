@@ -45,8 +45,7 @@ local function HandleDeleteConfirm()
     end
 end
 
--- Bestätigungstext je nach Popup-Typ.
--- Gibt nil zurück wenn der Typ nicht bekannt ist.
+-- Bestätigungstext fuer wertvolle Item-Loeschungen.
 local function GetConfirmText(which)
     if which == "DELETE_GOOD_ITEM"
     or which == "DELETE_GOOD_QUEST_ITEM"
@@ -55,29 +54,61 @@ local function GetConfirmText(which)
     then
         return DELETE_ITEM_CONFIRM_STRING
     end
-    if which == "UNLEARN_SKILL" then
-        -- CONFIRM_UNLEARN_PROFESSION existiert in manchen WoW-Versionen als Global
-        return CONFIRM_UNLEARN_PROFESSION or DELETE_ITEM_CONFIRM_STRING
-    end
     return nil
 end
 
--- Fall 2: Bestätigungstext automatisch eintragen
+-- Hilfsfunktion: Text in EditBox setzen und Fokus entfernen
+local function FillEditBox(self, text)
+    local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+    if editBox then
+        editBox:SetText(text)
+        editBox:ClearFocus()
+        editBox:SetAutoFocus(false)
+    end
+end
+
+-- Hilfsfunktion: EditBox verstecken und OK-Button aktivieren
+local function BypassEditBox(self)
+    C_Timer.After(0, function()
+        local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+        local btn1    = self.button1
+        if editBox and editBox:IsShown() then
+            editBox:Hide()
+            if btn1 then btn1:Enable() end
+        end
+    end)
+end
+
+-- Fall 2-4: Popups abfangen und Texteingabe automatisieren
 local function HookConfirmDialogs()
     for i = 1, 4 do
         local popup = _G["StaticPopup" .. i]
         if popup then
             hooksecurefunc(popup, "Show", function(self)
                 local db = AklimeModDB and AklimeModDB.easyDelete
-                if not db or db.skipConfirm ~= true then return end
-                if not self then return end
-                local text = GetConfirmText(self.which)
-                if not text then return end
-                local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
-                if editBox then
-                    editBox:SetText(text)
-                    editBox:ClearFocus()
-                    editBox:SetAutoFocus(false)
+                if not db or not self then return end
+                local which = self.which
+
+                -- BESTÄTIGEN: wertvolle Items loeschen
+                if db.skipConfirm then
+                    local text = GetConfirmText(which)
+                    if text then FillEditBox(self, text); return end
+                end
+
+                -- VERLERNEN: Beruf oder Fertigkeit vergessen
+                if db.skipUnlearn and which == "UNLEARN_SKILL" then
+                    local text = CONFIRM_UNLEARN_PROFESSION or DELETE_ITEM_CONFIRM_STRING
+                    FillEditBox(self, text)
+                    return
+                end
+
+                -- VERSTANDEN: alle anderen Popups mit Texteingabe
+                if db.skipUnderstood then
+                    local info = StaticPopupDialogs and StaticPopupDialogs[which]
+                    if info and info.hasEditBox
+                    and not GetConfirmText(which) and which ~= "UNLEARN_SKILL" then
+                        BypassEditBox(self)
+                    end
                 end
             end)
         end

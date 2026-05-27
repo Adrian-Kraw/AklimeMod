@@ -4,6 +4,8 @@
 -- Erfassung: beim Login RequestTimePlayed(), Speicherung bei TIME_PLAYED_MSG.
 -- Ausgabe:   /akm played
 
+local L = AklimeModL or {}
+
 local M = {}
 AklimeMod_PlayedTime = M
 
@@ -17,8 +19,7 @@ local GOLD      = { 0.80, 0.65, 0.10, 1 }
 local GOLD_D    = { 0.80, 0.65, 0.10, 0.5 }
 local BG        = { 0.07, 0.07, 0.08, 0.96 }
 
--- Deutsche Klassennamen
-local CLASS_NAMES = {
+local CLASS_NAMES = GetLocale() == "deDE" and {
     WARRIOR     = "Krieger",
     PALADIN     = "Paladin",
     HUNTER      = "Jäger",
@@ -32,6 +33,20 @@ local CLASS_NAMES = {
     DRUID       = "Druide",
     DEMONHUNTER = "Dämonenjäger",
     EVOKER      = "Rufer",
+} or {
+    WARRIOR     = "Warrior",
+    PALADIN     = "Paladin",
+    HUNTER      = "Hunter",
+    ROGUE       = "Rogue",
+    PRIEST      = "Priest",
+    DEATHKNIGHT = "Death Knight",
+    SHAMAN      = "Shaman",
+    MAGE        = "Mage",
+    WARLOCK     = "Warlock",
+    MONK        = "Monk",
+    DRUID       = "Druid",
+    DEMONHUNTER = "Demon Hunter",
+    EVOKER      = "Evoker",
 }
 
 local mainFrame
@@ -53,11 +68,11 @@ local function FormatTime(seconds)
     local hours = math.floor((seconds % 86400) / 3600)
     local mins  = math.floor((seconds % 3600)  / 60)
     if days > 0 then
-        return string.format("%dT %dSt %dMin", days, hours, mins)
+        return string.format(L["time_days"]  or "%dd %dh %dm", days, hours, mins)
     elseif hours > 0 then
-        return string.format("%dSt %dMin", hours, mins)
+        return string.format(L["time_hours"] or "%dh %dm", hours, mins)
     else
-        return string.format("%dMin", mins)
+        return string.format(L["time_mins"]  or "%dm", mins)
     end
 end
 
@@ -169,7 +184,7 @@ local function BuildFrame()
     local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -13)
     title:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
-    title:SetText("Gespielte Zeit")
+    title:SetText(L["played_title"] or "Played Time")
 
     local titleSep = MakeSep(mainFrame, GOLD_D[1], GOLD_D[2], GOLD_D[3], GOLD_D[4])
     titleSep:SetPoint("TOPLEFT",  mainFrame, "TOPLEFT",  8, -32)
@@ -293,10 +308,10 @@ local function RefreshFrame()
     end)
 
     if #list > 0 then
-        mainFrame._totalLabel:SetText("Gesamt: " .. FormatTime(grand))
+        mainFrame._totalLabel:SetText(string.format(L["played_total"] or "Total: %s", FormatTime(grand)))
         mainFrame._totalLabel:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
     else
-        mainFrame._totalLabel:SetText("Noch keine Daten — einmal pro Char einloggen.")
+        mainFrame._totalLabel:SetText(L["played_no_chars"] or "No data yet -- log in with each character once.")
         mainFrame._totalLabel:SetTextColor(0.6, 0.6, 0.6)
     end
     mainFrame._totalLabel:Show()
@@ -348,7 +363,7 @@ function M:DeleteAll()
     if mainFrame and mainFrame:IsShown() then
         RefreshFrame()
     end
-    print("|cFFFFD100AklimeMod:|r Spielzeit-Daten gelöscht.")
+    print("|cFFFFD100Aklime Mod Tools:|r " .. (L["played_data_deleted"] or "Played time data deleted."))
 end
 
 -- ============================================================

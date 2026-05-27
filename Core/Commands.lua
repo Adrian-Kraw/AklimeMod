@@ -2,19 +2,21 @@
 -- Zentrale Registry aller /akm Slash-Commands.
 -- Dashboard und /akm help nutzen diese Liste als einzige Quelle.
 
+local L = AklimeModL or {}
+
 AklimeMod_Commands = {
-    { cmd = "/akm",          desc = "Addon öffnen / schließen"                    },
-    { cmd = "/akm help",     desc = "Alle Befehle im Chat anzeigen"               },
-    { cmd = "/akm todo",     desc = "ToDo-Liste öffnen / schließen"               },
-    { cmd = "/akm ignore",   desc = "Erweiterte Ignore-Liste öffnen / schließen"   },
-    { cmd = "/akm played",  desc = "Gespielte Zeit aller Chars anzeigen"           },
-    { cmd = "/akmana",       desc = "Mana-Warnung Status anzeigen"      },
-    { cmd = "/akmana test",  desc = "Mana-Warnung Testnachricht senden"  },
+    { cmd = "/akm",         desc = L["dash_cmd_open"]  or "Open / close addon"                 },
+    { cmd = "/akm help",    desc = L["dash_cmd_help"]  or "Show all commands in chat"           },
+    { cmd = "/akm todo",    desc = L["cmd_todo"]       or "Open / close ToDo list"              },
+    { cmd = "/akm ignore",  desc = L["cmd_ignore"]     or "Open / close extended ignore list"   },
+    { cmd = "/akm played",  desc = L["cmd_played"]     or "Show played time for all characters" },
+    { cmd = "/akmana",      desc = L["cmd_mana"]       or "Show Mana Warning status"            },
+    { cmd = "/akmana test", desc = L["cmd_mana_test"]  or "Send Mana Warning test message"      },
 }
 
--- /akm help — gibt alle Befehle im Chat aus
+-- /akm help — prints all commands in chat
 local function PrintHelp()
-    print("|cFFFFD100AklimeMod Befehle:|r")
+    print("|cFFFFD100" .. (L["cmd_header"] or "AklimeMod Commands:") .. "|r")
     for _, e in ipairs(AklimeMod_Commands) do
         print("|cFF00CCFF" .. e.cmd .. "|r - " .. e.desc)
     end
