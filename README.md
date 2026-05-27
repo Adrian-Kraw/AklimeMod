@@ -3,7 +3,7 @@
 # Aklime Mod Tools
 :gb: [English](#english) · :de: [Deutsch](#deutsch)
 
-Personal WoW addon for The War Within.
+Personal WoW addon for Midnight (12.0.7).
 
 ---
 
@@ -123,7 +123,7 @@ Character and progress overview across all your characters.
 
 # Aklime Mod Tools
 
-Persönliches WoW Addon für The War Within.
+Persönliches WoW Addon für Midnight (12.0.7).
 
 ---
 
