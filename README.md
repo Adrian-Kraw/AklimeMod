@@ -69,7 +69,7 @@ Convenience features for everyday gameplay.
 - **Vendor Window — 20 Items per Page**: Shows 20 instead of 10 items per vendor page
 
 **Gameplay**
-- **Mana Warning**: Warns with sound and message when mana drops below a configurable threshold
+- **Mana Warning (Work in Progress)**: Warns the group with a chat message when being low mana
 - **Heroism Tracker**: Shows when Heroism / Drums is active
 - **Death Sound**: Plays a sound when your character dies
 - **Talent Reminder**: Notification when entering a dungeon without selected talents
@@ -189,7 +189,7 @@ Komfort-Features für den Spielalltag.
 - **Händlerfenster — 20 Gegenstände pro Seite**: Zeigt 20 statt 10 Gegenstände pro Händler-Seite
 
 **Gameplay**
-- **Mana Warnung**: Warnt per Sound und Meldung wenn Mana unter einen einstellbaren Schwellenwert fällt
+- **Mana Warnung (Work in Progress)**: Warnt die Gruppe über eine Chatnachricht wenn man wenig Mana besitzt
 - **HT-Anzeige**: Zeigt an wenn Heldentum / Trommeln aktiv ist
 - **Todessound**: Spielt einen Sound beim Tod des eigenen Charakters
 - **Talent-Erinnerung**: Hinweis wenn man einen Dungeon ohne gewählte Talente betritt
