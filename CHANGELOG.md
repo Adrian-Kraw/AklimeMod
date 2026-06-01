@@ -13,7 +13,7 @@ Friends List
 
 Chat
 
-* Fixed: Clicking an item link in chat could cause an ADDON_ACTION_FORBIDDEN taint error (ItemRefTooltip.SetHyperlink was replaced directly instead of hooked safely)
+* Fixed: Clicking an item link in chat could cause an ADDON_ACTION_FORBIDDEN taint error 
 
 General
 
@@ -33,7 +33,7 @@ Verbesserte Freundesliste
 
 Chat
 
-* Behoben: Klick auf einen Item-Link im Chat konnte einen ADDON_ACTION_FORBIDDEN-Taint-Fehler verursachen (ItemRefTooltip.SetHyperlink wurde direkt ersetzt statt sicher gehookt)
+* Behoben: Klick auf einen Item-Link im Chat konnte einen ADDON_ACTION_FORBIDDEN-Taint-Fehler verursachen 
 
 Allgemein
 
