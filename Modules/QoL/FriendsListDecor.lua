@@ -315,13 +315,11 @@ local function DecorateWoWFriend(button)
     if not isConnected then nameFont:SetTextColor(0.6, 0.6, 0.6) end
 
     if infoFont then
-        local infoText
         if isConnected then
-            infoText = BuildLocationText(info.area, realm)
-        else
-            infoText = (info.notes and info.notes ~= "" and info.notes) or BuildLocationText(info.area, realm)
+            -- Online: Ort und Realm anzeigen.
+            infoFont:SetText(BuildLocationText(info.area, realm) or "")
         end
-        infoFont:SetText(infoText or "")
+        -- Offline: nicht anfassen, Blizzard zeigt "Zuletzt online".
     end
 
     SetFactionIcon(button, nil)
@@ -406,7 +404,13 @@ local function DecorateBNetFriend(button)
 
     nameFont:SetText(displayName)
     if not isOnline then nameFont:SetTextColor(0.6, 0.6, 0.6) end
-    if infoFont then infoFont:SetText(infoText or "") end
+    -- Info-Zeile nur setzen wenn online oder tatsaechlich Text vorhanden.
+    -- Offline ohne Text: Blizzard zeigt "Zuletzt online", nicht ueberschreiben.
+    if infoFont then
+        if isOnline or (infoText and infoText ~= "") then
+            infoFont:SetText(infoText or "")
+        end
+    end
 
     SetFactionIcon(button, factionName)
 
@@ -454,11 +458,26 @@ local function ScheduleRefreshRetry()
     end)
 end
 
+-- Buttons die im naechsten OnUpdate dekoriert werden sollen.
+-- Der Hook schreibt nur in diese Tabelle (kein Frame-Code im Blizzard-Tick).
+-- OnUpdate liest sie im selben Frame vor dem Render aus — kein Flicker, kein Taint.
+local pendingButtons = {}
+local decorRunner = CreateFrame("Frame")
+decorRunner:SetScript("OnUpdate", function()
+    if next(pendingButtons) == nil then return end
+    for button in pairs(pendingButtons) do
+        pendingButtons[button] = nil
+        UpdateFriendButton(button)
+    end
+end)
+
 local hookInstalled = false
 local function EnsureHook()
     if hookInstalled then return true end
     if type(FriendsFrame_UpdateFriendButton) ~= "function" then return false end
-    hooksecurefunc("FriendsFrame_UpdateFriendButton", UpdateFriendButton)
+    hooksecurefunc("FriendsFrame_UpdateFriendButton", function(button)
+        pendingButtons[button] = true
+    end)
     hookInstalled = true
     return true
 end

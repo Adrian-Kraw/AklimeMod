@@ -226,9 +226,13 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         UpdateMinimapPos()
         AklimeMod_BuildLeftPanel()
         AklimeMod_InitSearch()
-        if AklimeModDB.reloadUI and AklimeModDB.reloadUI.enabled then
-            SLASH_AKM_RL1, SLASH_AKM_RL2 = "/rl", "/nl"
-            SlashCmdList["AKM_RL"] = function() ReloadUI() end
+        -- Immer registrieren, Funktion prueft den DB-Status selbst.
+        -- WoW deregistriert Slash-Befehle nicht zuverlässig per nil.
+        SLASH_AKM_RL1, SLASH_AKM_RL2 = "/rl", "/nl"
+        SlashCmdList["AKM_RL"] = function()
+            if AklimeModDB and AklimeModDB.reloadUI and AklimeModDB.reloadUI.enabled then
+                ReloadUI()
+            end
         end
         for _, item in ipairs(MENU_ITEMS) do
             table.insert(menuButtons, CreateMenuButton(item))

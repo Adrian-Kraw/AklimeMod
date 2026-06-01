@@ -1323,13 +1323,6 @@ local function addQoLNodes(dp)
         function() return AklimeModDB.reloadUI.enabled end,
         function(v)
             AklimeModDB.reloadUI.enabled = v
-            if v then
-                SLASH_AKM_RL1, SLASH_AKM_RL2 = "/rl", "/nl"
-                SlashCmdList["AKM_RL"] = function() ReloadUI() end
-            else
-                SlashCmdList["AKM_RL"] = nil
-                SLASH_AKM_RL1, SLASH_AKM_RL2 = nil, nil
-            end
         end
     )
     addInfo(reloadNode, L["info_reload_ui"])

@@ -297,15 +297,13 @@ local function MakeClickable(_, _, msg, ...)
     return false, msg, ...
 end
 
--- URL-Klick öffnet das Copy-Fenster mit der URL
-local origSetHyperlink = ItemRefTooltip.SetHyperlink
-ItemRefTooltip.SetHyperlink = function(self, link, ...)
-    if link and link:sub(1,3) == "url" then
+-- URL-Klick öffnet das Copy-Fenster mit der URL.
+-- hooksecurefunc statt direkter Ersetzung, damit kein Taint auf ItemRefTooltip entsteht.
+hooksecurefunc(ItemRefTooltip, "SetHyperlink", function(self, link)
+    if link and link:sub(1, 3) == "url" then
         OpenChatCopy(nil, link:sub(5))
-    else
-        origSetHyperlink(self, link, ...)
     end
-end
+end)
 
 local CHAT_TYPES = {
     "SAY","YELL","PARTY","PARTY_LEADER","RAID","RAID_LEADER","RAID_WARNING",

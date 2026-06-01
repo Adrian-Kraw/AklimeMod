@@ -76,17 +76,12 @@ end
 -- Event-Handler
 -- ============================================================
 
-local gossipClicked = {}
 local acceptQuestIDs = {}
 
 local function OnGossipShow()
     if not ShouldAutoQuest() then return end
     if IsNPCIgnored() then return end
 
-    -- Kein automatisches Auswaehlen im Housing (verhindert VisitHouse()-Taint).
-    local inInst, instType = IsInInstance()
-    if inInst and (instType == "interior" or instType == "neighborhood") then return end
-    if _G["HouseListFrame"] and _G["HouseListFrame"]:IsShown() then return end
 
     local hasActive    = C_GossipInfo.GetNumActiveQuests() > 0
     local available    = C_GossipInfo.GetAvailableQuests()
@@ -111,31 +106,6 @@ local function OnGossipShow()
         return
     end
 
-    -- Gossip-Optionen nur anklicken wenn Quest-Kontext vorhanden.
-    -- Ohne Quests im Gossip koennte es sich um Housing, Portale o.ae. handeln.
-    if not hasActive and not hasAvailable then return end
-
-    local options = C_GossipInfo.GetOptions()
-    if not options or #options == 0 then return end
-    if #options == 1 then
-        local opt = options[1]
-        local key = opt and (opt.gossipOptionID or opt.orderIndex)
-        if opt and key and not gossipClicked[key] then
-            gossipClicked[key] = true
-            C_GossipInfo.SelectOption(key)
-        end
-    else
-        for _, opt in pairs(options) do
-            if opt.flags == 1 then
-                C_GossipInfo.SelectOption(opt.gossipOptionID or opt.orderIndex)
-                return
-            end
-        end
-    end
-end
-
-local function OnGossipClosed()
-    gossipClicked = {}
 end
 
 local function OnQuestGreeting()
@@ -347,7 +317,6 @@ eventFrame:SetScript("OnEvent", function(self, _, _)
     if db.enabled or db.wowheadLink then HookMenus() end
     self:UnregisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("GOSSIP_SHOW")
-    self:RegisterEvent("GOSSIP_CLOSED")
     self:RegisterEvent("QUEST_GREETING")
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("QUEST_DATA_LOAD_RESULT")
@@ -355,7 +324,6 @@ eventFrame:SetScript("OnEvent", function(self, _, _)
     self:RegisterEvent("QUEST_COMPLETE")
     self:SetScript("OnEvent", function(_, event, arg1)
         if     event == "GOSSIP_SHOW"            then OnGossipShow()
-        elseif event == "GOSSIP_CLOSED"           then OnGossipClosed()
         elseif event == "QUEST_GREETING"          then OnQuestGreeting()
         elseif event == "QUEST_DETAIL"            then OnQuestDetail()
         elseif event == "QUEST_DATA_LOAD_RESULT"  then OnQuestDataLoadResult(arg1)
