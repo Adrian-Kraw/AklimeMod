@@ -12,9 +12,21 @@ Mana Warning
 
 Settings Window
 
+* New: Complete redesign in a flat black and gold look with rounded category buttons, stone background, round addon portrait and centered window title
+* New: Action buttons are now real centered buttons instead of plain clickable text
+* New: Delete actions ask for confirmation with a Yes / No dialog
+* New: The character delete list shows Name - Realm - Class in class colors, arranged in columns of 20
+* Changed: The window turns slightly transparent while being dragged
 * Fixed: Some checkboxes closed their section when clicked, sections now stay open
 * Fixed: Exclusive options (for example chat fade times) could show two checkmarks at once, now exactly one is shown and it updates instantly
 * Fixed: Clicking an already active option no longer removes its checkmark
+
+Colorizer
+
+* New: The addon window skin got more color slots: boxes, lines, selection and portrait ring, plus a "Color everything" picker and a restore default button
+* New: Elite Frame can now be colored (Addons group)
+* New: Game menu buttons can now be colored
+* Fixed: The active chat tab and the focused chat edit box were not colored along
 
 **DE**
 
@@ -28,7 +40,19 @@ Mana-Warnung
 
 Einstellungsfenster
 
+* Neu: Komplett neues Design in flachem Schwarz-Gold-Look mit abgerundeten Kategorie-Buttons, Stein-Hintergrund, rundem Addon-Portrait und mittigem Fenstertitel
+* Neu: Aktions-Schaltflächen sind jetzt echte zentrierte Buttons statt klickbarer Textflächen
+* Neu: Lösch-Aktionen fragen vorher mit einem Ja / Nein-Dialog nach
+* Neu: Die Char-Löschen-Liste zeigt Name - Server - Klasse in Klassenfarben, aufgeteilt in Spalten zu je 20
+* Geändert: Das Fenster wird beim Verschieben leicht transparent
 * Behoben: Manche Haken haben beim Anklicken ihre Sektion zugeklappt, Sektionen bleiben jetzt offen
 * Behoben: Bei exklusiven Optionen (z.B. Chat-Verblassen-Zeiten) konnten zwei Haken gleichzeitig zu sehen sein, jetzt ist immer genau einer gesetzt und er aktualisiert sich sofort
 * Behoben: Klick auf eine bereits aktive Option entfernt deren Haken nicht mehr
+
+Colorizer
+
+* Neu: Der Skin für das Addon-Fenster hat mehr Farbfelder: Boxen, Linien, Auswahl und Portrait-Ring, dazu "Alles färben" und einen Standard-Button
+* Neu: Elite Frame ist jetzt färbbar (Gruppe Addons)
+* Neu: Die Spielmenü-Buttons sind jetzt färbbar
+* Behoben: Der aktive Chat-Reiter und die fokussierte Eingabezeile wurden nicht mitgefärbt
 
