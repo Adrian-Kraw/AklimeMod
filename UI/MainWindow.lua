@@ -143,6 +143,7 @@ end)
 -- ============================================================
 local function headerInitializer(button, node)
     local data = node:GetData()
+    button._refreshCheckbox = function() button.enableButton:SetChecked(data.getEnabled()) end
     button.name:SetText(data.name)
     local function updateArrow()
         local atlas = node:IsCollapsed()
@@ -159,28 +160,34 @@ local function headerInitializer(button, node)
     button.enableButton:SetChecked(data.getEnabled())
 end
 
-local _rightToggleFrames = {}
-
 local function toggleInitializer(button, node)
     local data = node:GetData()
-    button._node = node
-    _rightToggleFrames[button] = true
+    button._refreshCheckbox = function() button.toggle:SetChecked(data.getVal()) end
     button.name:SetText(data.name)
-    button.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
+    button.toggle:SetScript("OnClick", function(self)
+        data.setVal(self:GetChecked())
+        -- Zustand immer aus der DB spiegeln: Radio-Optionen lassen sich so
+        -- nicht abwaehlen und der Haken zeigt nie einen veralteten Stand.
+        self:SetChecked(data.getVal())
+    end)
     button.toggle:SetChecked(data.getVal())
 end
 
+-- Synchronisiert alle sichtbaren Checkboxen mit ihren Gettern.
+-- Jeder Initializer hinterlegt dafuer _refreshCheckbox am Frame.
+-- Laeuft synchron und nur ueber die tatsaechlich angezeigten Frames,
+-- damit nach einem Radio-Klick nie zwei Haken gleichzeitig stehen
+-- und keine recycelten Frames falsche Zustaende bekommen.
+-- Erst sammeln, dann ausfuehren: ein Refresh-Callback darf Sektionen
+-- zuklappen (Colorizer), was die Frame-Liste der ScrollBox veraendert.
 function AklimeMod_RefreshRightToggles()
-    C_Timer.After(0, function()
-        for button in pairs(_rightToggleFrames) do
-            if button._node and button.toggle then
-                local data = button._node:GetData()
-                if data and data.getVal then
-                    button.toggle:SetChecked(data.getVal())
-                end
-            end
-        end
+    local scrollBox = frame.rightInset and frame.rightInset.scrollBox
+    if not scrollBox or not scrollBox.ForEachFrame then return end
+    local pending = {}
+    scrollBox:ForEachFrame(function(button)
+        if button._refreshCheckbox then pending[#pending + 1] = button._refreshCheckbox end
     end)
+    for _, refresh in ipairs(pending) do refresh() end
 end
 
 local function sliderInitializer(frame, node)

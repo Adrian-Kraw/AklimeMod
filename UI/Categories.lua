@@ -137,6 +137,8 @@ end
 
 local function moduleHeaderInitializer(button, node)
     local data = node:GetData()
+    -- Altlast vom Pool-Vorgaenger entfernen, frueher Return ueberspringt das Neusetzen
+    button._refreshCheckbox = nil
     if not data or type(data.getEnabled) ~= "function" then return end
 
     if button.name then button.name:SetText(data.name or "") end
@@ -160,6 +162,11 @@ local function moduleHeaderInitializer(button, node)
     if not button.enableButton then return end
     button.enableButton:SetChecked(isEnabled())
     updateVisuals()
+
+    button._refreshCheckbox = function()
+        button.enableButton:SetChecked(isEnabled())
+        updateVisuals()
+    end
 
     button:SetScript("PreClick", function(self, mouseButton)
         if not node:GetData() or type(node:GetData().getEnabled) ~= "function" then return end
@@ -187,6 +194,7 @@ end
 
 local function toggleInitializer(button, node)
     local data = node:GetData()
+    button._refreshCheckbox = function() button.toggle:SetChecked(data.getVal()) end
     if button.name then button.name:SetText(data.name or "") end
     local disabled = data.isDisabled and data.isDisabled()
     button.toggle:SetChecked(data.getVal())
@@ -204,6 +212,8 @@ local function toggleInitializer(button, node)
             self:SetChecked(not self:GetChecked()); return
         end
         data.setVal(self:GetChecked())
+        -- Zustand aus der DB spiegeln, Radio-Optionen bleiben so konsistent
+        self:SetChecked(data.getVal())
     end)
     button:SetScript("OnClick", function(self, mouseButton)
         -- Nichts tun — Toggle regelt sich selbst
@@ -675,7 +685,9 @@ local function BuildInterfaceContent(filter)
                 else
                     AklimeModDB.eliteFrame.style = nil; AklimeMod_RemoveEliteFrame()
                 end
-                eliteNode3:SetCollapsed(true); eliteNode3:SetCollapsed(false)
+                -- Geschwister-Haken direkt aktualisieren statt die Sektion
+                -- zu- und wieder aufzuklappen
+                AklimeMod_RefreshRightToggles()
             end
         )
     end
@@ -955,8 +967,9 @@ local function BuildInterfaceContent(filter)
                     end
                 end
             end
-            -- UI neu aufbauen
-            if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
+            -- Nur sichtbare Checkboxen aktualisieren. Ein kompletter Neuaufbau
+            -- wuerde alle aufgeklappten Sektionen wieder zuklappen.
+            AklimeMod_RefreshRightToggles()
         end
 
         local allNode = targetDP:Insert({
@@ -1020,7 +1033,7 @@ local function BuildInterfaceContent(filter)
                             else      pcall(function() skin:remove() end) end
                         end
                     end
-                    if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
+                    AklimeMod_RefreshRightToggles()
                 end
                 targetDP:Insert({
                     Template   = "AklimeMod_ModuleHeaderTemplate",

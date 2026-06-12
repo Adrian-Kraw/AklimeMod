@@ -1,61 +1,34 @@
-## 0.9.6
+## 0.9.7
 
 **EN**
 
-Friends List
-
-* Fixed: Visiting a friend's house from the contacts frame could cause an ADDON_ACTION_FORBIDDEN error due to the enhanced friends list hook running in Blizzard's call chain
-* Fixed: "Last Online" text for offline friends was being hidden
-
-Chat
-
-* Fixed: Clicking an item link in chat could cause an ADDON_ACTION_FORBIDDEN taint error
-
-Summons
-
-* Fixed: Auto-accept summons was broken and should work now
-
-Ready Check
-
-* Changed: Ready Check window now closes automatically after auto-accepting
-
 Heroism Tracker
 
-* Fixed: BL text was not reliably shown during combat and in instances
-* Fixed: BL Tracker frame was intercepting mouse clicks during combat, frame is now click-through by default when locked (locked is the new default)
-* Fixed: BL text did not appear when the buff came from an Evoker or a Marksmanship Hunter. Both are now detected
+* Fixed: BL text disappeared as soon as combat started in instances. Blizzard hides the buff data from addons in instanced combat (12.0), the tracker now derives the buff from the readable exhaustion debuff instead. Works no matter who casts BL and also covers drums
 
-General
+Mana Warning
 
-* Fixed: /rl and /nl slash commands worked even when the option was disabled
-* Fixed: Mouse ring could appear as a very large circle on the minimap after visiting a housing area
+* New: The warning now works. Sends one group message when your mana drops below 10%
+
+Settings Window
+
+* Fixed: Some checkboxes closed their section when clicked, sections now stay open
+* Fixed: Exclusive options (for example chat fade times) could show two checkmarks at once, now exactly one is shown and it updates instantly
+* Fixed: Clicking an already active option no longer removes its checkmark
 
 **DE**
 
-Verbesserte Freundesliste
-
-* Behoben: Das Besuchen eines Hauses über die Kontakteliste konnte einen ADDON_ACTION_FORBIDDEN-Fehler verursachen, weil der Hook der erweiterten Freundesliste in Blizzards sicherem Aufruf lief
-* Behoben: "Zuletzt online"-Text bei Offline-Freunden wurde ausgeblendet
-
-Chat
-
-* Behoben: Klick auf einen Item-Link im Chat konnte einen ADDON_ACTION_FORBIDDEN-Taint-Fehler verursachen
-
-Beschwörungen
-
-* Behoben: Auto-Beschwörung hat nicht mehr funktioniert und sollte jetzt funktionieren
-
-Ready Check
-
-* Geändert: Das Ready-Check-Fenster schließt sich jetzt automatisch nach dem Auto-Accept
-
 Heldentum-Tracker
 
-* Behoben: HT-Text wurde im Kampf nicht zuverlässig angezeigt, vor allem in Instanzen 
-* Behoben: Der HT-Tracker-Frame hat Maus-Klicks im Kampf blockiert, Frame ist jetzt standardmäßig click-through wenn gesperrt (gesperrt ist jetzt der Standard)
-* Behoben: HT-Text erschien nicht, wenn der Buff von einem Rufer oder Treffsicherheits-Jäger kam. Beide werden jetzt erkannt
+* Behoben: HT-Text verschwand in Instanzen, sobald der Kampf begann. Blizzard versteckt die Buff-Daten im Instanz-Kampf vor Addons (12.0), der Tracker leitet den Buff jetzt stattdessen aus dem lesbaren Erschöpfungs-Debuff ab. Funktioniert egal wer HT wirkt und deckt auch Trommeln ab
 
-Allgemein
+Mana-Warnung
 
-* Behoben: /rl und /nl funktionierten auch wenn die Option deaktiviert war
-* Behoben: Der Mausring konnte nach dem Besuchen eines Housing-Bereichs als sehr großer Kreis auf der Minimap erscheinen
+* Neu: Die Warnung arbeitet jetzt. Sendet eine Gruppennachricht, wenn das Mana unter 10% fällt. 
+
+Einstellungsfenster
+
+* Behoben: Manche Haken haben beim Anklicken ihre Sektion zugeklappt, Sektionen bleiben jetzt offen
+* Behoben: Bei exklusiven Optionen (z.B. Chat-Verblassen-Zeiten) konnten zwei Haken gleichzeitig zu sehen sein, jetzt ist immer genau einer gesetzt und er aktualisiert sich sofort
+* Behoben: Klick auf eine bereits aktive Option entfernt deren Haken nicht mehr
+

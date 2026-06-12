@@ -272,6 +272,13 @@ local function skinHeaderInitializer(button, node)
     end
     updateVisuals()
 
+    -- Fuer AklimeMod_RefreshRightToggles: Checkbox und Optik nachziehen
+    -- wenn ein Master-Toggle (Gruppe / Alle) den Skin-Status aendert.
+    button._refreshCheckbox = function()
+        button.enableButton:SetChecked(C:IsEnabled(d.skinKey))
+        updateVisuals()
+    end
+
     button:SetScript("PreClick", function(self, mouseButton)
         if not isEnabled() then
             node:SetCollapsed(true)
@@ -313,6 +320,11 @@ local function skinToggleInitializer(button, node)
     if button.name then button.name:SetText(d.toggleLabel or "") end
     local db = AklimeModDB.colorizer[d.skinKey]
     if button.toggle then
+        -- Recycelte Frames koennen ein _refreshCheckbox vom vorherigen
+        -- Bewohner tragen, daher hier immer neu setzen.
+        button._refreshCheckbox = function()
+            button.toggle:SetChecked(db and db.toggles and db.toggles[d.toggleKey] or false)
+        end
         button.toggle:SetChecked(db and db.toggles and db.toggles[d.toggleKey] or false)
         button.toggle:SetScript("OnClick", function(self)
             if db and db.toggles then db.toggles[d.toggleKey] = self:GetChecked() end
@@ -374,9 +386,13 @@ function AklimeMod_ColorizerRightFactory(factory, node)
         -- Normaler Toggle für Elite/Rare
         factory(t, function(btn, nd)
             local data = nd:GetData()
+            btn._refreshCheckbox = function() btn.toggle:SetChecked(data.getVal()) end
             if btn.name then btn.name:SetText(data.name or "") end
             btn.toggle:SetChecked(data.getVal())
-            btn.toggle:SetScript("OnClick", function(self) data.setVal(self:GetChecked()) end)
+            btn.toggle:SetScript("OnClick", function(self)
+                data.setVal(self:GetChecked())
+                self:SetChecked(data.getVal())
+            end)
         end)
     elseif t == "AklimeMod_ModuleHeaderTemplate" then
         factory(t, function(button, nd)
@@ -400,6 +416,11 @@ function AklimeMod_ColorizerRightFactory(factory, node)
                 end
             end
             updateVisuals()
+
+            button._refreshCheckbox = function()
+                button.enableButton:SetChecked(data.getEnabled())
+                updateVisuals()
+            end
 
             button:SetScript("PreClick", function(self, mouseButton)
                 if not isEnabled() then nd:SetCollapsed(true) end

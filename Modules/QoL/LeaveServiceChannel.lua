@@ -37,11 +37,10 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", function(_, _, msg)
         if msg:find("beigetreten") or msg:find("joined") then
             local db = GetDB()
             if db then db.enabled = false end
-            -- UI Checkbox aktualisieren
-            if AklimeModFrame and AklimeModFrame:IsShown() then
-                C_Timer.After(0.1, function()
-                    if AklimeMod_BuildQoLContent then AklimeMod_BuildQoLContent() end
-                end)
+            -- UI Checkbox aktualisieren (kein Neuaufbau, der wuerde alle
+            -- aufgeklappten Sektionen zuklappen)
+            if AklimeModFrame and AklimeModFrame:IsShown() and AklimeMod_RefreshRightToggles then
+                AklimeMod_RefreshRightToggles()
             end
         end
     end

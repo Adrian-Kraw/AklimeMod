@@ -27,6 +27,22 @@ local BUFF_IDS = {
     [1243972] = true, -- Leerentrommel (Midnight)
 }
 
+-- Erschoepfungs-Debuffs der Lust-Quellen. Im instanzierten Kampf sperrt
+-- Blizzard die Haste-Buffs selbst (Secret Values), die Erschoepfung bleibt
+-- aber lesbar (in-game verifiziert). Sie erscheint im selben Moment wie der
+-- Buff und haelt immer 600 Sekunden, daraus laesst sich das Buff-Ende exakt
+-- ableiten, egal wer den Lust gewirkt hat und welche Aura-ID der Buff hat.
+local SATED_IDS = {
+    [57723]  = true, -- Erschöpfung (Heldentum, Trommeln)
+    [57724]  = true, -- Übersättigt (Kampfrausch)
+    [80354]  = true, -- Zeitliche Verschiebung (Zeitsprung)
+    [264689] = true, -- Ermüdet (Urtümliche Raserei)
+    [390435] = true, -- Erschöpfung (Zorn der Aspekte)
+}
+
+local BUFF_DURATION  = 40  -- Lust-Buffs dauern immer 40 Sekunden
+local SATED_DURATION = 600 -- Erschoepfung dauert immer 10 Minuten
+
 
 -- ============================================================
 -- DB
@@ -39,16 +55,48 @@ end
 -- ============================================================
 -- Aura-Prüfung
 -- ============================================================
+-- issecretvalue existiert erst seit 12.0
+local issecretvalue = issecretvalue or function() return false end
+
+-- true = Buff aktiv, false = kein Buff, nil = Werte gesperrt (Secret).
+-- Bei true wird zusaetzlich expirationTime geliefert falls lesbar.
+-- Achtung: Im instanzierten Kampf sperrt Blizzard einzelne Auren komplett.
+-- Die Per-ID-Abfrage gibt fuer gesperrte Auren nil zurueck (leugnet sie),
+-- deshalb kann ein aktiver Lust-Buff hier unsichtbar sein.
 local function CheckAuras()
     -- GetPlayerAuraBySpellID: Spell-ID wird als Parameter uebergeben,
     -- kein Zugriff auf geschuetzte Felder der Rueckgabe-Tabelle noetig.
     -- UnitBuff und aura.spellId sind in TWW nicht zugaenglich.
+    local secretSeen = false
     for spellID in pairs(BUFF_IDS) do
-        if C_UnitAuras.GetPlayerAuraBySpellID(spellID) then
-            return true
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+        if issecretvalue(aura) then
+            secretSeen = true
+        elseif aura then
+            local expires = aura.expirationTime
+            if issecretvalue(expires) then expires = nil end
+            return true, expires
         end
     end
+    if secretSeen then return nil end
     return false
+end
+
+-- Leitet das Buff-Ende aus der Erschoepfung ab (GetTime-Basis).
+-- Erschoepfung erscheint zusammen mit dem Buff und haelt 600 Sekunden:
+-- Buff-Ende = Erschoepfungs-Ende - 600 + 40.
+-- nil wenn keine lesbare Erschoepfung aktiv ist.
+local function GetBuffEndFromSated()
+    for spellID in pairs(SATED_IDS) do
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+        if not issecretvalue(aura) and aura then
+            local expires = aura.expirationTime
+            if not issecretvalue(expires) and type(expires) == "number" and expires > 0 then
+                return expires - SATED_DURATION + BUFF_DURATION
+            end
+        end
+    end
+    return nil
 end
 
 -- ============================================================
@@ -78,6 +126,11 @@ local function ApplyPosition()
     end
 end
 
+-- Bis zu diesem GetTime()-Zeitpunkt gilt der Buff als sicher aktiv.
+-- Gesetzt durch die zuletzt lesbare Aura oder die Erschoepfungs-Ableitung.
+-- Traegt die Anzeige durch Phasen, in denen die Aura-Daten gesperrt sind.
+local forcedUntil = 0
+
 local function UpdateDisplay()
     if not frame then return end
     local db = GetDB()
@@ -85,7 +138,30 @@ local function UpdateDisplay()
         frame:Hide()
         return
     end
-    if CheckAuras() then
+    local now = GetTime()
+    local active, expires = CheckAuras()
+    if active then
+        if expires and expires > now then forcedUntil = expires end
+        frame:Show()
+        return
+    end
+    -- Kein direkter Treffer: Buff-Ende aus der Erschoepfung ableiten.
+    -- Deckt im Kampf gesperrte Buffs und unbekannte Aura-IDs ab,
+    -- unabhaengig davon wer den Lust gewirkt hat.
+    local satedEnd = GetBuffEndFromSated()
+    if satedEnd and satedEnd > now then
+        forcedUntil = satedEnd
+        frame:Show()
+        return
+    end
+    if active == false then
+        -- Werte lesbar, kein Buff, keine frische Erschoepfung: definitiv aus
+        forcedUntil = 0
+        frame:Hide()
+        return
+    end
+    -- Werte gesperrt: letztes sicheres Wissen entscheidet
+    if now < forcedUntil then
         frame:Show()
     else
         frame:Hide()
@@ -255,3 +331,96 @@ eventFrame:SetScript("OnEvent", function(_, event)
         if GetDB().enabled then C_Timer.After(0, UpdateDisplay) end
     end
 end)
+
+-- ============================================================
+-- Debug
+-- ============================================================
+SLASH_AKM_HT1 = "/akht"
+SlashCmdList["AKM_HT"] = function(input)
+    local cmd = strtrim(input or ""):lower()
+
+    -- "/akht buffs": alle aktiven Buffs mit Spell-ID auflisten,
+    -- um unbekannte Lust-Varianten zu identifizieren
+    if cmd == "buffs" then
+        print("|cFFFFD100Aklime Mod Tools HT:|r Aktive Buffs:")
+        local found = false
+        for i = 1, 60 do
+            local aura = C_UnitAuras.GetAuraDataByIndex("player", i, "HELPFUL")
+            if not aura then break end
+            found = true
+            if issecretvalue(aura) then
+                print("  [gesperrt]")
+            else
+                local name = aura.name
+                local sid  = aura.spellId
+                if issecretvalue(name) then name = "[gesperrt]" end
+                if issecretvalue(sid)  then sid  = "[gesperrt]" end
+                print(string.format("  %s = %s", tostring(name), tostring(sid)))
+            end
+        end
+        if not found then print("  (keine)") end
+        return
+    end
+
+    local db = GetDB()
+    print(string.format(
+        "|cFFFFD100Aklime Mod Tools HT:|r Modul: %s | Frame: %s | Kampf: %s",
+        db.enabled and "|cFF00FF00aktiv|r" or "|cFFFF4444inaktiv|r",
+        (frame and frame:IsShown()) and "|cFF00FF00sichtbar|r" or "versteckt",
+        UnitAffectingCombat("player") and "ja" or "nein"
+    ))
+
+    local foundBuff, buffSecret = nil, false
+    for spellID in pairs(BUFF_IDS) do
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+        if issecretvalue(aura) then
+            buffSecret = true
+        elseif aura then
+            foundBuff = spellID
+            break
+        end
+    end
+    local foundSated, satedSecret = nil, false
+    for spellID in pairs(SATED_IDS) do
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+        if issecretvalue(aura) then
+            satedSecret = true
+        elseif aura then
+            foundSated = spellID
+            break
+        end
+    end
+
+    local buffText = "|cFFFF4444keiner|r"
+    if foundBuff then
+        buffText = "|cFF00FF00" .. foundBuff .. "|r"
+    elseif buffSecret then
+        buffText = "|cFFFF8800GESPERRT|r"
+    end
+    local satedText = "nein"
+    if foundSated then
+        satedText = "|cFFFF4444" .. foundSated .. "|r"
+    elseif satedSecret then
+        satedText = "|cFFFF8800GESPERRT|r"
+    end
+
+    -- Aus der Erschoepfung abgeleitetes Buff-Ende
+    local derivedText = "nein"
+    local satedEnd = GetBuffEndFromSated()
+    if satedEnd then
+        local remain = satedEnd - GetTime()
+        if remain > 0 then
+            derivedText = string.format("|cFF00FF00noch %.0fs|r", remain)
+        else
+            derivedText = "abgelaufen"
+        end
+    end
+
+    print(string.format(
+        "  HT-Buff: %s | Erschoepfung: %s | Buff laut Ableitung: %s | Ticker: %s",
+        buffText,
+        satedText,
+        derivedText,
+        combatTicker and "laeuft" or "aus"
+    ))
+end

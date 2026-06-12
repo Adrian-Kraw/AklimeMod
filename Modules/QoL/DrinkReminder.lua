@@ -201,10 +201,8 @@ AklimeMod_DrinkReminder = {
     SetInterval          = function(m)
         local db = GetDB(); if db then db.intervalMinutes = m end
         UpdateTicker()
-        -- Immer refreshen, auch wenn Frame gerade nicht sichtbar
-        C_Timer.After(0.1, function()
-            if AklimeMod_BuildQoLContent then AklimeMod_BuildQoLContent() end
-        end)
+        -- Checkbox-Sync uebernimmt der Aufrufer in Categories.lua.
+        -- Kein Neuaufbau der Kategorie: der wuerde alle Sektionen zuklappen.
     end,
     GetDisableInInstance = function()
         local db = GetDB(); return db and db.disableInInstance
