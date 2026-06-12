@@ -32,6 +32,7 @@ local function StartTimer(delay)
         if countdown <= 0 then
             StopTimer()
             ConfirmReadyCheck(1)
+            if ReadyCheckFrame then ReadyCheckFrame:Hide() end
         end
     end)
 end

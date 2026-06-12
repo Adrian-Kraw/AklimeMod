@@ -222,7 +222,8 @@ function AklimeMod_InitDB()
     def(db.gearCheck, "enabled", false)
 
     db.combatTooltip = db.combatTooltip or {}
-    def(db.combatTooltip, "enabled", false)
+    def(db.combatTooltip, "enabled",    false)
+    def(db.combatTooltip, "allowAuras", false)
 
     db.interfaceFade = db.interfaceFade or {}
     for i = 1, 3 do

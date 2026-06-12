@@ -15,6 +15,8 @@ local BUFF_IDS = {
     [90355]   = true, -- Ancient Hysteria (Kerbelwind)
     [160452]  = true, -- Netherwinds
     [264667]  = true, -- Primal Rage (Urtümliche Raserei)
+    [390386]  = true, -- Fury of the Aspects (Zorn der Aspekte, Rufer)
+    [466904]  = true, -- Harrier's Cry (Jäger Treffsicherheit, seit 11.1)
     [178207]  = true, -- Trommeln des Zorns (WoD)
     [230935]  = true, -- Trommeln des Berges (Legion)
     [256740]  = true, -- Trommeln des Mahlstroms (BfA)
@@ -38,6 +40,9 @@ end
 -- Aura-Prüfung
 -- ============================================================
 local function CheckAuras()
+    -- GetPlayerAuraBySpellID: Spell-ID wird als Parameter uebergeben,
+    -- kein Zugriff auf geschuetzte Felder der Rueckgabe-Tabelle noetig.
+    -- UnitBuff und aura.spellId sind in TWW nicht zugaenglich.
     for spellID in pairs(BUFF_IDS) do
         if C_UnitAuras.GetPlayerAuraBySpellID(spellID) then
             return true
@@ -118,16 +123,16 @@ local function BuildFrame()
     text:SetWordWrap(false)
     frame.text = text
 
-    -- Drag
+    -- Drag: RegisterForDrag wuerde frame:Show() im Kampf (InCombatLockdown) blockieren.
+    -- OnMouseDown/OnMouseUp erreichen dasselbe ohne diese Einschraenkung.
     frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", function(self)
-        if not GetDB().locked then
+    frame:EnableMouse(GetDB().locked == false)
+    frame:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" and not M:IsLocked() then
             self:StartMoving()
         end
     end)
-    frame:SetScript("OnDragStop", function(self)
+    frame:SetScript("OnMouseUp", function(self)
         self:StopMovingOrSizing()
         SavePosition()
     end)
@@ -154,7 +159,8 @@ end
 -- API
 -- ============================================================
 function M:IsEnabled() return GetDB().enabled == true end
-function M:IsLocked()  return GetDB().locked  == true end
+-- nil und true gelten als gesperrt. Nur explizit false = entsperrt.
+function M:IsLocked()  return GetDB().locked ~= false end
 
 function M:SetEnabled(v)
     GetDB().enabled = v and true or false
@@ -167,7 +173,10 @@ function M:SetEnabled(v)
 end
 
 function M:SetLocked(v)
-    GetDB().locked = v and true or false
+    GetDB().locked = v ~= false  -- false bleibt false, nil/true wird true
+    if frame and not InCombatLockdown() then
+        frame:EnableMouse(GetDB().locked == false)
+    end
 end
 
 function M:GetFontSizeSlider() return GetDB().fontSizeSlider or 20 end
@@ -188,19 +197,61 @@ end
 -- ============================================================
 -- Events
 -- ============================================================
+
+-- Ticker laeuft nur waehrend des Kampfes und pollt UpdateDisplay jede Sekunde.
+-- Fallback falls UNIT_AURA nicht zuverlaessig feuert.
+local combatTicker = nil
+
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("UNIT_AURA")
+-- RegisterUnitEvent garantiert UNIT_AURA-Zustellung fuer den Spieler-Unit.
+eventFrame:RegisterUnitEvent("UNIT_AURA", "player")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(_, event, unit)
-    if event == "PLAYER_LOGIN" then
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+
+eventFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
         local db = GetDB()
+        -- Alten Ticker aufraumen: nach einem Zonenwechsel ist der Combat-State
+        -- zurueckgesetzt, ein veralteter Ticker wuerde sonst weiterlaufen.
+        if combatTicker then combatTicker:Cancel(); combatTicker = nil end
         if db.enabled then
             BuildFrame()
             UpdateDisplay()
+            -- Reconnect oder Instanzeintritt mitten im Kampf:
+            -- PLAYER_REGEN_DISABLED feuert nicht nochmal, Ticker manuell starten.
+            if UnitAffectingCombat("player") then
+                combatTicker = C_Timer.NewTicker(1, function()
+                    if GetDB().enabled then UpdateDisplay() end
+                end)
+            end
         end
         return
     end
-    if unit == "player" then
-        UpdateDisplay()
+
+    if event == "PLAYER_REGEN_DISABLED" then
+        if GetDB().enabled then
+            -- Sofort pruefen (z.B. Trommeln vor dem Zug)
+            C_Timer.After(0, UpdateDisplay)
+            -- Ticker als Fallback falls UNIT_AURA ausbleibt
+            if not combatTicker then
+                combatTicker = C_Timer.NewTicker(1, function()
+                    if GetDB().enabled then UpdateDisplay() end
+                end)
+            end
+        end
+        return
+    end
+
+    if event == "PLAYER_REGEN_ENABLED" then
+        if combatTicker then combatTicker:Cancel(); combatTicker = nil end
+        C_Timer.After(0, UpdateDisplay)
+        return
+    end
+
+    if event == "UNIT_AURA" then
+        -- Sofortige Reaktion, auch ausserhalb des Kampfes (z.B. Preview).
+        if GetDB().enabled then C_Timer.After(0, UpdateDisplay) end
     end
 end)

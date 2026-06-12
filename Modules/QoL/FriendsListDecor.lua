@@ -279,16 +279,10 @@ local function DecorateWoWFriend(button)
     if not C_FriendList or not C_FriendList.GetFriendInfoByIndex then return end
 
     local id = button.id
-    if not id then
-        nameFont:SetText(""); if infoFont then infoFont:SetText("") end
-        SetFactionIcon(button, nil); return
-    end
+    if not id then return end
 
     local info = C_FriendList.GetFriendInfoByIndex(id)
-    if not info or not info.name then
-        nameFont:SetText(""); if infoFont then infoFont:SetText("") end
-        SetFactionIcon(button, nil); return
-    end
+    if not info or not info.name then return end
 
     local isConnected = info.connected == true
     local status = isConnected and (info.dnd and "DND" or info.afk and "AFK" or "Online") or "Offline"
@@ -334,16 +328,10 @@ local function DecorateBNetFriend(button)
     if not nameFont then return end
 
     local id = button.id
-    if not id then
-        nameFont:SetText(""); if infoFont then infoFont:SetText("") end
-        SetFactionIcon(button, nil); return
-    end
+    if not id then return end
 
     local accountInfo = C_BattleNet.GetFriendAccountInfo(id)
-    if not accountInfo then
-        nameFont:SetText(""); if infoFont then infoFont:SetText("") end
-        SetFactionIcon(button, nil); return
-    end
+    if not accountInfo then return end
 
     local gameInfo = accountInfo.gameAccountInfo
     local isOnline = gameInfo and gameInfo.isOnline == true
@@ -426,10 +414,42 @@ local function DecorateBNetFriend(button)
     MoveStarRight(button, nameFont)
 end
 
+-- Prueft ob ein Button zum Housing-System gehoert.
+-- FriendsFrame_UpdateFriendButton wird vom Housing-System fuer Kontakt-Buttons aufgerufen.
+-- Das Housing-Popup ist oft ein Kind von FriendsFrame, daher reicht IsDescendantOf(FriendsFrame)
+-- allein nicht aus - Housing-Buttons wuerden faelschlich als Friends-Buttons erkannt.
+-- Addon-Code der auf Housing-Buttons schreibt taintet sie und blockiert VisitHouse().
+local function IsHousingButton(button)
+    -- Expliziter Check gegen bekannte Housing-Frame-Globals (Blizzard_HouseList Addon)
+    local housingFrame = _G["HouseListFrame"]
+    if housingFrame and button.IsDescendantOf and button:IsDescendantOf(housingFrame) then
+        return true
+    end
+    -- Fallback: Parent-Kette nach "HouseList" im Frame-Namen durchsuchen (nur lesen, kein Taint)
+    local frame = button:GetParent()
+    local depth = 0
+    while frame and depth < 8 do
+        local name = frame:GetName()
+        if name and name:find("HouseList", 1, true) then return true end
+        frame = frame:GetParent()
+        depth = depth + 1
+    end
+    return false
+end
+
 local function UpdateFriendButton(button)
     if not button or not button.buttonType then return end
+    -- Housing-Buttons niemals anfassen, auch wenn sie FriendsFrame-Nachkommen sind.
+    if IsHousingButton(button) then return end
     if not GetDB().enabled then
         if button._aklimeFactionIcon then button._aklimeFactionIcon:Hide() end
+        local repl = starReplacements[button]
+        if repl then repl:Hide() end
+        return
+    end
+
+    -- Nur Buttons innerhalb von FriendsFrame dekorieren.
+    if FriendsFrame and button.IsDescendantOf and not button:IsDescendantOf(FriendsFrame) then
         return
     end
 
@@ -440,22 +460,6 @@ local function UpdateFriendButton(button)
     else
         if button._aklimeFactionIcon then button._aklimeFactionIcon:Hide() end
     end
-end
-
-local function AreWoWFriendCountsReady()
-    if not C_FriendList or not C_FriendList.GetNumFriends then return false end
-    local ok, numFriends = pcall(C_FriendList.GetNumFriends)
-    return ok and type(numFriends) == "number"
-end
-
-local pendingRefresh = false
-local function ScheduleRefreshRetry()
-    if pendingRefresh then return end
-    pendingRefresh = true
-    C_Timer.After(0.1, function()
-        pendingRefresh = false
-        M:Refresh()
-    end)
 end
 
 -- Buttons die im naechsten OnUpdate dekoriert werden sollen.
@@ -476,6 +480,12 @@ local function EnsureHook()
     if hookInstalled then return true end
     if type(FriendsFrame_UpdateFriendButton) ~= "function" then return false end
     hooksecurefunc("FriendsFrame_UpdateFriendButton", function(button)
+        -- Guard: nur wenn FriendsFrame sichtbar ist dekorieren.
+        -- Housing-Panel oeffnet FriendsFrame nicht - damit werden Housing-Buttons
+        -- beim Refresh/Hover nicht in pendingButtons aufgenommen und nicht taintet.
+        if not FriendsFrame or not FriendsFrame:IsShown() then return end
+        if debugstack():find("HouseList", 1, true) then return end
+        if IsHousingButton(button) then return end
         pendingButtons[button] = true
     end)
     hookInstalled = true
@@ -484,15 +494,23 @@ end
 
 function M:Refresh()
     if not hookInstalled then EnsureHook() end
-    if not AreWoWFriendCountsReady() then ScheduleRefreshRetry(); return end
-    if FriendsList_UpdateFriends then
-        FriendsList_UpdateFriends()
-    elseif FriendsFrame_UpdateFriends then
-        FriendsFrame_UpdateFriends()
-    elseif FriendsList_Update then
-        FriendsList_Update()
-    elseif FriendsFrame and FriendsFrame.ScrollBox and FriendsFrame.ScrollBox.Update then
-        FriendsFrame.ScrollBox:Update()
+    -- Blizzards Update-Funktionen (FriendsList_UpdateFriends etc.) duerfen hier
+    -- nicht direkt aufgerufen werden. Der Aufruf aus Addon-Code taintet alle
+    -- Daten die sie schreiben (button.id, friendInfo, DataProvider). Blizzards
+    -- Kontextmenue liest diese Daten beim Rechtsklick und VisitHouse() wird
+    -- dann als ADDON_ACTION_FORBIDDEN blockiert.
+    -- Stattdessen: Server-Update anfordern. FRIENDLIST_UPDATE laesst Blizzard
+    -- die Liste selbst (secure) neu aufbauen, unser Hook dekoriert danach.
+    if C_FriendList and C_FriendList.ShowFriends then
+        C_FriendList.ShowFriends()
+    end
+    -- Sichtbare Buttons sofort neu dekorieren (rein lesender Zugriff).
+    local scrollBox = (FriendsListFrame and FriendsListFrame.ScrollBox)
+        or (FriendsFrame and FriendsFrame.ScrollBox)
+    if scrollBox and scrollBox.ForEachFrame then
+        scrollBox:ForEachFrame(function(button)
+            pendingButtons[button] = true
+        end)
     end
 end
 

@@ -543,6 +543,10 @@ local function addInterfaceNodes(dp)
             function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
         )
         addInfo(ttNode, L["info_combat_tooltip"])
+        addToggle(ttNode, L["tog_ct_allow_auras"],
+            function() return AklimeMod_CombatTooltip:AllowsAuras() end,
+            function(v) AklimeMod_CombatTooltip:SetAllowAuras(v) end
+        )
     end
 
     if currentSearchFilter == "" then
@@ -845,6 +849,10 @@ local function BuildInterfaceContent(filter)
             function(v) AklimeMod_CombatTooltip:SetEnabled(v) end
         )
         addInfo(ttNode, L["info_combat_tooltip"])
+        addToggle(ttNode, L["tog_ct_allow_auras"],
+            function() return AklimeMod_CombatTooltip:AllowsAuras() end,
+            function(v) AklimeMod_CombatTooltip:SetAllowAuras(v) end
+        )
     end
 
     dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_hud_fading"], centered = true })

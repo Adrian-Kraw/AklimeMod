@@ -26,14 +26,27 @@ end
 -- ============================================================
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("CONFIRM_SUMMON")
-eventFrame:SetScript("OnEvent", function(_, event)
+eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
     if event ~= "CONFIRM_SUMMON" then return end
     if not GetDB().enabled then return end
 
-    local summoner = GetSummonConfirmSummoner and GetSummonConfirmSummoner() or "?"
-    local area     = GetSummonConfirmAreaName and GetSummonConfirmAreaName() or "?"
+    -- TWW: Summoner/Area kommen als Event-Args oder ueber neue C_SummonRequest-API.
+    -- Alte globale Getter-Funktionen existieren in TWW nicht mehr.
+    local summoner = (type(arg1) == "string" and arg1 ~= "") and arg1
+                  or (C_SummonRequest and C_SummonRequest.GetSummonerName and C_SummonRequest.GetSummonerName())
+                  or (GetSummonConfirmSummoner and GetSummonConfirmSummoner())
+                  or "?"
+    local area     = (type(arg2) == "string" and arg2 ~= "") and arg2
+                  or (C_SummonRequest and C_SummonRequest.GetSummonAreaName and C_SummonRequest.GetSummonAreaName())
+                  or (GetSummonConfirmAreaName and GetSummonConfirmAreaName())
+                  or "?"
 
-    ConfirmSummon()
+    -- TWW: ConfirmSummon() wurde durch C_SummonRequest.Accept() ersetzt.
+    if C_SummonRequest and C_SummonRequest.Accept then
+        C_SummonRequest.Accept()
+    elseif ConfirmSummon then
+        ConfirmSummon()
+    end
     StaticPopup_Hide("CONFIRM_SUMMON")
 
     print("|cFFFFD100Aklime Mod Tools:|r Beschwörung von " .. summoner .. " nach " .. area .. " automatisch angenommen.")

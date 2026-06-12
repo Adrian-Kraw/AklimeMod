@@ -7,8 +7,32 @@ AklimeMod_CombatTooltip = M
 
 local inCombat = false
 
-local function IsEnabled()
-    return AklimeModDB and AklimeModDB.combatTooltip and AklimeModDB.combatTooltip.enabled
+local function GetDB()
+    if AklimeModDB and AklimeModDB.combatTooltip then return AklimeModDB.combatTooltip end
+    return { enabled = false }
+end
+
+-- ============================================================
+-- Aura-Erkennung
+-- ============================================================
+
+local function IsAuraTooltip(tooltip)
+    -- Methode 1: TooltipData-API (Dragonflight/TWW) — prueft den Inhalt-Typ direkt
+    if tooltip.GetTooltipData then
+        local data = tooltip:GetTooltipData()
+        if data then
+            local auraType = Enum.TooltipDataType and Enum.TooltipDataType.UnitAura
+            if auraType and data.type == auraType then return true end
+        end
+    end
+    -- Methode 2: Owner-Frame-Hierarchie — greift wenn TooltipData-API nicht verfuegbar ist
+    local owner = tooltip:GetOwner()
+    if owner and owner.IsDescendantOf then
+        if BuffFrame and owner:IsDescendantOf(BuffFrame) then return true end
+        local df = _G["DebuffFrame"]
+        if df and owner:IsDescendantOf(df) then return true end
+    end
+    return false
 end
 
 -- ============================================================
@@ -16,9 +40,10 @@ end
 -- ============================================================
 
 GameTooltip:HookScript("OnShow", function(self)
-    if IsEnabled() and inCombat then
-        self:Hide()
-    end
+    local db = GetDB()
+    if not db.enabled or not inCombat then return end
+    if db.allowAuras and IsAuraTooltip(self) then return end
+    self:Hide()
 end)
 
 -- ============================================================
@@ -32,8 +57,11 @@ f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
-        if IsEnabled() then
-            GameTooltip:Hide()
+        local db = GetDB()
+        if db.enabled then
+            if not (db.allowAuras and IsAuraTooltip(GameTooltip)) then
+                GameTooltip:Hide()
+            end
         end
     elseif event == "PLAYER_REGEN_ENABLED" then
         inCombat = false
@@ -45,12 +73,20 @@ end)
 -- ============================================================
 
 function M:IsEnabled()
-    return IsEnabled() == true
+    return GetDB().enabled == true
 end
 
 function M:SetEnabled(v)
-    AklimeModDB.combatTooltip.enabled = v
+    GetDB().enabled = v and true or false
     if v and inCombat then
         GameTooltip:Hide()
     end
+end
+
+function M:AllowsAuras()
+    return GetDB().allowAuras == true
+end
+
+function M:SetAllowAuras(v)
+    GetDB().allowAuras = v and true or false
 end
