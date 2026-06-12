@@ -235,6 +235,8 @@ L["action_remove_all"]        = "Remove All"
 L["action_clear_ignore"]      = "Clear Ignore List"
 L["action_clear_contacts"]    = "Clear Contacts"
 L["action_restore_default"]   = "Restore Default"
+L["color_all_skin"]           = "Color everything"
+L["confirm_action"]           = "Are you sure you want to do this?"
 L["action_delete_char"]       = "Delete Character..."
 L["action_delete_all"]        = "Delete All Data"
 
@@ -577,6 +579,8 @@ if GetLocale() == "deDE" then
     L["action_clear_ignore"]      = "Ignoreliste leeren"
     L["action_clear_contacts"]    = "Kontakte leeren"
     L["action_restore_default"]   = "Standard wiederherstellen"
+    L["color_all_skin"]           = "Alles färben"
+    L["confirm_action"]           = "Bist du dir sicher, dass du das machen willst?"
     L["action_delete_char"]       = "Char löschen..."
     L["action_delete_all"]        = "Alle Daten löschen"
 

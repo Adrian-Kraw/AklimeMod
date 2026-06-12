@@ -340,9 +340,14 @@ function M:GetSavedChars()
     local list = {}
     for key, rec in pairs(db.chars) do
         local className = CLASS_NAMES[rec.class] or rec.class or "?"
+        local realm = rec.realm or key:match("^[^%-]+%-(.+)$") or "?"
+        local display = (rec.name or key) .. " - " .. realm .. " - " .. className
+        local r, g, b = GetClassColor(rec.class)
         table.insert(list, {
-            key     = key,
-            display = (rec.name or key) .. " – " .. className,
+            key       = key,
+            display   = display,
+            -- Eintrag komplett in Klassenfarbe
+            colorized = string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, display),
         })
     end
     table.sort(list, function(a, b) return a.display < b.display end)

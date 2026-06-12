@@ -767,11 +767,38 @@ C:Register("winFriends", {
 -- ========================================================
 -- Game Menu
 -- ========================================================
+-- Die Menue-Buttons kommen aus einem Frame-Pool und werden bei jedem
+-- Oeffnen neu aufgebaut, daher Faerbung als eigene Funktion plus Hook.
+local function EachGameMenuButton(fn)
+    local gm = GameMenuFrame
+    if not gm then return end
+    if gm.buttonPool then
+        for btn in gm.buttonPool:EnumerateActive() do fn(btn) end
+    else
+        for _,child in pairs({ gm:GetChildren() }) do
+            if child.GetNormalTexture then fn(child) end
+        end
+    end
+end
+
+local function TintGameMenuButtons(r,g,b,a,des)
+    EachGameMenuButton(function(btn)
+        for _,tex in pairs({
+            btn.Left, btn.Center, btn.Right,
+            btn:GetNormalTexture(), btn:GetHighlightTexture(),
+            btn:GetPushedTexture(), btn:GetDisabledTexture(),
+        }) do
+            if tex then tex:SetDesaturation(des); tex:SetVertexColor(r,g,b,a) end
+        end
+    end)
+end
+
 C:Register("winGameMenu", {
     label="Game Menu", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
         background={label="Background",r=0,g=0,b=0,a=0.7,order=2},
+        buttons={label="Buttons",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},
     },
     apply=function(self)
         local mr,mg,mb,ma = col("winGameMenu","main")
@@ -790,12 +817,31 @@ C:Register("winGameMenu", {
             bg:SetColorTexture(br, bg2, bb, ba)
             bg:SetVertexColor(br, bg2, bb, ba)
         end
+        -- Buttons (rote Standard-Buttons) faerben, auch nach jedem
+        -- Neuaufbau des Menues
+        local cr2,cg2,cb2,ca2 = col("winGameMenu","buttons")
+        TintGameMenuButtons(cr2,cg2,cb2,ca2,1)
+        if not self._btnHook and GameMenuFrame then
+            self._btnHook = true
+            local function refresh()
+                if C:IsEnabled("winGameMenu") then
+                    local r,g,b,a = col("winGameMenu","buttons")
+                    TintGameMenuButtons(r,g,b,a,1)
+                end
+            end
+            if type(GameMenuFrame.InitButtons) == "function" then
+                hooksecurefunc(GameMenuFrame, "InitButtons", refresh)
+            else
+                GameMenuFrame:HookScript("OnShow", refresh)
+            end
+        end
     end,
     remove=function(self)
         RB(GameMenuFrame)
         R(GameMenuFrame.Header.LeftBG)
         R(GameMenuFrame.Header.CenterBG)
         R(GameMenuFrame.Header.RightBG)
+        TintGameMenuButtons(1,1,1,1,0)
         local bg = GameMenuFrame.Border and GameMenuFrame.Border.Bg
         if bg then
             bg:SetDesaturation(0)
@@ -1591,10 +1637,17 @@ C:Register("winAklimeMod", {
     label  = "Aklime Mod Tools",
     group  = "Addons",
     colors = {
-        main       = { label="Frame",        r=DM.r, g=DM.g, b=DM.b, a=1,   order=1 },
-        background = { label="Background", r=DG.r, g=DG.g, b=DG.b, a=0.9, order=2 },
-        borders    = { label="Inset Borders",r=DR.r, g=DR.g, b=DR.b, a=1,   order=3 },
-        controls   = { label="Controls",   r=DC.r, g=DC.g, b=DC.b, a=1,   order=4 },
+        main       = { label="Frame",          r=DM.r, g=DM.g,  b=DM.b,  a=1,   order=1 },
+        -- Default #1D1D1D, dunkle Toenung der Stein-Textur
+        background = { label="Background",     r=0.114, g=0.114, b=0.114, a=1,  order=2 },
+        borders    = { label="Inset Borders",  r=DR.r, g=DR.g,  b=DR.b,  a=1,   order=3 },
+        -- Defaults entsprechen AklimeMod_Theme (rowBg, rowBorder, line, selection)
+        boxBg      = { label="Box Background", r=0.08, g=0.075, b=0.06,  a=1,   order=4 },
+        boxBorder  = { label="Box Borders",    r=0.50, g=0.40,  b=0.12,  a=0.7, order=5 },
+        lines      = { label="Lines",          r=0.85, g=0.68,  b=0.15,  a=0.6, order=6 },
+        selection  = { label="Selection",      r=0.74, g=0.56,  b=0.12,  a=1,   order=7 },
+        ring       = { label="Portrait Ring",  r=1,    g=0.82,  b=0,     a=1,   order=8 },
+        controls   = { label="Controls",       r=DC.r, g=DC.g,  b=DC.b,  a=1,   order=9 },
     },
     apply = function(self)
         local mr,mg,mb,ma = col("winAklimeMod","main")
@@ -1602,17 +1655,36 @@ C:Register("winAklimeMod", {
         local ir,ig,ib,ia = col("winAklimeMod","borders")
         local cr,cg,cb,ca = col("winAklimeMod","controls")
         local frame = AklimeModFrame
-        if not frame then return end
-        -- Hauptrahmen (NineSlice)
-        SkinNS(frame, mr,mg,mb,ma)
-        -- Hintergrund (die Holztextur)
-        if frame.Bg then
-            frame.Bg:SetDesaturation(1)
-            frame.Bg:SetVertexColor(br,bg2,bb,ba)
+        if not frame or not frame.SetBackdropBorderColor then return end
+        -- Fenster: Rahmen (main) und Hintergrund (background)
+        frame:SetBackdropBorderColor(mr,mg,mb,ma)
+        frame:SetBackdropColor(br,bg2,bb,ba)
+        -- Linkes und rechtes Panel: Rahmenfarbe
+        frame.leftInset:SetBackdropBorderColor(ir,ig,ib,ia)
+        frame.rightInset:SetBackdropBorderColor(ir,ig,ib,ia)
+        -- Listen-Boxen, Trennlinien und Kategorie-Auswahl
+        local g1r,g1g,g1b,g1a = col("winAklimeMod","boxBg")
+        local g2r,g2g,g2b,g2a = col("winAklimeMod","boxBorder")
+        local l1r,l1g,l1b,l1a = col("winAklimeMod","lines")
+        local s1r,s1g,s1b,s1a = col("winAklimeMod","selection")
+        AklimeMod_RowColors = {
+            bg        = { r=g1r, g=g1g, b=g1b, a=g1a },
+            border    = { r=g2r, g=g2g, b=g2b, a=g2a },
+            line      = { r=l1r, g=l1g, b=l1b, a=l1a },
+            selection = { r=s1r, g=s1g, b=s1b, a=s1a },
+        }
+        if AklimeMod_RefreshRowTheme then AklimeMod_RefreshRowTheme() end
+        -- Portrait-Ring
+        local rr,rg2,rb,ra = col("winAklimeMod","ring")
+        if frame.portraitRing then
+            frame.portraitRing:SetDesaturated(true)
+            frame.portraitRing:SetVertexColor(rr,rg2,rb,ra)
         end
-        -- Linker und rechter Inset
-        SkinNS(frame.leftInset,  ir,ig,ib,ia)
-        SkinNS(frame.rightInset, ir,ig,ib,ia)
+        -- Stein-Textur: Toenung folgt der Background-Farbe, multiplikativ
+        -- auf die natuerliche Textur (weiss = ungetoent)
+        if frame.bgTexture then
+            frame.bgTexture:SetVertexColor(br,bg2,bb,ba)
+        end
         -- Suchfeld
         SkinBox(AklimeModSearchBox, cr,cg,cb,ca)
         -- ScrollBar der rechten Seite
@@ -1620,22 +1692,56 @@ C:Register("winAklimeMod", {
     end,
     remove = function(self)
         local frame = AklimeModFrame
-        if not frame then return end
-        RestoreNS(frame)
-        if frame.Bg then R(frame.Bg) end
-        RestoreNS(frame.leftInset)
-        RestoreNS(frame.rightInset)
+        if not frame or not frame.SetBackdropBorderColor then return end
+        -- Zurueck auf die Theme-Standardfarben
+        local T = AklimeMod_Theme
+        if T then
+            frame:SetBackdropBorderColor(T.windowBorder.r, T.windowBorder.g, T.windowBorder.b, T.windowBorder.a)
+            frame:SetBackdropColor(T.windowBg.r, T.windowBg.g, T.windowBg.b, T.windowBg.a)
+            frame.leftInset:SetBackdropBorderColor(T.panelBorder.r, T.panelBorder.g, T.panelBorder.b, T.panelBorder.a)
+            frame.rightInset:SetBackdropBorderColor(T.panelBorder.r, T.panelBorder.g, T.panelBorder.b, T.panelBorder.a)
+            if frame.bgTexture then
+                frame.bgTexture:SetVertexColor(T.windowTexTint.r, T.windowTexTint.g, T.windowTexTint.b, T.windowTexTint.a)
+            end
+        end
+        if frame.portraitRing then
+            frame.portraitRing:SetDesaturated(false)
+            frame.portraitRing:SetVertexColor(1, 1, 1, 1)
+        end
+        AklimeMod_RowColors = nil
+        if AklimeMod_RefreshRowTheme then AklimeMod_RefreshRowTheme() end
         RestoreBox(AklimeModSearchBox)
         RestoreScrollBar(frame.rightInset)
     end,
 })
 
 -- ========================================================
+-- Elite Frame (faerbt den Elite-Drachen am Player-Frame,
+-- sichtbar nur wenn das Elite-Frame-Modul aktiv ist)
+-- ========================================================
+C:Register("eliteFrame", {
+    label  = "Elite Frame",
+    group  = "Addons",
+    colors = {
+        main = { label="Frame", r=DM.r, g=DM.g, b=DM.b, a=1, order=1 },
+    },
+    -- Die eigentliche Faerbung passiert in AklimeMod_ApplyEliteFrame,
+    -- die den Skin-Status selbst liest. Hier nur neu anwenden.
+    apply = function(self)
+        if AklimeMod_ApplyEliteFrame then AklimeMod_ApplyEliteFrame() end
+    end,
+    remove = function(self)
+        if AklimeMod_ApplyEliteFrame then AklimeMod_ApplyEliteFrame() end
+    end,
+})
+
+-- ========================================================
 -- Gruppen-Reihenfolge
 -- ========================================================
-table.insert(AklimeMod_Colorizer.groupOrder, {
+-- An Position 1: Addons stehen direkt unter "Alle aktivieren / deaktivieren"
+table.insert(AklimeMod_Colorizer.groupOrder, 1, {
     label = "Addons",
-    keys  = { "winAklimeMod" },
+    keys  = { "winAklimeMod", "eliteFrame" },
 })
 
 table.insert(AklimeMod_Colorizer.groupOrder, {

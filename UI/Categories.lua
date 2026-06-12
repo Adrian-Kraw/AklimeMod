@@ -68,11 +68,14 @@ local function addSlider(node, label, min, max, step, getVal, setVal, formatFn)
     })
 end
 
-local function addAction(node, label, onClick)
+-- confirm = true: vor dem Ausfuehren erscheint ein Ja/Nein-Dialog
+local function addAction(node, label, onClick, extent, confirm)
     node:Insert({
         Template = "AklimeMod_ActionButtonTemplate",
         label    = label,
         onClick  = onClick,
+        extent   = extent,
+        confirm  = confirm,
     })
 end
 
@@ -111,6 +114,9 @@ local reloadBtns = nil
 local function actionInitializer(frame, node)
     local data = node:GetData()
     if data.label == "RELOAD_BUTTONS" then
+        -- Sonderzeile mit eigenen /rl- und /nl-Buttons, der zentrierte
+        -- Standard-Button wird hier nicht gebraucht
+        if frame.button then frame.button:Hide() end
         if not reloadBtns then
             local lbl1 = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
             lbl1:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -8); lbl1:SetText(L["reload_label_rl"])
@@ -126,17 +132,25 @@ local function actionInitializer(frame, node)
         end
         return
     end
-    if frame.label then
-        frame.label:SetText(data.label or "")
-        frame.label:SetTextColor(1, 0.25, 0.25, 1)
-    end
-    frame:SetScript("OnClick", function() if data.onClick then data.onClick() end end)
-    frame:SetScript("OnEnter", function() if frame.label then frame.label:SetTextColor(1, 0.5, 0.5, 1) end end)
-    frame:SetScript("OnLeave", function() if frame.label then frame.label:SetTextColor(1, 0.25, 0.25, 1) end end)
+    local btn = frame.button
+    if not btn then return end
+    btn:Show()
+    AklimeMod_StyleActionButton(btn)
+    btn.label:SetText(data.label or "")
+    btn:SetWidth(math.max(180, btn.label:GetStringWidth() + 44))
+    btn:SetScript("OnClick", function(self)
+        if not data.onClick then return end
+        if data.confirm then
+            AklimeMod_Confirm(data.label, data.onClick)
+        else
+            data.onClick(self)
+        end
+    end)
 end
 
 local function moduleHeaderInitializer(button, node)
     local data = node:GetData()
+    AklimeMod_ApplyRowTheme(button)
     -- Altlast vom Pool-Vorgaenger entfernen, frueher Return ueberspringt das Neusetzen
     button._refreshCheckbox = nil
     if not data or type(data.getEnabled) ~= "function" then return end
@@ -342,6 +356,7 @@ function AklimeMod_RightFactory(factory, node)
     elseif t == "AklimeMod_SeparatorTemplate" then
         factory(t, function(frame, nd)
             local data = nd:GetData()
+            AklimeMod_ApplyRowTheme(frame)
             if frame.label then
                 frame.label:SetText(data.label or "")
                 if data.centered then
@@ -370,21 +385,27 @@ local function GetOrCreateDashboard(parent)
     if dashboardPanel then return dashboardPanel end
     dashboardPanel = CreateFrame("Frame", nil, parent)
     dashboardPanel:SetAllPoints(parent)
+    -- Inhalt liegt in einem Child-Frame, damit er beim Verkleinern des
+    -- Fensters am Panel-Rand abgeschnitten wird statt herauszuragen
+    dashboardPanel:SetClipsChildren(true)
     dashboardPanel:Hide()
 
+    local content = CreateFrame("Frame", nil, dashboardPanel)
+    content:SetAllPoints(dashboardPanel)
+
     local function Label(text, offsetY, font, r, g, b)
-        local fs = dashboardPanel:CreateFontString(nil, "OVERLAY", font or "GameFontHighlight")
-        fs:SetPoint("TOPLEFT", dashboardPanel, "TOPLEFT", 20, offsetY)
+        local fs = content:CreateFontString(nil, "OVERLAY", font or "GameFontHighlight")
+        fs:SetPoint("TOPLEFT", content, "TOPLEFT", 20, offsetY)
         fs:SetTextColor(r or 0.9, g or 0.9, b or 0.9, 1)
         fs:SetText(text)
         return fs
     end
     local function Separator(offsetY)
-        local line = dashboardPanel:CreateTexture(nil, "ARTWORK")
+        local line = content:CreateTexture(nil, "ARTWORK")
         line:SetHeight(1)
-        line:SetPoint("TOPLEFT",  dashboardPanel, "TOPLEFT",  16, offsetY)
-        line:SetPoint("TOPRIGHT", dashboardPanel, "TOPRIGHT", -16, offsetY)
-        line:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+        line:SetPoint("TOPLEFT",  content, "TOPLEFT",  16, offsetY)
+        line:SetPoint("TOPRIGHT", content, "TOPRIGHT", -16, offsetY)
+        AklimeMod_RegisterThemeLine(line)
     end
 
     local y = -40
@@ -402,8 +423,8 @@ local function GetOrCreateDashboard(parent)
         { cmd="/akm help", desc=L["dash_cmd_help"] },
     }
     for _, e in ipairs(cmds) do
-        local row = dashboardPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        row:SetPoint("TOPLEFT", dashboardPanel, "TOPLEFT", 20, y)
+        local row = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        row:SetPoint("TOPLEFT", content, "TOPLEFT", 20, y)
         row:SetText("|cFF00CCFF" .. e.cmd .. "|r - " .. e.desc)
         y = y - 22
     end
@@ -1086,6 +1107,36 @@ local function BuildInterfaceContent(filter)
                                     })
                                 end
                             end
+
+                            -- Nur beim eigenen Fenster-Skin: alles auf einmal
+                            -- faerben und alle Farben auf Standard
+                            if key == "winAklimeMod" then
+                                headerNode:Insert({
+                                    Template     = "AklimeMod_SubColorTemplate",
+                                    skinKey      = key,
+                                    skinAllColor = true,
+                                    colorLabel   = L["color_all_skin"] or "Color everything",
+                                })
+                                headerNode:Insert({
+                                    Template = "AklimeMod_ActionButtonTemplate",
+                                    label    = L["action_restore_default"],
+                                    onClick  = function()
+                                        local skdb = AklimeModDB.colorizer[key]
+                                        if skdb and skin.colors then
+                                            for ck, cd in pairs(skin.colors) do
+                                                skdb.colors[ck] = { r=cd.r, g=cd.g, b=cd.b, a=cd.a, followClassColor=false }
+                                            end
+                                        end
+                                        if C:IsEnabled(key) then
+                                            pcall(function() skin:apply() end)
+                                        else
+                                            pcall(function() skin:remove() end)
+                                        end
+                                        -- Neu aufbauen damit die Farb-Swatches den Standard zeigen
+                                        if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
+                                    end,
+                                })
+                            end
                         end
                     end
                 end
@@ -1190,10 +1241,10 @@ local function addQoLNodes(dp)
         addInfo(chatHistNode, L["info_chat_history"])
         addAction(chatHistNode, L["action_clear_all_windows"], function()
             AklimeMod_ChatHistory:ClearAll()
-        end)
+        end, nil, true)
         addAction(chatHistNode, L["action_clear_active"], function()
             AklimeMod_ChatHistory:ClearActive()
-        end)
+        end, nil, true)
     end
 
     if AklimeMod_ExtendedIgnore then
@@ -1208,7 +1259,7 @@ local function addQoLNodes(dp)
         addAction(ignoreNode, L["action_remove_all"], function()
             AklimeMod_ExtendedIgnore:ClearAll()
             print("|cFFFFD100Aklime Mod Tools:|r " .. L["msg_ignore_cleared"])
-        end)
+        end, nil, true)
     end
 
     local leaveServiceNode = addModule(dp, L["mod_leave_channel"],
@@ -1347,7 +1398,8 @@ local function addQoLNodes(dp)
         end
     )
     addInfo(reloadNode, L["info_reload_ui"])
-    addAction(reloadNode, "RELOAD_BUTTONS", nil)
+    -- Sonderzeile braucht Platz fuer zwei Befehls-Buttons untereinander
+    addAction(reloadNode, "RELOAD_BUTTONS", nil, 70)
 
     local deleteNode
     local function easyDeleteMainEnabled()
@@ -1471,7 +1523,7 @@ local function addQoLNodes(dp)
         addInfo(mailboxNode, L["info_mailbox"])
         addAction(mailboxNode, L["action_clear_contacts"], function()
             AklimeMod_Mailbox:ClearContacts()
-        end)
+        end, nil, true)
     end
 
     if AklimeMod_Merchant then
@@ -1601,7 +1653,7 @@ local function addQoLNodes(dp)
         end
         addAction(autoQuestNode, L["action_clear_ignore"], function()
             AklimeMod_QuestAutomation:ClearIgnoredNPCs()
-        end)
+        end, nil, true)
     end
 
     if AklimeMod_QuestAutomation then
@@ -1685,34 +1737,48 @@ local function addQoLNodes(dp)
             function(v) AklimeModDB.playedTime.enabled = v end
         )
         addInfo(playedNode, L["info_played_time"])
-        addAction(playedNode, L["action_delete_char"], function()
+        addAction(playedNode, L["action_delete_char"], function(anchor)
             local chars = AklimeMod_PlayedTime:GetSavedChars()
-            local menu = _G["AklimeModPlayedDeleteMenu"]
-                or CreateFrame("Frame", "AklimeModPlayedDeleteMenu", UIParent, "UIDropDownMenuTemplate")
-            UIDropDownMenu_Initialize(menu, function()
+            local menu = MenuUtil.CreateContextMenu(anchor or UIParent, function(owner, rootDescription)
                 if #chars == 0 then
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text     = L["played_no_data"]
-                    info.disabled = true
-                    UIDropDownMenu_AddButton(info)
+                    rootDescription:CreateTitle(L["played_no_data"])
                     return
+                end
+                -- Spaltenweise fuellen, maximal 20 Charaktere pro Spalte
+                local columns = math.ceil(#chars / 20)
+                if columns > 1 then
+                    rootDescription:SetGridMode(MenuConstants.VerticalGridDirection, columns)
                 end
                 for _, rec in ipairs(chars) do
                     local key     = rec.key
                     local display = rec.display
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text = display
-                    info.func = function()
-                        AklimeMod_PlayedTime:DeleteChar(key)
-                    end
-                    UIDropDownMenu_AddButton(info)
+                    rootDescription:CreateButton(rec.colorized or display, function()
+                        AklimeMod_Confirm(display, function()
+                            AklimeMod_PlayedTime:DeleteChar(key)
+                        end)
+                    end)
                 end
-            end, "MENU")
-            ToggleDropDownMenu(1, nil, menu, "cursor", 0, 0)
+            end)
+            -- Menue mittig auf dem Bildschirm zentrieren. Zweiter Versuch
+            -- einen Frame spaeter, falls das Menue seine Position beim
+            -- Layout-Aufbau selbst nochmal setzt.
+            local function centerMenu()
+                local m = menu
+                if (not m or not m.SetPoint) and Menu and Menu.GetManager then
+                    local mgr = Menu.GetManager()
+                    m = mgr and mgr.GetOpenMenu and mgr:GetOpenMenu()
+                end
+                if m and m.ClearAllPoints and m.SetPoint then
+                    m:ClearAllPoints()
+                    m:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+                end
+            end
+            centerMenu()
+            C_Timer.After(0, centerMenu)
         end)
         addAction(playedNode, L["action_delete_all"], function()
             AklimeMod_PlayedTime:DeleteAll()
-        end)
+        end, nil, true)
     end
 
 end  -- addQoLNodes
@@ -1992,14 +2058,42 @@ local categories = {
 }
 
 local function SetSelected(clickedButton)
-    LSV():FindFrameByPredicate(function(btn) btn.selectedTexture:Hide() end)
-    clickedButton.selectedTexture:Show()
+    LSV():FindFrameByPredicate(function(btn)
+        btn._selected = false
+        AklimeMod_ApplyRowTheme(btn)
+        if btn.name then btn.name:SetTextColor(1, 1, 1, 1) end
+    end)
+    clickedButton._selected = true
+    AklimeMod_ApplyRowTheme(clickedButton)
+    -- Dunkler Text auf der goldenen Auswahl-Fuellung
+    if clickedButton.name then clickedButton.name:SetTextColor(0.12, 0.06, 0.02, 1) end
 end
 
+-- Abgerundete Box: Tooltip-Rand liefert die runden Ecken,
+-- Fuellung und Rahmenfarbe kommen aus AklimeMod_ApplyRowTheme
+local CATEGORY_BACKDROP = {
+    bgFile   = "Interface\\BUTTONS\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    edgeSize = 12,
+    insets   = { left = 3, right = 3, top = 3, bottom = 3 },
+}
+
 local function LeftInitializer(button, data)
+    if not button._isCategory then
+        button._isCategory = true
+        button:SetBackdrop(CATEGORY_BACKDROP)
+        button:SetScript("OnEnter", function(self)
+            local a = AklimeMod_Theme and AklimeMod_Theme.accent
+            if a then self:SetBackdropBorderColor(a.r, a.g, a.b, 1) end
+        end)
+        button:SetScript("OnLeave", function(self)
+            AklimeMod_ApplyRowTheme(self)
+        end)
+    end
+    AklimeMod_ApplyRowTheme(button)
     button.name:SetText(data.name)
     button:SetScript("OnClick", function(self)
-        if self.selectedTexture:IsShown() then return end
+        if self._selected then return end
         SetSelected(self)
         data.callback()
     end)

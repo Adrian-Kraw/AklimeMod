@@ -156,6 +156,7 @@ end
 local function applyToChatFrame(chatFrameName, mc, bgc, boc, cc, tc, des)
     for _,tex in pairs({
         _G[chatFrameName.."EditBoxLeft"], _G[chatFrameName.."EditBoxMid"], _G[chatFrameName.."EditBoxRight"],
+        _G[chatFrameName.."EditBoxFocusLeft"], _G[chatFrameName.."EditBoxFocusMid"], _G[chatFrameName.."EditBoxFocusRight"],
     }) do if tex then tex:SetDesaturation(des); tex:SetVertexColor(mc[1],mc[2],mc[3],mc[4]) end end
     for _,tex in pairs({
         _G[chatFrameName.."Background"], _G[chatFrameName.."ButtonFrameBackground"],
@@ -182,10 +183,15 @@ local function applyToChatFrame(chatFrameName, mc, bgc, boc, cc, tc, des)
         local stb = cf.ScrollToBottomButton:GetNormalTexture()
         if stb then stb:SetDesaturation(des); stb:SetVertexColor(cc[1],cc[2],cc[3],cc[4]) end
     end
-    -- Tab
+    -- Tab: inaktive, aktive und Hover-Texturen (sonst bleibt der
+    -- gerade aktive Reiter ungefaerbt)
     local tab = _G[chatFrameName.."Tab"]
     if tab then
-        for _,tex in pairs({ tab.Left, tab.Middle, tab.Right }) do
+        for _,tex in pairs({
+            tab.Left, tab.Middle, tab.Right,
+            tab.ActiveLeft, tab.ActiveMiddle, tab.ActiveRight,
+            tab.HighlightLeft, tab.HighlightMiddle, tab.HighlightRight,
+        }) do
             if tex then tex:SetDesaturation(des); tex:SetVertexColor(tc[1],tc[2],tc[3],tc[4]) end
         end
     end

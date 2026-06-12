@@ -42,6 +42,18 @@ function AklimeMod_ApplyEliteFrame(style)
     tex:ClearAllPoints()
     tex:SetPoint("TOPLEFT", PlayerFrame.PlayerFrameContainer, "TOPLEFT", mode.x, mode.y)
     tex:SetDesaturated(mode.desaturated)
+
+    -- Faerbung durch den Colorizer-Skin "Elite Frame" (Gruppe Addons).
+    -- Hier statt im Skin selbst, damit Style-Wechsel und spaeteres
+    -- Aktivieren die Farbe automatisch mitnehmen.
+    local C = AklimeMod_Colorizer
+    if C and C.IsEnabled and C:IsEnabled("eliteFrame") then
+        local r, g, b, a = C:GetColor("eliteFrame", "main")
+        tex:SetDesaturated(true)
+        tex:SetVertexColor(r, g, b, a)
+    else
+        tex:SetVertexColor(1, 1, 1, 1)
+    end
     tex:Show()
 end
 

@@ -239,12 +239,100 @@ local function subColorInitializer(button, node)
 end
 
 -- ============================================================
+-- Alles-faerben-Zeile: setzt alle Farb-Slots EINES Skins auf
+-- dieselbe Farbe (analog zur Globalfarbe, aber nur ein Skin)
+-- ============================================================
+local function skinAllColorInitializer(button, node)
+    local d = node:GetData()
+    local C = AklimeMod_Colorizer
+
+    if button.followClassColor then button.followClassColor:Hide() end
+    if button.name then button.name:SetText(d.colorLabel or "") end
+
+    local function getColors()
+        local db = AklimeModDB.colorizer[d.skinKey]
+        return db and db.colors
+    end
+
+    local function refreshSwatch()
+        local colors = getColors()
+        local co = colors and colors.main
+        if button.colorPicker and button.colorPicker.swatch and co then
+            button.colorPicker.swatch:SetAtlas(nil)
+            button.colorPicker.swatch:SetColorTexture(co.r, co.g, co.b, 1)
+        end
+    end
+    refreshSwatch()
+
+    local function applySkin()
+        if C:IsEnabled(d.skinKey) then
+            local skin = C.skins[d.skinKey]
+            if skin then pcall(function() skin:apply() end) end
+        end
+    end
+
+    local function setAll(r, g, b, a)
+        local colors = getColors()
+        local skin = C.skins[d.skinKey]
+        if not colors or not skin or not skin.colors then return end
+        for ck in pairs(skin.colors) do
+            colors[ck] = { r = r, g = g, b = b, a = a, followClassColor = false }
+        end
+        applySkin()
+        refreshSwatch()
+    end
+
+    if button.colorPicker then
+        button.colorPicker:SetEnabled(true)
+        button.colorPicker:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine(d.colorLabel or "", 1, 1, 1)
+            GameTooltip:AddLine(L["color_global_desc"] or "Sets this color for all color slots", 0.7, 0.7, 0.7)
+            GameTooltip:Show()
+        end)
+        button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        button.colorPicker:SetScript("OnClick", function()
+            local colors = getColors()
+            if not colors then return end
+            -- Snapshot fuer Abbrechen: stellt die individuellen Farben wieder her
+            local snapshot = {}
+            for ck, co in pairs(colors) do
+                snapshot[ck] = { r = co.r, g = co.g, b = co.b, a = co.a, followClassColor = co.followClassColor }
+            end
+            local start = colors.main or { r = 0.28, g = 0.28, b = 0.28, a = 1 }
+            local function onChange()
+                local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+                local na = ColorPickerFrame:GetColorAlpha()
+                setAll(nr, ng, nb, na)
+            end
+            ColorPickerFrame:Hide()
+            ColorPickerFrame:SetupColorPickerAndShow({
+                swatchFunc  = onChange,
+                opacityFunc = onChange,
+                cancelFunc  = function()
+                    local cur = getColors()
+                    if cur then
+                        for ck, co in pairs(snapshot) do cur[ck] = co end
+                    end
+                    applySkin()
+                    refreshSwatch()
+                end,
+                hasOpacity = true,
+                opacity    = start.a or 1,
+                r = start.r, g = start.g, b = start.b,
+            })
+        end)
+    end
+end
+
+-- ============================================================
 -- Skin-Header Initializer
 -- ============================================================
 local function skinHeaderInitializer(button, node)
     local d = node:GetData()
     local C = AklimeMod_Colorizer
 
+    AklimeMod_ApplyRowTheme(button)
     if button.name then button.name:SetText(d.name or "") end
     button.enableButton:SetChecked(C:IsEnabled(d.skinKey))
 
@@ -344,6 +432,7 @@ end
 -- ============================================================
 local function separatorInitializer(frame, node)
     local data = node:GetData()
+    AklimeMod_ApplyRowTheme(frame)
     if not frame.label then return end
     frame.label:SetText(data.label or "")
     if data.centered then
@@ -354,8 +443,9 @@ local function separatorInitializer(frame, node)
         frame.label:SetPoint("LEFT",  frame, "LEFT",  0, 0)
         frame.label:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
     elseif data.sublabel then
-        frame.label:SetFont(GameFontHighlightSmall:GetFont())
-        frame.label:SetTextColor(0.65, 0.65, 0.65, 1)
+        -- Unter-Ueberschrift: gleiche Position, aber besser lesbar
+        frame.label:SetFont(GameFontHighlight:GetFont())
+        frame.label:SetTextColor(0.75, 0.75, 0.75, 1)
         frame.label:SetJustifyH("LEFT")
         frame.label:ClearAllPoints()
         frame.label:SetPoint("LEFT", frame, "LEFT", 8, 0)
@@ -378,6 +468,8 @@ function AklimeMod_ColorizerRightFactory(factory, node)
         factory(t, skinHeaderInitializer)
     elseif t == "AklimeMod_SubColorTemplate" and d.isGlobalColor then
         factory(t, globalColorInitializer)
+    elseif t == "AklimeMod_SubColorTemplate" and d.skinAllColor then
+        factory(t, skinAllColorInitializer)
     elseif t == "AklimeMod_SubColorTemplate" then
         factory(t, subColorInitializer)
     elseif t == "AklimeMod_ToggleTemplate" and d.toggleKey then
@@ -397,6 +489,7 @@ function AklimeMod_ColorizerRightFactory(factory, node)
     elseif t == "AklimeMod_ModuleHeaderTemplate" then
         factory(t, function(button, nd)
             local data = nd:GetData()
+            AklimeMod_ApplyRowTheme(button)
             if button.name then button.name:SetText(data.name or "") end
             button.enableButton:SetChecked(data.getEnabled())
 
@@ -442,8 +535,20 @@ function AklimeMod_ColorizerRightFactory(factory, node)
     elseif t == "AklimeMod_ActionButtonTemplate" then
         factory(t, function(frame, nd)
             local data = nd:GetData()
-            if frame.label then frame.label:SetText(data.label or "") end
-            frame:SetScript("OnClick", function() if data.onClick then data.onClick() end end)
+            local btn = frame.button
+            if not btn then return end
+            btn:Show()
+            AklimeMod_StyleActionButton(btn)
+            btn.label:SetText(data.label or "")
+            btn:SetWidth(math.max(180, btn.label:GetStringWidth() + 44))
+            btn:SetScript("OnClick", function(self)
+                if not data.onClick then return end
+                if data.confirm then
+                    AklimeMod_Confirm(data.label, data.onClick)
+                else
+                    data.onClick(self)
+                end
+            end)
         end)
     elseif t == "AklimeMod_SliderTemplate" then
         factory(t, AklimeMod_SliderInitializer)
