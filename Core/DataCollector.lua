@@ -286,6 +286,8 @@ local function CollectToonData()
     t.Money    = GetMoney()
     t.LastSeen = time()
     t.MaxXP    = UnitXPMax("player")
+    -- GUID fuer eindeutige Zuordnung bei Waehrungs-Transfers
+    t.GUID     = UnitGUID("player")
 
     -- Wartungsmodus/Resting
     t.isResting = IsResting()
@@ -354,6 +356,124 @@ local function TrackInstanceEntry()
 end
 
 -- ============================================================
+-- Waehrungs-Transfer zwischen eigenen Chars (Account-Waehrungen)
+-- Beim Transfer aendert sich der Stand des Quell-Chars, ohne dass er
+-- eingeloggt ist. Nach jedem Transfer werden deshalb die echten Salden
+-- aller Chars vom Server geholt und in die Tracker-DB geschrieben.
+-- ============================================================
+
+local function NormRealm(realm)
+    return (realm or ""):gsub("[%s%-']", ""):lower()
+end
+
+-- Findet den Toon-Key zu einem Account-Currency-Eintrag.
+-- Reihenfolge: GUID (eindeutig), voller Name mit Realm, eindeutiger Kurzname.
+local function FindToonKey(db, entry)
+    if entry.characterGUID then
+        for key, toon in pairs(db.Toons) do
+            if toon.GUID == entry.characterGUID then return key end
+        end
+    end
+    local full = entry.fullCharacterName
+    if full and full ~= "" then
+        local n, r = full:match("^([^%-]+)%-(.+)$")
+        if n and r then
+            local rNorm = NormRealm(r)
+            for key in pairs(db.Toons) do
+                local kn, kr = key:match("^(.-)%s*%-%s*(.+)$")
+                if kn == n and NormRealm(kr) == rNorm then return key end
+            end
+        end
+    end
+    if entry.characterName then
+        local found, count = nil, 0
+        for key in pairs(db.Toons) do
+            local kn = key:match("^(.-)%s*%-")
+            if kn == entry.characterName then
+                found = key
+                count = count + 1
+            end
+        end
+        if count == 1 then return found end
+    end
+    return nil
+end
+
+local function SyncCurrencyFromAccountData(currencyID)
+    local db = GetTrackerDB()
+    if not db or not C_CurrencyInfo.FetchCurrencyDataFromAccountCharacters then return end
+    local ok, list = pcall(C_CurrencyInfo.FetchCurrencyDataFromAccountCharacters, currencyID)
+    if not ok or type(list) ~= "table" then return end
+    for _, entry in ipairs(list) do
+        local key = FindToonKey(db, entry)
+        local toon = key and db.Toons[key]
+        if toon and type(entry.quantity) == "number" then
+            toon.currency = toon.currency or {}
+            toon.currency[currencyID] = toon.currency[currencyID] or {}
+            toon.currency[currencyID].amount = entry.quantity
+        end
+    end
+    if AklimeModCTFrame and AklimeModCTFrame:IsShown() and AklimeMod_CT_Refresh then
+        AklimeMod_CT_Refresh()
+    end
+end
+
+-- Waehrungen mit ausstehendem Server-Abgleich nach einem Transfer
+local currencySyncPending = {}
+
+-- Frische Daten anfordern und abgleichen. Timer-Fallbacks (1s und 3s)
+-- greifen, falls das ACCOUNT_CHARACTER-Event nie feuert.
+local function RequestAndSync(cid)
+    currencySyncPending[cid] = true
+    if C_CurrencyInfo.RequestCurrencyDataForAccountCharacters then
+        pcall(C_CurrencyInfo.RequestCurrencyDataForAccountCharacters, cid)
+    end
+    C_Timer.After(1, function()
+        if currencySyncPending[cid] then SyncCurrencyFromAccountData(cid) end
+    end)
+    C_Timer.After(3, function()
+        if currencySyncPending[cid] then
+            currencySyncPending[cid] = nil
+            SyncCurrencyFromAccountData(cid)
+        end
+    end)
+end
+
+-- Zweiter Ausloeser neben dem Log-Event: der Transfer-Klick selbst.
+-- Die Argumente werden defensiv durchsucht, jede Zahl die eine gueltige
+-- Waehrungs-ID ist wird abgeglichen (ueberzaehlige Syncs sind unschaedlich,
+-- es wird immer nur der Serverstand uebernommen).
+if C_CurrencyInfo.RequestCurrencyTransfer then
+    hooksecurefunc(C_CurrencyInfo, "RequestCurrencyTransfer", function(...)
+        for i = 1, select("#", ...) do
+            local v = select(i, ...)
+            if type(v) == "number" and v > 0 then
+                local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, v)
+                if ok and info and info.name and info.name ~= "" then
+                    -- Verzoegert: der Server braucht einen Moment zum Verbuchen
+                    C_Timer.After(0.5, function() RequestAndSync(v) end)
+                end
+            end
+        end
+    end)
+end
+
+-- Eigener Char: Waehrungsstand bei jeder Aenderung nachziehen (gebuendelt)
+local ownCurrencyDirty = false
+local function CollectOwnCurrenciesSoon()
+    if ownCurrencyDirty then return end
+    ownCurrencyDirty = true
+    C_Timer.After(1, function()
+        ownCurrencyDirty = false
+        local db = GetTrackerDB()
+        local toonKey = GetToonKey()
+        if db and toonKey and db.Toons[toonKey] then
+            CollectCurrencies(db.Toons[toonKey])
+        end
+    end)
+end
+
+-- ============================================================
 -- Event-Frame
 -- ============================================================
 local eventFrame = CreateFrame("Frame")
@@ -363,8 +483,12 @@ eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 eventFrame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
+eventFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+-- Transfer-Events: pcall falls ein Event in dieser Client-Version fehlt
+pcall(eventFrame.RegisterEvent, eventFrame, "CURRENCY_TRANSFER_LOG_UPDATE")
+pcall(eventFrame.RegisterEvent, eventFrame, "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED")
 
-eventFrame:SetScript("OnEvent", function(self, event)
+eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
         if event == "PLAYER_ENTERING_WORLD" then
             CleanExpiredInstances()
@@ -409,5 +533,43 @@ eventFrame:SetScript("OnEvent", function(self, event)
                 end
             end
         end)
+
+    elseif event == "CURRENCY_DISPLAY_UPDATE" then
+        -- Eigener Char: Stand aktuell halten (looten, ausgeben, Transfer)
+        CollectOwnCurrenciesSoon()
+
+    elseif event == "CURRENCY_TRANSFER_LOG_UPDATE" then
+        -- Ein Transfer wurde verbucht: betroffene Waehrungen ermitteln und
+        -- frische Account-Daten anfordern (Antwort kommt asynchron)
+        if C_CurrencyInfo.FetchCurrencyTransferTransactions then
+            local ok, txs = pcall(C_CurrencyInfo.FetchCurrencyTransferTransactions)
+            if ok and type(txs) == "table" then
+                for _, tx in ipairs(txs) do
+                    local cid = tx and (tx.currencyType or tx.currencyID)
+                    if cid then currencySyncPending[cid] = true end
+                end
+            end
+        end
+        for cid in pairs(currencySyncPending) do
+            if C_CurrencyInfo.RequestCurrencyDataForAccountCharacters then
+                pcall(C_CurrencyInfo.RequestCurrencyDataForAccountCharacters, cid)
+            else
+                -- Keine Request-API: direkt mit dem Cache abgleichen
+                SyncCurrencyFromAccountData(cid)
+                currencySyncPending[cid] = nil
+            end
+        end
+
+    elseif event == "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED" then
+        -- Frische Daten sind da: angeforderte Waehrungen abgleichen
+        if type(arg1) == "number" then
+            SyncCurrencyFromAccountData(arg1)
+            currencySyncPending[arg1] = nil
+        else
+            for cid in pairs(currencySyncPending) do
+                SyncCurrencyFromAccountData(cid)
+                currencySyncPending[cid] = nil
+            end
+        end
     end
 end)
