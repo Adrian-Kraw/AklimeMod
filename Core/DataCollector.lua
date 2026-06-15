@@ -404,15 +404,38 @@ local function SyncCurrencyFromAccountData(currencyID)
     if not db or not C_CurrencyInfo.FetchCurrencyDataFromAccountCharacters then return end
     local ok, list = pcall(C_CurrencyInfo.FetchCurrencyDataFromAccountCharacters, currencyID)
     if not ok or type(list) ~= "table" then return end
+
+    -- Der eingeloggte Char ist in den Account-Daten nie enthalten und wird
+    -- ueber CollectCurrencies separat gepflegt, daher hier ausgenommen.
+    local currentKey = GetToonKey()
+    local seen = {}
     for _, entry in ipairs(list) do
         local key = FindToonKey(db, entry)
-        local toon = key and db.Toons[key]
-        if toon and type(entry.quantity) == "number" then
+        if key and type(entry.quantity) == "number" then
+            seen[key] = true
+            local toon = db.Toons[key]
             toon.currency = toon.currency or {}
             toon.currency[currencyID] = toon.currency[currencyID] or {}
             toon.currency[currencyID].amount = entry.quantity
         end
     end
+
+    -- Die API liefert nur Chars mit Bestand > 0. Ein getrackter Char der
+    -- diese Waehrung hatte aber nicht mehr gelistet ist, hat jetzt 0 (z.B.
+    -- der Quell-Char nach dem Wegtransferieren). Nur abgleichen wenn die
+    -- Account-Daten als bereit gemeldet werden, sonst nicht faelschlich nullen.
+    local ready = (not C_CurrencyInfo.IsAccountCharacterCurrencyDataReady)
+        or C_CurrencyInfo.IsAccountCharacterCurrencyDataReady()
+    if ready then
+        for key, toon in pairs(db.Toons) do
+            if key ~= currentKey and not seen[key]
+            and toon.currency and toon.currency[currencyID]
+            and (toon.currency[currencyID].amount or 0) > 0 then
+                toon.currency[currencyID].amount = 0
+            end
+        end
+    end
+
     if AklimeModCTFrame and AklimeModCTFrame:IsShown() and AklimeMod_CT_Refresh then
         AklimeMod_CT_Refresh()
     end
@@ -421,39 +444,15 @@ end
 -- Waehrungen mit ausstehendem Server-Abgleich nach einem Transfer
 local currencySyncPending = {}
 
--- Frische Daten anfordern und abgleichen. Timer-Fallbacks (1s und 3s)
--- greifen, falls das ACCOUNT_CHARACTER-Event nie feuert.
-local function RequestAndSync(cid)
-    currencySyncPending[cid] = true
-    if C_CurrencyInfo.RequestCurrencyDataForAccountCharacters then
-        pcall(C_CurrencyInfo.RequestCurrencyDataForAccountCharacters, cid)
-    end
-    C_Timer.After(1, function()
-        if currencySyncPending[cid] then SyncCurrencyFromAccountData(cid) end
-    end)
-    C_Timer.After(3, function()
-        if currencySyncPending[cid] then
-            currencySyncPending[cid] = nil
+-- Frische Account-Daten vom Server anfordern (ohne Argument, holt alle
+-- Waehrungen). Die Antwort kommt asynchron ueber das RECEIVED-Event. Der
+-- Timer-Fallback gleicht ab, falls dieses Event nicht feuert.
+local function RequestAccountCurrencyData()
+    pcall(C_CurrencyInfo.RequestCurrencyDataForAccountCharacters)
+    C_Timer.After(2, function()
+        for cid in pairs(currencySyncPending) do
             SyncCurrencyFromAccountData(cid)
-        end
-    end)
-end
-
--- Zweiter Ausloeser neben dem Log-Event: der Transfer-Klick selbst.
--- Die Argumente werden defensiv durchsucht, jede Zahl die eine gueltige
--- Waehrungs-ID ist wird abgeglichen (ueberzaehlige Syncs sind unschaedlich,
--- es wird immer nur der Serverstand uebernommen).
-if C_CurrencyInfo.RequestCurrencyTransfer then
-    hooksecurefunc(C_CurrencyInfo, "RequestCurrencyTransfer", function(...)
-        for i = 1, select("#", ...) do
-            local v = select(i, ...)
-            if type(v) == "number" and v > 0 then
-                local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, v)
-                if ok and info and info.name and info.name ~= "" then
-                    -- Verzoegert: der Server braucht einen Moment zum Verbuchen
-                    C_Timer.After(0.5, function() RequestAndSync(v) end)
-                end
-            end
+            currencySyncPending[cid] = nil
         end
     end)
 end
@@ -488,7 +487,7 @@ eventFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
 pcall(eventFrame.RegisterEvent, eventFrame, "CURRENCY_TRANSFER_LOG_UPDATE")
 pcall(eventFrame.RegisterEvent, eventFrame, "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED")
 
-eventFrame:SetScript("OnEvent", function(self, event, arg1)
+eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
         if event == "PLAYER_ENTERING_WORLD" then
             CleanExpiredInstances()
@@ -539,37 +538,34 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
         CollectOwnCurrenciesSoon()
 
     elseif event == "CURRENCY_TRANSFER_LOG_UPDATE" then
-        -- Ein Transfer wurde verbucht: betroffene Waehrungen ermitteln und
-        -- frische Account-Daten anfordern (Antwort kommt asynchron)
+        -- Ein Transfer wurde verbucht: betroffene Waehrungen aus dem Log
+        -- ermitteln und frische Account-Daten anfordern (Antwort asynchron)
         if C_CurrencyInfo.FetchCurrencyTransferTransactions then
             local ok, txs = pcall(C_CurrencyInfo.FetchCurrencyTransferTransactions)
             if ok and type(txs) == "table" then
                 for _, tx in ipairs(txs) do
-                    local cid = tx and (tx.currencyType or tx.currencyID)
-                    if cid then currencySyncPending[cid] = true end
+                    if tx and tx.currencyType then
+                        currencySyncPending[tx.currencyType] = true
+                    end
                 end
             end
         end
-        for cid in pairs(currencySyncPending) do
-            if C_CurrencyInfo.RequestCurrencyDataForAccountCharacters then
-                pcall(C_CurrencyInfo.RequestCurrencyDataForAccountCharacters, cid)
-            else
-                -- Keine Request-API: direkt mit dem Cache abgleichen
+        if C_CurrencyInfo.RequestCurrencyDataForAccountCharacters then
+            RequestAccountCurrencyData()
+        else
+            -- Keine Request-API: direkt mit dem Cache abgleichen
+            for cid in pairs(currencySyncPending) do
                 SyncCurrencyFromAccountData(cid)
                 currencySyncPending[cid] = nil
             end
         end
 
     elseif event == "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED" then
-        -- Frische Daten sind da: angeforderte Waehrungen abgleichen
-        if type(arg1) == "number" then
-            SyncCurrencyFromAccountData(arg1)
-            currencySyncPending[arg1] = nil
-        else
-            for cid in pairs(currencySyncPending) do
-                SyncCurrencyFromAccountData(cid)
-                currencySyncPending[cid] = nil
-            end
+        -- Frische Account-Daten sind da: alle vorgemerkten Waehrungen abgleichen
+        -- (Event hat keine Payload, daher immer ueber die Pending-Liste)
+        for cid in pairs(currencySyncPending) do
+            SyncCurrencyFromAccountData(cid)
+            currencySyncPending[cid] = nil
         end
     end
 end)

@@ -28,6 +28,10 @@ Colorizer
 * New: Game menu buttons can now be colored
 * Fixed: The active chat tab and the focused chat edit box were not colored along
 
+Character Tracker
+
+* New: Currency amounts now update live after transferring a currency between your characters. The receiving character and the offline source character both show the new balance immediately, no relog needed
+
 **DE**
 
 Heldentum-Tracker
@@ -55,6 +59,10 @@ Colorizer
 * Neu: Elite Frame ist jetzt färbbar (Gruppe Addons)
 * Neu: Die Spielmenü-Buttons sind jetzt färbbar
 * Behoben: Der aktive Chat-Reiter und die fokussierte Eingabezeile wurden nicht mitgefärbt
+
+Charakter-Tracker
+
+* Neu: Währungsstände aktualisieren sich jetzt live nach einem Währungstransfer zwischen deinen Charakteren. Empfangender und abgebender Charakter (auch offline) zeigen sofort den neuen Stand, kein Relog nötig
 
 
 ## 0.9.6
