@@ -32,6 +32,11 @@ Character Tracker
 
 * New: Currency amounts now update live after transferring a currency between your characters. The receiving character and the offline source character both show the new balance immediately, no relog needed
 
+Purchase Confirmation
+
+* Fixed: High cost purchase dialogs ("buy for the following amount") were not auto-confirmed, now they are
+* New: Separate toggle to auto-confirm refund dialogs when selling refundable items back to a vendor
+
 **DE**
 
 Heldentum-Tracker
@@ -63,4 +68,9 @@ Colorizer
 Charakter-Tracker
 
 * Neu: Währungsstände aktualisieren sich jetzt live nach einem Währungstransfer zwischen deinen Charakteren. Empfangender und abgebender Charakter (auch offline) zeigen sofort den neuen Stand, kein Relog nötig
+
+Kaufbestätigung
+
+* Behoben: Teure Kaufdialoge ("für den folgenden Betrag kaufen") wurden nicht automatisch bestätigt, jetzt schon
+* Neu: Eigener Schalter, der Rückerstattungsdialoge beim Rückverkauf umtauschbarer Items automatisch bestätigt
 

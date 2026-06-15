@@ -12,6 +12,12 @@ end
 local AUTO_CONFIRM = {
     CONFIRM_PURCHASE_TOKEN_ITEM         = true,
     CONFIRM_PURCHASE_NONREFUNDABLE_ITEM = true,
+    CONFIRM_HIGH_COST_ITEM              = true,  -- teurer Kauf ("fuer den folgenden Betrag")
+}
+
+-- Rueckverkauf/Rueckerstattung refundbarer Items (eigener Haken)
+local REFUND_CONFIRM = {
+    CONFIRM_REFUND_TOKEN_ITEM = true,
 }
 
 local function TryAccept(popup, idx, which)
@@ -44,8 +50,11 @@ local function Setup()
             -- HookScript("OnShow") statt hooksecurefunc(popup, "Show", ...).
             -- Feuert auf Widget-Ebene unabhaengig davon wie das Frame sichtbar wird.
             popup:HookScript("OnShow", function(self)
-                if not self.which or not AUTO_CONFIRM[self.which] then return end
-                if not GetDB().enabled then return end
+                if not self.which then return end
+                local db = GetDB()
+                local active = (AUTO_CONFIRM[self.which] and db.enabled)
+                    or (REFUND_CONFIRM[self.which] and db.refundEnabled)
+                if not active then return end
                 local which = self.which
 
                 local elapsed = 0
@@ -98,3 +107,5 @@ end)
 
 function M.IsEnabled() return GetDB().enabled == true end
 function M.SetEnabled(v) GetDB().enabled = v and true or false end
+function M.IsRefundEnabled() return GetDB().refundEnabled == true end
+function M.SetRefundEnabled(v) GetDB().refundEnabled = v and true or false end
