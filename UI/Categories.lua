@@ -2071,8 +2071,8 @@ local function SetSelected(clickedButton)
     end)
     clickedButton._selected = true
     AklimeMod_ApplyRowTheme(clickedButton)
-    -- Dunkler Text auf der goldenen Auswahl-Fuellung
-    if clickedButton.name then clickedButton.name:SetTextColor(0.12, 0.06, 0.02, 1) end
+    -- Heller Text auf der tiefen Bernstein-Auswahl
+    if clickedButton.name then clickedButton.name:SetTextColor(1, 0.89, 0.62, 1) end
 end
 
 -- Abgerundete Box: Tooltip-Rand liefert die runden Ecken,

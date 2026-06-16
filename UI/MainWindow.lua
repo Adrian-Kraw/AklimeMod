@@ -22,7 +22,7 @@ AklimeMod_Theme = {
     -- Trennlinien unter Ueberschriften und in Separatoren
     line         = { r = 0.85, g = 0.68,  b = 0.15, a = 0.6 },
     -- Auswahl-Hervorhebung der Kategorie-Buttons
-    selection    = { r = 0.74, g = 0.56,  b = 0.12, a = 1.0 },
+    selection    = { r = 0.40, g = 0.30,  b = 0.11, a = 1.0 },
 }
 
 -- Override fuer Boxen, Linien und Auswahl, gesetzt vom Colorizer-Skin.

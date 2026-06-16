@@ -793,13 +793,26 @@ local function TintGameMenuButtons(r,g,b,a,des)
     end)
 end
 
+-- Buttons je nach Toggle behandeln. Der Standard belaesst Blizzards rote
+-- Originaltextur mit Verlauf und Goldkante. Ist das Einfaerben aktiv, wird die
+-- Textur entsaettigt und mit der gewaehlten Farbe getoent.
+local function ApplyGameMenuButtons()
+    if C:GetToggle("winGameMenu", "colorButtons") then
+        local r,g,b,a = col("winGameMenu","buttons")
+        TintGameMenuButtons(r,g,b,a,1)
+    else
+        TintGameMenuButtons(1,1,1,1,0)
+    end
+end
+
 C:Register("winGameMenu", {
     label="Game Menu", group="Windows",
     colors={
         main={label="Main",r=DM.r,g=DM.g,b=DM.b,a=1,order=1},
         background={label="Background",r=0,g=0,b=0,a=0.7,order=2},
-        buttons={label="Buttons",r=DC.r,g=DC.g,b=DC.b,a=1,order=3},
+        buttons={label="Buttons",r=0.85,g=0.18,b=0.15,a=1,order=3},
     },
+    toggles={colorButtons={label="Color Buttons",default=false}},
     apply=function(self)
         local mr,mg,mb,ma = col("winGameMenu","main")
         local br,bg2,bb,ba = col("winGameMenu","background")
@@ -817,17 +830,13 @@ C:Register("winGameMenu", {
             bg:SetColorTexture(br, bg2, bb, ba)
             bg:SetVertexColor(br, bg2, bb, ba)
         end
-        -- Buttons (rote Standard-Buttons) faerben, auch nach jedem
-        -- Neuaufbau des Menues
-        local cr2,cg2,cb2,ca2 = col("winGameMenu","buttons")
-        TintGameMenuButtons(cr2,cg2,cb2,ca2,1)
+        -- Buttons je nach Toggle nativ lassen oder einfaerben, auch nach jedem
+        -- Neuaufbau des Menues ueber den Hook.
+        ApplyGameMenuButtons()
         if not self._btnHook and GameMenuFrame then
             self._btnHook = true
             local function refresh()
-                if C:IsEnabled("winGameMenu") then
-                    local r,g,b,a = col("winGameMenu","buttons")
-                    TintGameMenuButtons(r,g,b,a,1)
-                end
+                if C:IsEnabled("winGameMenu") then ApplyGameMenuButtons() end
             end
             if type(GameMenuFrame.InitButtons) == "function" then
                 hooksecurefunc(GameMenuFrame, "InitButtons", refresh)
