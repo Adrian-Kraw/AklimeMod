@@ -1,4 +1,6 @@
-## 0.9.7
+## 1.0.0
+
+First stable release / Erste stabile Release-Version.
 
 **EN**
 
