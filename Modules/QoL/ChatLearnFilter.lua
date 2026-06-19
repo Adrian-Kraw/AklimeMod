@@ -79,30 +79,32 @@ local function SuppressBubble(f)
     if IsBubbleEnabled() and f.IsShown and f:IsShown() then f:Hide() end
 end
 
--- The talent alert is an anonymous UIParent child with a FontString region
--- containing the "unspent talent points" text. We find it once by text and cache it.
-local talentBubble = nil
-
+-- Talent alert bubbles are anonymous UIParent children identified by their text.
+-- bubbleHooked (defined above) acts as the cache — once hooked, skip on next scan.
 local BUBBLE_PATTERNS = {
-    "unverteilte Talentpunkt", -- deDE
-    "unspent talent point",    -- enUS
+    "unverteilte Talentpunkt", -- deDE regular
+    "PvP-Talentplatz",         -- deDE PvP
+    "unspent talent point",    -- enUS regular
+    "PvP talent",              -- enUS PvP
 }
 
-local function FindTalentBubble()
-    if talentBubble then return talentBubble end
+local function ApplyBubbleHide()
+    if not IsBubbleEnabled() then return end
     for i = 1, UIParent:GetNumChildren() do
         local f = select(i, UIParent:GetChildren())
-        local ok, nr = pcall(function() return f:GetNumRegions() end)
-        if ok and nr then
-            for j = 1, nr do
-                local r = select(j, f:GetRegions())
-                if r.GetText then
-                    local ok2, t = pcall(function() return r:GetText() end)
-                    if ok2 and t then
-                        for _, pat in ipairs(BUBBLE_PATTERNS) do
-                            if t:find(pat, 1, true) then
-                                talentBubble = f
-                                return f
+        if not bubbleHooked[f] then
+            local ok, nr = pcall(function() return f:GetNumRegions() end)
+            if ok and nr then
+                for j = 1, nr do
+                    local r = select(j, f:GetRegions())
+                    if r.GetText then
+                        local ok2, t = pcall(function() return r:GetText() end)
+                        if ok2 and t then
+                            for _, pat in ipairs(BUBBLE_PATTERNS) do
+                                if t:find(pat, 1, true) then
+                                    SuppressBubble(f)
+                                    break
+                                end
                             end
                         end
                     end
@@ -110,13 +112,6 @@ local function FindTalentBubble()
             end
         end
     end
-    return nil
-end
-
-local function ApplyBubbleHide()
-    if not IsBubbleEnabled() then return end
-    local f = FindTalentBubble()
-    if f then SuppressBubble(f) end
 end
 
 local function HookShowAlert()
