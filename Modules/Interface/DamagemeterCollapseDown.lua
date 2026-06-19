@@ -36,7 +36,6 @@ local function PatchWindow(sw)
     C_Timer.After(0.5, function()
         wdb = GetWindowDB(idx)
         if wdb and wdb.absLeft and wdb.fullH then
-            -- Always restore, regardless of whether minimized or not
             sw._dmcd_absLeft   = wdb.absLeft
             sw._dmcd_absBottom = wdb.absBottom
             sw._dmcd_fullH     = wdb.fullH
@@ -48,6 +47,10 @@ local function PatchWindow(sw)
                 sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", wdb.absLeft, wdb.absBottom)
                 if wdb.fullW then sw:SetWidth(wdb.fullW) end
                 sw:SetHeight(headerH)
+            else
+                -- Expanded: apply saved size only, position is managed by Blizzard
+                if wdb.fullW then sw:SetWidth(wdb.fullW) end
+                sw:SetHeight(wdb.fullH)
             end
         end
     end)
