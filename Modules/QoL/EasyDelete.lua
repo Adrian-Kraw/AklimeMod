@@ -79,6 +79,20 @@ local function BypassEditBox(self)
     end)
 end
 
+-- Extract the required confirmation word from the dialog's visible text.
+-- Blizzard embeds it in quotes, e.g. "Gebt 'ZERSTÖREN' ein" -> "ZERSTÖREN".
+-- This is locale-independent and survives string changes across patches.
+local function GetRequiredTextFromDialog(popup)
+    local textEl = popup.text
+    if textEl and textEl.GetText then
+        local t = textEl:GetText()
+        if t then
+            return t:match("'([^']+)'") or t:match('"([^"]+)"')
+        end
+    end
+    return nil
+end
+
 -- Cases 2-4: intercept popups and automate text entry
 local function HookConfirmDialogs()
     for i = 1, 4 do
@@ -89,26 +103,22 @@ local function HookConfirmDialogs()
                 if not db or not self then return end
                 local which = self.which
 
-                -- Confirm: delete valuable items
+                -- Confirm: delete or destroy valuable items
                 if db.skipConfirm then
-                    local text = GetConfirmText(which)
-                    if text then FillEditBox(self, text); return end
+                    local fallback = GetConfirmText(which)
+                    if fallback then
+                        FillEditBox(self, GetRequiredTextFromDialog(self) or fallback)
+                        return
+                    end
                 end
 
                 -- Unlearn: forget a profession or skill
                 if db.skipUnlearn and which == "UNLEARN_SKILL" then
-                    local text = CONFIRM_UNLEARN_PROFESSION or DELETE_ITEM_CONFIRM_STRING
+                    local text = GetRequiredTextFromDialog(self)
+                        or CONFIRM_UNLEARN_PROFESSION
+                        or DELETE_ITEM_CONFIRM_STRING
                     FillEditBox(self, text)
                     return
-                end
-
-                -- Understood: all other popups with text entry
-                if db.skipUnderstood then
-                    local info = StaticPopupDialogs and StaticPopupDialogs[which]
-                    if info and info.hasEditBox
-                    and not GetConfirmText(which) and which ~= "UNLEARN_SKILL" then
-                        BypassEditBox(self)
-                    end
                 end
             end)
         end
