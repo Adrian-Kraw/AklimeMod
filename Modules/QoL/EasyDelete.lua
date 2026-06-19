@@ -1,17 +1,17 @@
 -- Modules/QoL/EasyDelete.lua
--- Kombiniert aus EasyDelete-Addon + EnhanceQoL:
+-- Streamlines the item delete-confirmation popups:
 --
--- Fall 1: DELETE_ITEM_CONFIRM (normale Items)
---   → EditBox verstecken, Bestätigen-Button direkt freischalten
+-- Case 1: DELETE_ITEM_CONFIRM (normal items)
+--   Hide the edit box and enable the confirm button directly
 --
--- Fall 2: DELETE_GOOD_ITEM / DELETE_GOOD_QUEST_ITEM (wertvolle Items)
---   → "BESTÄTIGEN" automatisch in EditBox eintragen (aus EnhanceQoL)
---   → So muss man den Text nicht mehr eintippen
+-- Case 2: DELETE_GOOD_ITEM / DELETE_GOOD_QUEST_ITEM (valuable items)
+--   Fill the required confirm text into the edit box automatically
+--   so it no longer has to be typed by hand
 
 local isSetup    = false
 local linkDisplay = nil
 
--- Setup: FontString über dem EditBox des Löschen-Popups
+-- Setup: FontString above the edit box of the delete popup
 local function Setup()
     if isSetup then return end
     isSetup = true
@@ -28,7 +28,7 @@ local function Setup()
     end)
 end
 
--- Fall 1: normale Items — EditBox verstecken, Button freischalten
+-- Case 1: normal items. Hide the edit box, enable the button
 local function HandleDeleteConfirm()
     local db = AklimeModDB and AklimeModDB.easyDelete
     if not db or db.skipDelete ~= true then return end
@@ -45,7 +45,7 @@ local function HandleDeleteConfirm()
     end
 end
 
--- Bestätigungstext fuer wertvolle Item-Loeschungen.
+-- Confirmation text for valuable item deletions.
 local function GetConfirmText(which)
     if which == "DELETE_GOOD_ITEM"
     or which == "DELETE_GOOD_QUEST_ITEM"
@@ -57,7 +57,7 @@ local function GetConfirmText(which)
     return nil
 end
 
--- Hilfsfunktion: Text in EditBox setzen und Fokus entfernen
+-- Helper: set text in the edit box and remove focus
 local function FillEditBox(self, text)
     local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
     if editBox then
@@ -67,7 +67,7 @@ local function FillEditBox(self, text)
     end
 end
 
--- Hilfsfunktion: EditBox verstecken und OK-Button aktivieren
+-- Helper: hide the edit box and enable the OK button
 local function BypassEditBox(self)
     C_Timer.After(0, function()
         local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
@@ -79,7 +79,7 @@ local function BypassEditBox(self)
     end)
 end
 
--- Fall 2-4: Popups abfangen und Texteingabe automatisieren
+-- Cases 2-4: intercept popups and automate text entry
 local function HookConfirmDialogs()
     for i = 1, 4 do
         local popup = _G["StaticPopup" .. i]
@@ -89,20 +89,20 @@ local function HookConfirmDialogs()
                 if not db or not self then return end
                 local which = self.which
 
-                -- BESTÄTIGEN: wertvolle Items loeschen
+                -- Confirm: delete valuable items
                 if db.skipConfirm then
                     local text = GetConfirmText(which)
                     if text then FillEditBox(self, text); return end
                 end
 
-                -- VERLERNEN: Beruf oder Fertigkeit vergessen
+                -- Unlearn: forget a profession or skill
                 if db.skipUnlearn and which == "UNLEARN_SKILL" then
                     local text = CONFIRM_UNLEARN_PROFESSION or DELETE_ITEM_CONFIRM_STRING
                     FillEditBox(self, text)
                     return
                 end
 
-                -- VERSTANDEN: alle anderen Popups mit Texteingabe
+                -- Understood: all other popups with text entry
                 if db.skipUnderstood then
                     local info = StaticPopupDialogs and StaticPopupDialogs[which]
                     if info and info.hasEditBox

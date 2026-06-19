@@ -1,7 +1,7 @@
 -- Modules/Interface/DamageMeterCollapseDown.lua
--- Schadensanzeige: leere Fläche nach unten verschwinden lassen.
--- Blizzard versteckt MinimizeContainer aber lässt Frame auf voller Höhe.
--- Wir setzen die Höhe nach dem Klick auf Header-Höhe.
+-- Damage meter: hide the empty area by collapsing it downward.
+-- Blizzard hides the MinimizeContainer but leaves the frame at full height.
+-- We set the height to the header height after the click.
 
 local function GetDB()
     return AklimeModDB and AklimeModDB.damageMeterCollapseDown
@@ -31,12 +31,12 @@ local function PatchWindow(sw)
     local idx    = sw.sessionWindowIndex or 1
     local wdb    = GetWindowDB(idx)
 
-    -- Beim Login: Falls minimiert und Position gespeichert, sofort korrigieren
-    -- und _dmcd_* Variablen aus DB wiederherstellen damit der Click-Handler funktioniert
+    -- On login: if minimized and a position is stored, correct it immediately
+    -- and restore the _dmcd_* variables from the DB so the click handler works
     C_Timer.After(0.5, function()
         wdb = GetWindowDB(idx)
         if wdb and wdb.absLeft and wdb.fullH then
-            -- Immer wiederherstellen, egal ob minimiert oder nicht
+            -- Always restore, regardless of whether minimized or not
             sw._dmcd_absLeft   = wdb.absLeft
             sw._dmcd_absBottom = wdb.absBottom
             sw._dmcd_fullH     = wdb.fullH
@@ -55,7 +55,7 @@ local function PatchWindow(sw)
     mb:HookScript("OnClick", function()
         if not IsEnabled() then return end
 
-        -- Position VOR Blizzards Aktion speichern
+        -- Save the position BEFORE Blizzard's action
         if not sw._dmcd_origPoint then
             local p1, relTo, p2, x, y = sw:GetPoint()
             sw._dmcd_origPoint = { p1, relTo, p2, x, y }
@@ -63,7 +63,7 @@ local function PatchWindow(sw)
             sw._dmcd_fullW = sw:GetWidth()
             sw._dmcd_absLeft   = sw:GetLeft()
             sw._dmcd_absBottom = sw:GetBottom()
-            -- In DB speichern für Reload
+            -- Save to DB for reload
             wdb = GetWindowDB(idx)
             if wdb then
                 wdb.absLeft   = sw._dmcd_absLeft
@@ -81,13 +81,13 @@ local function PatchWindow(sw)
             local fullW  = sw._dmcd_fullW     or sw:GetWidth()
 
             if sw.isMinimized then
-                -- Eingeklappt: Header-Hoehe, absolute Bottom-Position
+                -- Collapsed: header height, absolute bottom position
                 sw:ClearAllPoints()
                 sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
                 sw:SetWidth(fullW)
                 sw:SetHeight(headerH)
             else
-                -- Aufgeklappt: volle Hoehe, gleiche Bottom-Position
+                -- Expanded: full height, same bottom position
                 sw:ClearAllPoints()
                 sw:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
                 sw:SetWidth(fullW)

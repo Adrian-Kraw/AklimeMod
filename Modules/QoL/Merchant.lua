@@ -1,5 +1,5 @@
 -- Modules/QoL/Merchant.lua
--- Zeigt 20 Gegenstände pro Händler-Seite statt 10 (2 Spalten à 10).
+-- Shows 20 items per merchant page instead of 10 (2 columns of 10).
 
 local ITEMS_PER_PAGE_EXPANDED = 20
 local ORIGINAL_ITEMS_PER_PAGE = _G.MERCHANT_ITEMS_PER_PAGE or 10
@@ -10,7 +10,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Cache-Helfer
+-- Cache helpers
 -- ============================================================
 
 local cache = {}
@@ -72,7 +72,7 @@ local function RestoreAll()
 end
 
 -- ============================================================
--- Layout-Funktionen
+-- Layout functions
 -- ============================================================
 
 local M = {}
@@ -251,16 +251,16 @@ function M:Disable()
     self.enabled = false
     _G.MERCHANT_ITEMS_PER_PAGE = ORIGINAL_ITEMS_PER_PAGE
 
-    -- Extra-Slots ausblenden
+    -- Hide extra slots
     for i = ORIGINAL_ITEMS_PER_PAGE + 1, ITEMS_PER_PAGE_EXPANDED do
         local slot = _G["MerchantItem" .. i]
         if slot then slot:Hide() end
     end
 
-    -- Original-Positionen wiederherstellen
+    -- Restore original positions
     RestoreAll()
 
-    -- Blizzard positioniert Item-Slots 1-10 selbst neu
+    -- Blizzard repositions item slots 1-10 itself
     if MerchantFrame and MerchantFrame:IsShown() then
         if MerchantFrame_UpdateMerchantInfo then MerchantFrame_UpdateMerchantInfo() end
     end

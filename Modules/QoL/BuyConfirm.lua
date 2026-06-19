@@ -1,5 +1,5 @@
 -- Modules/QoL/BuyConfirm.lua
--- Kaufbestätigungsdialoge automatisch annehmen.
+-- Automatically accept purchase confirmation dialogs.
 
 local M = {}
 AklimeMod_BuyConfirm = M
@@ -12,10 +12,10 @@ end
 local AUTO_CONFIRM = {
     CONFIRM_PURCHASE_TOKEN_ITEM         = true,
     CONFIRM_PURCHASE_NONREFUNDABLE_ITEM = true,
-    CONFIRM_HIGH_COST_ITEM              = true,  -- teurer Kauf ("fuer den folgenden Betrag")
+    CONFIRM_HIGH_COST_ITEM              = true,  -- expensive purchase ("for the following amount")
 }
 
--- Rueckverkauf/Rueckerstattung refundbarer Items (eigener Haken)
+-- Resale/refund of refundable items (separate hook)
 local REFUND_CONFIRM = {
     CONFIRM_REFUND_TOKEN_ITEM = true,
 }
@@ -23,7 +23,7 @@ local REFUND_CONFIRM = {
 local function TryAccept(popup, idx, which)
     if not popup:IsShown() or popup.which ~= which then return end
 
-    -- Dialog-OnAccept direkt aufrufen (Blizzard-intern identisch mit Button1-Klick).
+    -- Call the dialog's OnAccept directly (internally identical to a Button1 click).
     local dialog = StaticPopupDialogs and StaticPopupDialogs[which]
     if dialog and dialog.OnAccept then
         dialog.OnAccept(popup, popup.data, popup.data2)
@@ -31,7 +31,7 @@ local function TryAccept(popup, idx, which)
         return
     end
 
-    -- Fallback: Button1 klicken.
+    -- Fallback: click Button1.
     local btn = popup.button1 or _G["StaticPopup" .. idx .. "Button1"]
     if btn and btn:IsEnabled() then
         btn:Click()
@@ -47,8 +47,8 @@ local function Setup()
         local popup = _G["StaticPopup" .. i]
         if popup then
             local idx = i
-            -- HookScript("OnShow") statt hooksecurefunc(popup, "Show", ...).
-            -- Feuert auf Widget-Ebene unabhaengig davon wie das Frame sichtbar wird.
+            -- HookScript("OnShow") instead of hooksecurefunc(popup, "Show", ...).
+            -- Fires at the widget level regardless of how the frame becomes visible.
             popup:HookScript("OnShow", function(self)
                 if not self.which then return end
                 local db = GetDB()

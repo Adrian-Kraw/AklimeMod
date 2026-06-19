@@ -1,4 +1,4 @@
--- ColorizerSkins_MicroMenu.lua — 1:1 Port von FrameColor
+-- ColorizerSkins_MicroMenu.lua: micro menu skin definitions for the colorizer.
 
 local C = AklimeMod_Colorizer
 local D = C.defaults
@@ -34,7 +34,7 @@ local function removeMicro(btn)
 end
 
 -- ============================================================
--- Character Micro Button — Portrait (hover-hooks exakt wie FrameColor)
+-- Character micro button portrait. Re-tints the hover textures so they stay themed.
 -- ============================================================
 C:Register("microChar", {
     label  = "Character Info",
@@ -63,7 +63,7 @@ C:Register("microChar", {
 })
 
 -- ============================================================
--- Alle anderen Micro Buttons — identische Struktur
+-- All other micro buttons -- identical structure
 -- ============================================================
 local microButtons = {
     { key="microProfession", label="Professions",             btn="ProfessionMicroButton"    },

@@ -1,5 +1,5 @@
 -- Modules/QoL/Summons.lua
--- Nimmt Beschwörungsanfragen automatisch an.
+-- Automatically accepts summon requests.
 
 local M = {}
 AklimeMod_Summons = M
@@ -30,8 +30,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
     if event ~= "CONFIRM_SUMMON" then return end
     if not GetDB().enabled then return end
 
-    -- TWW: Summoner/Area kommen als Event-Args oder ueber neue C_SummonRequest-API.
-    -- Alte globale Getter-Funktionen existieren in TWW nicht mehr.
+    -- summoner/area come as event args or via the new C_SummonRequest API.
     local summoner = (type(arg1) == "string" and arg1 ~= "") and arg1
                   or (C_SummonRequest and C_SummonRequest.GetSummonerName and C_SummonRequest.GetSummonerName())
                   or (GetSummonConfirmSummoner and GetSummonConfirmSummoner())
@@ -41,7 +40,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
                   or (GetSummonConfirmAreaName and GetSummonConfirmAreaName())
                   or "?"
 
-    -- TWW: ConfirmSummon() wurde durch C_SummonRequest.Accept() ersetzt.
+    -- ConfirmSummon() was replaced by C_SummonRequest.Accept().
     if C_SummonRequest and C_SummonRequest.Accept then
         C_SummonRequest.Accept()
     elseif ConfirmSummon then

@@ -8,9 +8,9 @@ local LSV = function() return AklimeMod_LeftScrollView  end
 local function newDP() return CreateTreeDataProvider() end
 
 -- ============================================================
--- Shared Helfer
+-- Shared helpers
 -- ============================================================
--- Suchfilter-Zustand (globale Suche ueber alle Kategorien)
+-- Search filter state (global search across all categories)
 local currentSearchFilter = ""
 local dummyNode = setmetatable({}, { __index = function() return function() end end })
 local lastCategoryFn = nil
@@ -25,7 +25,7 @@ local function addModule(dp, name, getEnabled, setEnabled)
         getEnabled = getEnabled,
         setEnabled = setEnabled,
     })
-    -- Im Suchmodus aufgeklappt damit Untereintraege direkt sichtbar sind
+    -- Expanded in search mode so subentries are directly visible
     node:SetCollapsed(currentSearchFilter == "")
     return node
 end
@@ -39,7 +39,7 @@ local function addToggle(node, name, getVal, setVal)
     })
 end
 
-local INFO_LINE_H = 14  -- GameFontHighlightSmall Zeilenhoehe (px)
+local INFO_LINE_H = 14  -- GameFontHighlightSmall line height (px)
 
 local function addInfo(node, text)
     local height = 24
@@ -68,7 +68,7 @@ local function addSlider(node, label, min, max, step, getVal, setVal, formatFn)
     })
 end
 
--- confirm = true: vor dem Ausfuehren erscheint ein Ja/Nein-Dialog
+-- confirm = true: a yes/no dialog appears before execution
 local function addAction(node, label, onClick, extent, confirm)
     node:Insert({
         Template = "AklimeMod_ActionButtonTemplate",
@@ -106,16 +106,16 @@ local function ShowScrollView()
 end
 
 -- ============================================================
--- Right Factory fuer QoL / allgemeine Module
--- (Interface / Colorizer hat eigene Factory in ColorizerUI.lua)
+-- Right Factory for QoL / general modules
+-- (Interface / Colorizer has its own factory in ColorizerUI.lua)
 -- ============================================================
 local reloadBtns = nil
 
 local function actionInitializer(frame, node)
     local data = node:GetData()
     if data.label == "RELOAD_BUTTONS" then
-        -- Sonderzeile mit eigenen /rl- und /nl-Buttons, der zentrierte
-        -- Standard-Button wird hier nicht gebraucht
+        -- Special row with its own /rl and /nl buttons, the centered
+        -- default button is not needed here
         if frame.button then frame.button:Hide() end
         if not reloadBtns then
             local lbl1 = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -151,7 +151,7 @@ end
 local function moduleHeaderInitializer(button, node)
     local data = node:GetData()
     AklimeMod_ApplyRowTheme(button)
-    -- Altlast vom Pool-Vorgaenger entfernen, frueher Return ueberspringt das Neusetzen
+    -- Remove leftovers from the pool predecessor, an early return skips the reset
     button._refreshCheckbox = nil
     if not data or type(data.getEnabled) ~= "function" then return end
 
@@ -226,11 +226,11 @@ local function toggleInitializer(button, node)
             self:SetChecked(not self:GetChecked()); return
         end
         data.setVal(self:GetChecked())
-        -- Zustand aus der DB spiegeln, Radio-Optionen bleiben so konsistent
+        -- Mirror the state from the DB, radio options stay consistent this way
         self:SetChecked(data.getVal())
     end)
     button:SetScript("OnClick", function(self, mouseButton)
-        -- Nichts tun — Toggle regelt sich selbst
+        -- Do nothing, the toggle handles itself
     end)
 end
 
@@ -313,14 +313,14 @@ local function mouseColorInitializer(button, node)
     end
 end
 
--- Standard-Factory fuer QoL und andere Kategorien
+-- Default factory for QoL and other categories
 function AklimeMod_RightFactory(factory, node)
     local d = node:GetData()
     local t = d.Template
     if t == "AklimeMod_ModuleHeaderTemplate" then
         factory(t, moduleHeaderInitializer)
     elseif t == "AklimeMod_ToggleTemplate" and d.name then
-        -- normaler Toggle (QoL etc.) — hat .name statt .toggleLabel
+        -- normal toggle (QoL etc.), has .name instead of .toggleLabel
         factory(t, toggleInitializer)
     elseif t == "AklimeMod_SubColorTemplate" and (d.mouseRingColor or d.mouseTrailColor) then
         factory(t, mouseColorInitializer)
@@ -385,8 +385,8 @@ local function GetOrCreateDashboard(parent)
     if dashboardPanel then return dashboardPanel end
     dashboardPanel = CreateFrame("Frame", nil, parent)
     dashboardPanel:SetAllPoints(parent)
-    -- Inhalt liegt in einem Child-Frame, damit er beim Verkleinern des
-    -- Fensters am Panel-Rand abgeschnitten wird statt herauszuragen
+    -- Content lives in a child frame so it is clipped at the panel edge
+    -- when the window is shrunk instead of sticking out
     dashboardPanel:SetClipsChildren(true)
     dashboardPanel:Hide()
 
@@ -440,22 +440,22 @@ local function BuildDashboardContent()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     RSV():SetDataProvider(newDP())
 
-    -- Dashboard Panel immer neu aufbauen damit Commands-Liste aktuell ist
+    -- Always rebuild the dashboard panel so the commands list is current
     if dashboardPanel then dashboardPanel:Hide(); dashboardPanel = nil end
     ShowCustomPanel(GetOrCreateDashboard(AklimeModFrame.rightInset))
 end
 
 -- ============================================================
--- Suche
+-- Search
 -- ============================================================
 local currentBuildFn = nil
--- BuildGlobalSearch und AklimeMod_InitSearch folgen nach den add*Nodes-Definitionen
+-- BuildGlobalSearch and AklimeMod_InitSearch follow after the add*Nodes definitions
 
 -- ============================================================
--- Interface-Tab — Elite/Rare + Colorizer-Baum
+-- Interface tab: Elite/Rare + colorizer tree
 -- ============================================================
 
--- Nur die nicht-Colorizer-Module (fuer globale Suche nutzbar)
+-- Only the non colorizer modules (usable for global search)
 local function addInterfaceNodes(dp)
     local eliteNode = addModule(dp, L["mod_elite_frame"],
         function() return AklimeModDB.eliteFrame.enabled end,
@@ -657,12 +657,12 @@ local function BuildInterfaceContent(filter)
     ShowScrollView()
     currentBuildFn = BuildInterfaceContent
 
-    -- Factory auf Colorizer-Factory umschalten
+    -- Switch the factory to the colorizer factory
     RSV():SetElementFactory(AklimeMod_ColorizerRightFactory, function() end)
 
     local dp = CreateTreeDataProvider()
 
-    -- Erweiterte Factory (Elite + Rare Support)
+    -- Extended factory (Elite + Rare support)
     local function extendedFactory(factory, node)
         local d = node:GetData()
         if d.Template == "AklimeMod_ModuleHeaderTemplate" then
@@ -672,7 +672,7 @@ local function BuildInterfaceContent(filter)
         elseif d.Template == "AklimeMod_SubColorTemplate" and (d.mouseRingColor or d.mouseTrailColor) then
             factory(d.Template, mouseColorInitializer)
         else
-            -- Alle Colorizer-Templates
+            -- All colorizer templates
             AklimeMod_ColorizerRightFactory(factory, node)
         end
     end
@@ -706,14 +706,14 @@ local function BuildInterfaceContent(filter)
                 else
                     AklimeModDB.eliteFrame.style = nil; AklimeMod_RemoveEliteFrame()
                 end
-                -- Geschwister-Haken direkt aktualisieren statt die Sektion
-                -- zu- und wieder aufzuklappen
+                -- Update sibling checks directly instead of collapsing and
+                -- re-expanding the section
                 AklimeMod_RefreshRightToggles()
             end
         )
     end
 
-    -- Seltene Gegner
+    -- Rare enemies
     local rareNode = addModule(dp3, L["mod_rare_enemies"],
         function() return AklimeModDB.rareFrame.enabled end,
         function(v) AklimeModDB.rareFrame.enabled = v; AklimeMod_UpdateRareFrame() end
@@ -734,7 +734,7 @@ local function BuildInterfaceContent(filter)
     )
     addInfo(dungeonEyeNode, L["info_dungeon_eye"])
 
-    -- Raid Frame Zentrierung
+    -- Raid frame centering
     local raidCenterNode = addModule(dp3, L["mod_raid_center"],
         function() return AklimeMod_RaidFrameCenter.IsEnabled() end,
         function(v) AklimeMod_RaidFrameCenter.SetEnabled(v) end
@@ -956,7 +956,7 @@ local function BuildInterfaceContent(filter)
         end
     end
 
-    -- Colorizer-Nodes direkt in dp3 einfügen
+    -- Insert colorizer nodes directly into dp3
     local function insertColorizerNodes(targetDP, searchFilter)
         local C = AklimeMod_Colorizer
 
@@ -966,7 +966,7 @@ local function BuildInterfaceContent(filter)
             centered = true,
         })
 
-        -- Master-Toggle: alle Skins an/aus
+        -- Master toggle: all skins on/off
         local function AllEnabled()
             for _, group in ipairs(C.groupOrder) do
                 for _, key in ipairs(group.keys) do
@@ -988,8 +988,8 @@ local function BuildInterfaceContent(filter)
                     end
                 end
             end
-            -- Nur sichtbare Checkboxen aktualisieren. Ein kompletter Neuaufbau
-            -- wuerde alle aufgeklappten Sektionen wieder zuklappen.
+            -- Only update visible checkboxes. A complete rebuild would
+            -- collapse all expanded sections again.
             AklimeMod_RefreshRightToggles()
         end
 
@@ -1036,7 +1036,7 @@ local function BuildInterfaceContent(filter)
                     sublabel = true,
                 })
 
-                -- Gruppe Master-Toggle
+                -- Group master toggle
                 local grpKeys = group.keys
                 local function GroupAllEnabled()
                     for _, key in ipairs(grpKeys) do
@@ -1091,7 +1091,7 @@ local function BuildInterfaceContent(filter)
                                 end
                             end
 
-                            -- Farben (sortiert)
+                            -- Colors (sorted)
                             if skin.colors then
                                 local sortedColors = {}
                                 for ck, cd in pairs(skin.colors) do
@@ -1108,8 +1108,8 @@ local function BuildInterfaceContent(filter)
                                 end
                             end
 
-                            -- Nur beim eigenen Fenster-Skin: alles auf einmal
-                            -- faerben und alle Farben auf Standard
+                            -- Only for the own window skin: color everything at
+                            -- once and reset all colors to default
                             if key == "winAklimeMod" then
                                 headerNode:Insert({
                                     Template     = "AklimeMod_SubColorTemplate",
@@ -1132,7 +1132,7 @@ local function BuildInterfaceContent(filter)
                                         else
                                             pcall(function() skin:remove() end)
                                         end
-                                        -- Neu aufbauen damit die Farb-Swatches den Standard zeigen
+                                        -- Rebuild so the color swatches show the default
                                         if AklimeMod_BuildInterfaceContent then AklimeMod_BuildInterfaceContent() end
                                     end,
                                 })
@@ -1155,7 +1155,7 @@ AklimeMod_BuildInterfaceContent = BuildInterfaceContent
 local function addQoLNodes(dp)
 
     -- ============================================================
-    -- Chat und Social
+    -- Chat and Social
     -- ============================================================
     if currentSearchFilter == "" then
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_chat_social"], centered = true })
@@ -1337,7 +1337,7 @@ local function addQoLNodes(dp)
     end
 
     -- ============================================================
-    -- Allgemein
+    -- General
     -- ============================================================
     if currentSearchFilter == "" then
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_general"], centered = true })
@@ -1398,7 +1398,7 @@ local function addQoLNodes(dp)
         end
     )
     addInfo(reloadNode, L["info_reload_ui"])
-    -- Sonderzeile braucht Platz fuer zwei Befehls-Buttons untereinander
+    -- Special row needs space for two command buttons stacked vertically
     addAction(reloadNode, "RELOAD_BUTTONS", nil, 70)
 
     local deleteNode
@@ -1699,7 +1699,7 @@ local function addQoLNodes(dp)
     end
 
     -- ============================================================
-    -- Gesundheit
+    -- Health
     -- ============================================================
     if currentSearchFilter == "" then
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_health"], centered = true })
@@ -1731,7 +1731,7 @@ local function addQoLNodes(dp)
     end)
 
     -- ============================================================
-    -- Spielzeit
+    -- Playtime
     -- ============================================================
     if currentSearchFilter == "" then
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_playtime"], centered = true })
@@ -1750,7 +1750,7 @@ local function addQoLNodes(dp)
                     rootDescription:CreateTitle(L["played_no_data"])
                     return
                 end
-                -- Spaltenweise fuellen, maximal 20 Charaktere pro Spalte
+                -- Fill by column, maximum 20 characters per column
                 local columns = math.ceil(#chars / 20)
                 if columns > 1 then
                     rootDescription:SetGridMode(MenuConstants.VerticalGridDirection, columns)
@@ -1765,9 +1765,8 @@ local function addQoLNodes(dp)
                     end)
                 end
             end)
-            -- Menue mittig auf dem Bildschirm zentrieren. Zweiter Versuch
-            -- einen Frame spaeter, falls das Menue seine Position beim
-            -- Layout-Aufbau selbst nochmal setzt.
+            -- Center the menu on the screen. Second attempt one frame later
+            -- in case the menu repositions itself during layout.
             local function centerMenu()
                 local m = menu
                 if (not m or not m.SetPoint) and Menu and Menu.GetManager then
@@ -1857,7 +1856,7 @@ local function BuildCollectingContent()
     RSV():SetElementFactory(AklimeMod_RightFactory, function() end)
     local dp = newDP()
 
-    -- ── Währungen ─────────────────────────────────────────────
+    -- ── Currencies ────────────────────────────────────────────
     dp:Insert({
         Template = "AklimeMod_SeparatorTemplate",
         label    = L["sec_currencies"],
@@ -1873,18 +1872,18 @@ local function BuildCollectingContent()
     }
     local CURR_BY_EXP = {}
     for _, ce in ipairs({
-        -- Saison (Morgenlichtwappen + Saison-Währungen)
+        -- Season (Morgenlight crests + season currencies)
         {id=3310,exp=15},{id=2803,exp=15},{id=3378,exp=15},{id=3418,exp=15},
         {id=3028,exp=15},{id=3356,exp=15},{id=3383,exp=15},{id=3341,exp=15},
         {id=3343,exp=15},{id=3346,exp=15},{id=3347,exp=15},{id=3212,exp=15},
-        -- Dungeon & Schlachtzug
+        -- Dungeon & Raid
         {id=1166,exp=14},
-        -- Spieler gegen Spieler
+        -- Player vs Player
         {id=391,exp=13},{id=2123,exp=13},{id=1792,exp=13},{id=1602,exp=13},
-        -- Verschiedenes
+        -- Miscellaneous
         {id=2588,exp=12},{id=402,exp=12},{id=81,exp=12},
         {id=3363,exp=12},{id=515,exp=12},{id=2032,exp=12},
-        -- Midnight (Content + Tatkraft-Berufswährungen)
+        -- Midnight (content + artisan's acuity profession currencies)
         {id=3373,exp=11},{id=3405,exp=11},{id=3393,exp=11},{id=3316,exp=11},
         {id=3385,exp=11},{id=3376,exp=11},{id=3392,exp=11},{id=3379,exp=11},
         {id=3377,exp=11},{id=3400,exp=11},
@@ -1940,7 +1939,7 @@ local function BuildCollectingContent()
         return "ID:" .. id, "ID:" .. id
     end
 
-    -- Umlaut-normalisierter Sortierschlüssel für A-Z auch auf DE-Client
+    -- Umlaut-normalized sort key for A-Z on DE client as well
     local function CurrSortKey(s)
         if not s then return "" end
         s = s:lower()
@@ -1962,7 +1961,7 @@ local function BuildCollectingContent()
                 Template = "AklimeMod_InfoTextTemplate",
                 text     = "|cFF888888" .. expLabel .. "|r",
             })
-            -- Währungen innerhalb der Erweiterung A-Z sortieren (nach Rohname, umlautnormalisiert)
+            -- Sort currencies within expansion A-Z (by raw name, umlaut-normalized)
             local sorted = {}
             for _, id in ipairs(ids) do
                 local display, raw = GetCurrNameLocal(id)
@@ -2004,7 +2003,7 @@ local function BuildCollectingContent()
 end
 
 -- ============================================================
--- Globale Suche (muss nach allen add*Nodes-Funktionen stehen)
+-- Global search (must come after all add*Nodes functions)
 -- ============================================================
 local function BuildGlobalSearch(filter)
     currentBuildFn = nil
@@ -2034,7 +2033,7 @@ function AklimeMod_InitSearch()
     sb:SetScript("OnTextChanged", function(self, userInput)
         local text = self:GetText()
         if not userInput then
-            -- X-Button oder programmatisches Leeren: Kategorie wiederherstellen
+            -- X button or programmatic clear: restore category
             if text == "" and lastCategoryFn then
                 lastCategoryFn()
             end
@@ -2053,7 +2052,7 @@ function AklimeMod_InitSearch()
 end
 
 -- ============================================================
--- Linke Kategorie-Buttons
+-- Left category buttons
 -- ============================================================
 local categories = {
     { order=1, name="Dashboard",       callback=BuildDashboardContent                        },
@@ -2071,12 +2070,12 @@ local function SetSelected(clickedButton)
     end)
     clickedButton._selected = true
     AklimeMod_ApplyRowTheme(clickedButton)
-    -- Heller Text auf der tiefen Bernstein-Auswahl
+    -- Bright text on the deep amber selection
     if clickedButton.name then clickedButton.name:SetTextColor(1, 0.89, 0.62, 1) end
 end
 
--- Abgerundete Box: Tooltip-Rand liefert die runden Ecken,
--- Fuellung und Rahmenfarbe kommen aus AklimeMod_ApplyRowTheme
+-- Rounded box: the tooltip border provides the rounded corners,
+-- fill and border color come from AklimeMod_ApplyRowTheme
 local CATEGORY_BACKDROP = {
     bgFile   = "Interface\\BUTTONS\\WHITE8X8",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",

@@ -1,6 +1,6 @@
 -- Modules/QoL/DeathSound.lua
--- Spielt einen Sound ab wenn der Charakter stirbt.
--- Wird pro Tod nur einmal abgespielt.
+-- Plays a sound when the character dies.
+-- Plays only once per death.
 
 local SOUND_FILE = "Interface\\AddOns\\AklimeModTools\\Assets\\SqueakyToySound.mp3"
 

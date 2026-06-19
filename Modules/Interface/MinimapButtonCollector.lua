@@ -1,11 +1,11 @@
 -- Modules/Interface/MinimapButtonCollector.lua
--- Sammelt alle Addon-Minimap-Buttons und versteckt sie.
--- Klick: aufklappen nach links.
+-- Collects all addon minimap buttons and hides them.
+-- Click: expand to the left.
 
 local L = AklimeModL or {}
 
 -- ============================================================
--- Ignore-Liste
+-- Ignore list
 -- ============================================================
 local IGNORE = {
     MiniMapTrackingFrame=true, MiniMapMeetingStoneFrame=true,
@@ -21,7 +21,7 @@ local IGNORE = {
 }
 
 -- ============================================================
--- Housing-Erkennung
+-- Housing detection
 -- ============================================================
 local function IsHousingInstance()
     local inInst, instType = IsInInstance()
@@ -69,7 +69,7 @@ local collectorBtn    = nil
 local isOpen          = false
 local storedButtons   = {}
 local expandedButtons = {}
-local suppressHook    = false  -- Verhindert Hook-Loop beim Restore
+local suppressHook    = false  -- Prevents a hook loop during restore
 
 local RADIUS  = 99
 local BTN_SIZE = 32
@@ -88,24 +88,24 @@ local function UpdateCollectorPos()
 end
 
 -- ============================================================
--- Button-Erkennung
+-- Button detection
 -- ============================================================
 local function IsAddonButton(frame)
     if not frame then return false end
 
-    -- Muss Button sein
+    -- Must be a button
     local ok, isBtn = pcall(function() return frame:IsObjectType("Button") end)
     if not ok or not isBtn then return false end
 
-    -- Muss einen Namen haben
+    -- Must have a name
     local name = frame:GetName()
     if not name or name == "" then return false end
 
-    -- Bekannte Ignore-Liste
+    -- Known ignore list
     if IGNORE[name] then return false end
     if frame == collectorBtn then return false end
 
-    -- Bekannte Nicht-Addon-Button-Patterns rausfiltern
+    -- Filter out known non-addon button patterns
     local lname = name:lower()
     if lname:find("handynotes", 1, true) then return false end
     if lname:find("tomtom",     1, true) then return false end
@@ -115,16 +115,16 @@ local function IsAddonButton(frame)
     if lname:find("pin",        1, true) then return false end
     if lname:find("mappin",     1, true) then return false end
 
-    -- AklimeMod eigener Button
+    -- The addon's own button
     if name == "AklimeModMinimapBtn" and not IncludeOwn() then return false end
 
-    -- Größe muss passen (echte Addon-Buttons sind 15-45px)
+    -- Size must match (real addon buttons are 15-45px)
     local ok2, w = pcall(function() return frame:GetWidth() end)
     local ok3, h = pcall(function() return frame:GetHeight() end)
     if not ok2 or not w or w < 15 or w > 50 then return false end
     if not ok3 or not h or h < 15 or h > 50 then return false end
 
-    -- Muss eine Textur haben (sonst ist es ein unsichtbarer Hilfsframe)
+    -- Must have a texture (otherwise it is an invisible helper frame)
     local ok4, regions = pcall(function() return { frame:GetRegions() } end)
     if ok4 and type(regions) == "table" then
         local hasTexture = false
@@ -159,19 +159,19 @@ local function ScanAllMinimapButtons()
 end
 
 -- ============================================================
--- Verstecken / Wiederherstellen
+-- Hide / restore
 -- ============================================================
 local function StoreAndHideAll()
-    -- Bereits bekannte Buttons direkt verstecken, OHNE sie vorher einzublenden.
-    -- btn:Show() wuerde die eigenen OnShow-Handler der Addons ausloesen,
-    -- die die Minimap-Position veraendern koennen.
+    -- Hide already known buttons directly, WITHOUT showing them first.
+    -- btn:Show() would trigger the buttons' own OnShow handlers,
+    -- which can change the minimap position.
     suppressHook = true
     for _, btn in ipairs(storedButtons) do
         btn:Hide()
     end
     suppressHook = false
 
-    -- Nur NEUE sichtbare Buttons suchen, die noch nicht bekannt sind.
+    -- Only look for NEW visible buttons that are not yet known.
     local seen = {}
     for _, btn in ipairs(storedButtons) do
         local name = btn:GetName()
@@ -221,14 +221,14 @@ local function RestoreAll()
 end
 
 -- ============================================================
--- Aufklappen / Einklappen
+-- Expand / collapse
 -- ============================================================
 local CollectorClose  -- forward declaration
 local closeDetector = CreateFrame("Frame")
 local mouseWasDown = false
 
 local function PositionBtn(btn, i)
-    -- Original-Parent und Position speichern (nur einmal)
+    -- Save original parent and position (only once)
     if not btn._mmc_openParent then
         btn._mmc_openParent = btn:GetParent()
     end
@@ -239,7 +239,7 @@ local function PositionBtn(btn, i)
 end
 
 local function RestoreBtn(btn)
-    -- Parent und Anchor wiederherstellen
+    -- Restore parent and anchor
     local origParent = btn._mmc_openParent or btn._mmc_origParent or Minimap
     btn:SetParent(origParent)
     local p = btn._mmc_origPoint
@@ -263,8 +263,8 @@ local function CollectorOpen()
         expandedButtons[#expandedButtons + 1] = btn
     end
 
-    -- Klick irgendwo → zuklappen
-    -- Warten bis Maustaste gedrückt UND wieder losgelassen → dann schließen
+    -- Click anywhere to collapse
+    -- Wait until a mouse button is pressed AND released, then close
     C_Timer.After(0.15, function()
         if not isOpen then return end
         mouseWasDown = false
@@ -300,7 +300,7 @@ CollectorClose = function()
 end
 
 -- ============================================================
--- Collector-Button erstellen
+-- Create the collector button
 -- ============================================================
 local function CreateCollector()
     if collectorBtn then return end
@@ -377,7 +377,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
                 StoreAndHideAll()
             end)
         end
-        -- Sicherheit: falls Button bereits existiert aber disabled
+        -- Safety: in case the button already exists but is disabled
         C_Timer.After(0.1, function()
             if collectorBtn and not IsEnabled() then
                 collectorBtn:Hide()
@@ -397,14 +397,14 @@ frame:SetScript("OnEvent", function(_, event, arg1)
 end)
 
 -- ============================================================
--- Debug-Slash: /akmmmc        -> Status + Winkel
---              /akmmmc X Y    -> Winkel aus Bildschirmkoordinaten setzen
+-- Debug slash: /akmmmc        -> status + angle
+--              /akmmmc X Y    -> set angle from screen coordinates
 -- ============================================================
 SLASH_AKM_MMC1 = "/akmmmc"
 SlashCmdList["AKM_MMC"] = function(input)
     local x, y = input:match("^(-?%d+%.?%d*)%s+(-?%d+%.?%d*)$")
     if x and y then
-        -- Winkel aus X/Y Offset berechnen
+        -- Compute angle from X/Y offset
         local angle = math.deg(math.atan2(tonumber(y), tonumber(x)))
         SetAngle(angle)
         UpdateCollectorPos()
@@ -449,7 +449,7 @@ AklimeMod_MinimapCollector = {
         if IsEnabled() then
             if isOpen then CollectorClose() end
             if not v then
-                -- AklimeMod-Button aus Liste entfernen und an Originalposition zurückbringen
+                -- Remove the addon's own button from the list and move it back to its original position
                 suppressHook = true
                 for i, btn in ipairs(storedButtons) do
                     if btn:GetName() == "AklimeModMinimapBtn" then

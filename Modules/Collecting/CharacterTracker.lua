@@ -1,12 +1,11 @@
 -- Modules/CharacterTracker.lua
--- Charakter-Tracker: Raids + Währungen aus SavedInstancesDB.
--- Vollständig dynamisch. Hover-Tooltip auf Charakter-Namen.
+-- Character tracker: shows raids and currencies per character.
+-- Fully dynamic, with a hover tooltip on character names.
 
 local L = AklimeModL or {}
 
 -- ============================================================
--- Hidden/DNT Currencies die NICHT angezeigt werden sollen
--- (aus SI Currency.lua Kommentare + hiddenCurrency Logik)
+-- Hidden and do-not-track currencies that must not be shown.
 -- ============================================================
 local HIDDEN_CURRENCY_IDS = {
     [2409]=true, [2410]=true, [2411]=true, [2412]=true,  -- DNT Crest Fragments
@@ -20,15 +19,15 @@ local HIDDEN_CURRENCY_IDS = {
     [2045]=true,  -- Dragon Glyph Embers (intern)
 }
 
--- Alle SI Currency-IDs (1:1 aus SI Currency.lua)
-local SI_CURRENCY_IDS = {
-    -- Saison
+-- All currency IDs tracked by the addon.
+local TRACKED_CURRENCY_IDS = {
+    -- Season
     3310, 2803, 3378, 3418, 3028, 3356, 3383, 3341, 3343, 3346, 3347, 3212,
-    -- Dungeon & Schlachtzug
+    -- Dungeon & Raid
     1166,
-    -- Spieler gegen Spieler
+    -- Player vs. Player
     391, 2123, 1792, 1602,
-    -- Verschiedenes
+    -- Miscellaneous
     2588, 402, 81, 3363, 515, 2032,
     -- Midnight
     3373, 3405, 3393, 3316, 3385, 3376, 3392, 3379, 3377, 3400,
@@ -202,8 +201,8 @@ local function TranslateRaidName(name)
     return name
 end
 
--- SI speichert expansionLevel direkt als 0-11 — kein Mapping nötig
--- Nur als Sicherheitsnetz falls alte/fehlerhafte Werte vorkommen
+-- expansionLevel is stored directly as 0 to 11, so no mapping is needed.
+-- This only guards against old or invalid stored values.
 local function NormalizeExpansion(exp)
     if not exp then return 0 end
     if exp >= 0 and exp <= 11 then return exp end
@@ -246,7 +245,7 @@ local function GetDataDB()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 local function ShortName(full)
     return full:match("^(.-)%s*%-") or full
@@ -254,21 +253,21 @@ end
 
 local function ClassCol(lclass)
     if not lclass then return 1, 0.82, 0 end
-    -- RAID_CLASS_COLORS braucht englischen Großbuchstaben-Key (z.B. "WARRIOR")
+    -- RAID_CLASS_COLORS requires an uppercase English key (e.g. "WARRIOR")
     local ci = RAID_CLASS_COLORS and RAID_CLASS_COLORS[lclass:upper()]
     if ci then return ci.r, ci.g, ci.b end
     return 1, 0.82, 0
 end
 
--- Klassenfarbe aus Toon-Daten holen (Class = englisch groß, LClass = lokalisiert)
+-- Get class color from toon data (Class = uppercase English, LClass = localized)
 local function ToonClassCol(toon)
     if not toon then return 1, 0.82, 0 end
-    -- Class ist englisch großgeschrieben (WARRIOR, EVOKER etc.) → direkt für RAID_CLASS_COLORS
+    -- Class is uppercase English (WARRIOR, EVOKER etc.) -- use directly with RAID_CLASS_COLORS
     if toon.Class then
         local ci = RAID_CLASS_COLORS and RAID_CLASS_COLORS[toon.Class:upper()]
         if ci then return ci.r, ci.g, ci.b end
     end
-    -- Fallback LClass (funktioniert auf englischen Clients)
+    -- Fallback to LClass (works on English clients)
     if toon.LClass then
         local ci = RAID_CLASS_COLORS and RAID_CLASS_COLORS[toon.LClass:upper()]
         if ci then return ci.r, ci.g, ci.b end
@@ -278,13 +277,13 @@ end
 
 local function GetBossKills(save)
     if not save then return 0 end
-    -- Direkt aus API (DataCollector speichert save.Killed)
+    -- Direct from API (DataCollector stores save.Killed)
     if save.Killed and save.Killed > 0 then return save.Killed end
-    -- Fallback: Link-Bitmask (aeltere gespeicherte Daten)
+    -- Fallback: link bitmask (older stored data)
     if save.Link then
         local bits = save.Link:match(":(%d+)\124h")
         bits = bits and tonumber(bits)
-        if bits and bits > 1 then  -- > 1 weil isExtended (0/1) nicht zaehlt
+        if bits and bits > 1 then  -- > 1 because isExtended (0/1) does not count
             local k = 0
             while bits > 0 do
                 if bit.band(bits, 1) > 0 then k = k + 1 end
@@ -297,7 +296,7 @@ local function GetBossKills(save)
 end
 
 local function GetBossTotal(save)
-    -- Direkt aus API (DataCollector: numBosses aus GetSavedInstanceInfo)
+    -- Direct from API (DataCollector: numBosses from GetSavedInstanceInfo)
     if save and save.Total and save.Total > 0 then return save.Total end
     -- Fallback: Anzahl gespeicherter Bosse
     if save and save.bosses then
@@ -307,21 +306,21 @@ local function GetBossTotal(save)
     return 0
 end
 
--- Manuelle Expansion-Zuweisung (da C_CurrencyInfo.expansionID oft nil)
--- 1:1 aus SI Currency.lua Struktur — ALLE IDs müssen hier gemappt sein
+-- Manual expansion assignment, since C_CurrencyInfo.expansionID is often nil.
+-- Every tracked currency ID must be mapped here.
 local CURRENCY_EXP = {}
 local function SetExp(exp, ids)
     for _, id in ipairs(ids) do CURRENCY_EXP[id] = exp end
 end
--- Saison (15) — Morgenlichtwappen + Saison-Währungen
+-- Season (15) -- crest currencies + season currencies
 SetExp(15, {3310,2803,3378,3418,3028,3356,3383,3341,3343,3346,3347,3212})
--- Dungeon & Schlachtzug (14)
+-- Dungeon & Raid (14)
 SetExp(14, {1166})
--- Spieler gegen Spieler (13)
+-- Player vs. Player (13)
 SetExp(13, {391,2123,1792,1602})
--- Verschiedenes (12)
+-- Miscellaneous (12)
 SetExp(12, {2588,402,81,3363,515,2032})
--- Midnight (11) — Content + Tatkraft-Berufswährungen
+-- Midnight (11) -- content + profession currencies
 SetExp(11, {3373,3405,3393,3316,3385,3376,3392,3379,3377,3400,
             3256,3257,3258,3260,3261,3262,3263,3264,3265,3266})
 -- The War Within (10)
@@ -352,11 +351,11 @@ local function GetCurrInfo(id)
     if C_CurrencyInfo then
         local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
         if ok and info and info.name and info.name ~= "" then
-            -- Expansion aus manueller Tabelle
-            -- Wenn nicht gemappt → nil zurückgeben (nicht anzeigen)
+            -- Expansion from manual table
+            -- If not mapped, return nil (do not display)
             local exp = CURRENCY_EXP[id]
             if exp == nil then
-                currInfoCache[id] = false  -- false = bekannt aber nicht anzeigen
+                currInfoCache[id] = false  -- false = known but do not display
                 return nil
             end
             currInfoCache[id] = {
@@ -394,12 +393,12 @@ end
 
 local function GetSelectedChars()
     local db   = GetDB()
-    local siDB = GetDataDB()
-    if not siDB then return {} end
+    local trackerDB = GetDataDB()
+    if not trackerDB then return {} end
     local sel = {}
     if db and db.chars then
         for name, on in pairs(db.chars) do
-            if on and siDB.Toons[name] then sel[#sel+1] = name end
+            if on and trackerDB.Toons[name] then sel[#sel+1] = name end
         end
     end
     table.sort(sel)
@@ -407,11 +406,11 @@ local function GetSelectedChars()
 end
 
 local function BuildRaids(sel)
-    local siDB = GetDataDB()
-    if not siDB or not siDB.Instances then return {} end
+    local trackerDB = GetDataDB()
+    if not trackerDB or not trackerDB.Instances then return {} end
     local byExp = {}
-    for instName, inst in pairs(siDB.Instances) do
-        -- Nur echte Raids (maxPlayers > 5), keine Dungeons, keine zufälligen
+    for instName, inst in pairs(trackerDB.Instances) do
+        -- Only real raids (maxPlayers > 5), no dungeons, no random instances
         if inst.Raid and not inst.Random and inst.Show ~= "never"
         and IsRaidExpEnabled(NormalizeExpansion(inst.Expansion or 0)) then
             local exp   = NormalizeExpansion(inst.Expansion or 0)
@@ -443,7 +442,7 @@ local function BuildRaids(sel)
     end
     for _, raids in pairs(byExp) do
         table.sort(raids, function(a,b)
-            -- Weltbosse ans Ende
+            -- World bosses go last
             if a.worldBoss ~= b.worldBoss then return not a.worldBoss end
             return (a.recLevel or 0) > (b.recLevel or 0)
         end)
@@ -452,13 +451,13 @@ local function BuildRaids(sel)
 end
 
 local function BuildCurrencies(sel)
-    local siDB = GetDataDB()
-    if not siDB then return {} end
+    local trackerDB = GetDataDB()
+    if not trackerDB then return {} end
 
-    -- IDs die mind. 1 Char > 0 hat
+    -- IDs where at least 1 character has amount > 0
     local present = {}
     for _, ch in ipairs(sel) do
-        local toon = siDB.Toons[ch]
+        local toon = trackerDB.Toons[ch]
         if toon and toon.currency then
             for id, data in pairs(toon.currency) do
                 if type(id) == "number" and data.amount and data.amount > 0
@@ -470,7 +469,7 @@ local function BuildCurrencies(sel)
     end
 
     local siSet = {}
-    for _, id in ipairs(SI_CURRENCY_IDS) do siSet[id] = true end
+    for _, id in ipairs(TRACKED_CURRENCY_IDS) do siSet[id] = true end
 
     local result = {}
     for id in pairs(present) do
@@ -478,7 +477,7 @@ local function BuildCurrencies(sel)
             local info = GetCurrInfo(id)
             if info then
                 local nameLower = info.name:lower()
-                -- Nur offensichtlich interne/hidden rausfiltern
+                -- Only filter obviously internal/hidden ones
                 if not nameLower:find("%(hidden%)") and not nameLower:find("dnt")
                 and not nameLower:find("personal tracker") then
                     result[#result+1] = { id=id, exp=info.exp, name=info.name, icon=info.icon }
@@ -495,10 +494,10 @@ local function BuildCurrencies(sel)
 end
 
 -- ============================================================
--- Layout-Konstanten
+-- Layout constants
 -- ============================================================
 local ROW_H = 16
-local LAB_W = 260   -- Genug Platz für Raid-Namen
+local LAB_W = 260   -- Enough room for raid names
 local COL_W = 68
 local PAD   = 6
 
@@ -538,14 +537,14 @@ local function CreateUI()
     mainFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
     mainFrame:Hide()
 
-    -- ESC schließt
+    -- ESC closes
     table.insert(UISpecialFrames, "AklimeModCTFrame")
 
     local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", mainFrame, "TOP", 0, -10)
     title:SetText(NORMAL_FONT_COLOR_CODE .. (L["ct_title"] or "Character Tracker") .. FONT_COLOR_CODE_CLOSE)
 
-    -- Gold-Summary oben links
+    -- Gold summary top left
     local goldBtn = CreateFrame("Button", nil, mainFrame)
     goldBtn:SetSize(120, 28)
     goldBtn:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 8, -4)
@@ -557,7 +556,7 @@ local function CreateUI()
     mainFrame.goldBtn   = goldBtn
     mainFrame.goldLabel = goldLabel
 
-    -- Instanz-Timer rechts vom Gold-Label
+    -- Instance timer to the right of the gold label
     local instBtn = CreateFrame("Button", nil, mainFrame)
     instBtn:SetSize(150, 28)
     instBtn:SetPoint("LEFT", goldBtn, "RIGHT", 4, 0)
@@ -565,7 +564,7 @@ local function CreateUI()
     instLabel:SetAllPoints(instBtn)
     instLabel:SetJustifyH("LEFT")
 
-    -- Label dynamisch: zeigt Anzahl kürzlicher Instanzen (eigenes Tracking)
+    -- Dynamic label: shows count of recent instances (own tracking)
     local function GetInstHistory()
         return AklimeModDB and AklimeModDB.tracker and AklimeModDB.tracker.instanceHistory or {}
     end
@@ -603,7 +602,7 @@ local function CreateUI()
                 recent[#recent+1] = e
             end
         end
-        -- Ältester Eintritt zuerst
+        -- Oldest entry first
         table.sort(recent, function(a, b) return a.t < b.t end)
 
         if #recent > 0 then
@@ -633,18 +632,18 @@ local function CreateUI()
     instBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     goldBtn:SetScript("OnEnter", function(self)
-        local siDB = GetDataDB()
-        if not siDB then return end
+        local trackerDB = GetDataDB()
+        if not trackerDB then return end
 
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
         GameTooltip:ClearLines()
         GameTooltip:AddLine("|cFFFFD100" .. (L["ct_gold_overview"] or "Gold Overview") .. "|r")
 
-        -- ALLE bekannten Chars (nicht nur ausgewählte)
+        -- ALL known characters (not just selected ones)
         local byRealm = {}
         local realmOrder = {}
 
-        for name, toon in pairs(siDB.Toons) do
+        for name, toon in pairs(trackerDB.Toons) do
             local realm = name:match("%-(.+)$") or "?"
             if not byRealm[realm] then
                 byRealm[realm] = { total=0, chars={} }
@@ -681,9 +680,9 @@ local function CreateUI()
             GameTooltip:AddLine(" ")
         end
 
-        -- Kriegsmeutengeld
+        -- Warband gold
         local guildTotal = 0
-        for _, toon in pairs(siDB.Toons) do
+        for _, toon in pairs(trackerDB.Toons) do
             if toon.GuildMoney and toon.GuildMoney > 0 then
                 guildTotal = guildTotal + math.floor(toon.GuildMoney / 10000)
             end
@@ -735,7 +734,7 @@ local function CreateUI()
     scroll:SetScrollChild(contentFrame)
 end
 
--- Zeile
+-- Row
 local function MkRow(parent, y, even)
     local f = CreateFrame("Frame", nil, parent)
     f:SetHeight(ROW_H)
@@ -767,15 +766,15 @@ local function MkTxt(parent, text, x, w, font, justify)
     return fs
 end
 
--- Charakter-Header-Button mit Hover-Tooltip (wie SI)
-local function MkCharHeader(parent, y, colX, sel, siDB)
+-- Character header button with a hover tooltip.
+local function MkCharHeader(parent, y, colX, sel, trackerDB)
     local hRow = MkHdr(parent, y)
     for i, name in ipairs(sel) do
-        local toon = siDB.Toons[name]
+        local toon = trackerDB.Toons[name]
         local label = ShortName(name)
         local r, g, b = ToonClassCol(toon)
 
-        -- Unsichtbarer Button über der Spalte für Hover-Tooltip
+        -- Invisible button over the column for hover tooltip
         local btn = CreateFrame("Button", nil, hRow)
         btn:SetSize(COL_W, ROW_H)
         btn:SetPoint("LEFT", hRow, "LEFT", colX + (i-1)*COL_W, 0)
@@ -785,17 +784,17 @@ local function MkCharHeader(parent, y, colX, sel, siDB)
         fs:SetJustifyH("CENTER")
         fs:SetText(string.format("|cFF%02x%02x%02x%s|r", r*255, g*255, b*255, label))
 
-        -- Tooltip mit Char-Infos (wie SI)
+        -- Tooltip with character info.
         local n = name
         btn:SetScript("OnEnter", function(self)
-            local t = siDB.Toons[n]
+            local t = trackerDB.Toons[n]
             if not t then return end
             GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
             GameTooltip:ClearLines()
             local tr, tg, tb = ToonClassCol(t)
             GameTooltip:AddLine(string.format("|cFF%02x%02x%02x%s|r", tr*255, tg*255, tb*255, n))
             if t.Class then
-                -- Erste Buchstabe groß, Rest klein
+                -- First letter uppercase, rest lowercase
                 local class = t.Class:sub(1,1):upper() .. t.Class:sub(2):lower()
                 GameTooltip:AddLine(class, 0.8, 0.8, 0.8)
             end
@@ -827,7 +826,7 @@ local function MkCharHeader(parent, y, colX, sel, siDB)
 end
 
 -- ============================================================
--- Hauptansicht
+-- Main view
 -- ============================================================
 function AklimeMod_CT_Refresh()
     CreateUI()
@@ -835,8 +834,8 @@ function AklimeMod_CT_Refresh()
     view = "main"
     if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText(L["ct_btn_chars"] or "Characters") end
 
-    local siDB = GetDataDB()
-    if not siDB then
+    local trackerDB = GetDataDB()
+    if not trackerDB then
         local fs = contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fs:SetPoint("CENTER", contentFrame, "CENTER")
         fs:SetText(L["ct_no_data"] or "No data. Log in with your characters.")
@@ -853,7 +852,7 @@ function AklimeMod_CT_Refresh()
         contentFrame:Show(); return
     end
 
-    -- Fensterbreite anpassen
+    -- Adjust window width
     local totalW = LAB_W + PAD + #sel * COL_W + 40
     mainFrame:SetWidth(math.max(700, totalW))
     contentFrame:SetWidth(math.max(660, totalW - 40))
@@ -861,14 +860,14 @@ function AklimeMod_CT_Refresh()
     local colX = LAB_W + PAD
     local y    = 4
 
-    -- Charakter-Header mit Hover-Tooltip
-    MkCharHeader(contentFrame, y, colX, sel, siDB)
+    -- Character header with hover tooltip
+    MkCharHeader(contentFrame, y, colX, sel, trackerDB)
     y = y + ROW_H
 
-    -- ── Große Schatzkammer ────────────────────────────────────
+    -- ── Great Vault ───────────────────────────────────────────
     local hasVaultData = false
     for _, ch in ipairs(sel) do
-        local toon = siDB.Toons[ch]
+        local toon = trackerDB.Toons[ch]
         if toon and toon.weeklyVault then hasVaultData = true; break end
     end
 
@@ -890,7 +889,7 @@ function AklimeMod_CT_Refresh()
             MkTxt(row, NORMAL_FONT_COLOR_CODE .. vr.label .. FONT_COLOR_CODE_CLOSE,
                 8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
             for ci, ch in ipairs(sel) do
-                local toon = siDB.Toons[ch]
+                local toon = trackerDB.Toons[ch]
                 local vault = toon and toon.weeklyVault
                 local slots = vault and vault[vr.key]
                 local txt
@@ -908,12 +907,12 @@ function AklimeMod_CT_Refresh()
             y = y + ROW_H
         end
 
-        -- Vierte Zeile: offen = Belohnung verfügbar aber noch nicht abgeholt
+        -- Fourth row: open = reward available but not yet collected
         local rewardRow = MkRow(contentFrame, y, false)
         MkTxt(rewardRow, NORMAL_FONT_COLOR_CODE .. (L["vault_reward"] or "Reward") .. FONT_COLOR_CODE_CLOSE,
             8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
         for ci, ch in ipairs(sel) do
-            local toon = siDB.Toons[ch]
+            local toon = trackerDB.Toons[ch]
             local vault = toon and toon.weeklyVault
             local txt
             if vault and vault.hasRewards then
@@ -941,7 +940,7 @@ function AklimeMod_CT_Refresh()
         y = y + ROW_H
 
         for _, exp in ipairs(expIDs) do
-            -- Trennlinie + Erweiterungs-Header (gleicher Style wie Realm)
+            -- Divider + expansion header (same style as realm)
             y = y + 4
             local sep = contentFrame:CreateTexture(nil, "ARTWORK")
             sep:SetHeight(1)
@@ -966,7 +965,7 @@ function AklimeMod_CT_Refresh()
                     local dc        = DIFF_COLOR[diff] or {r=1,g=1,b=1}
                     local dcHex     = string.format("|cFF%02x%02x%02x", dc.r*255, dc.g*255, dc.b*255)
 
-                    -- Name: wenn mehrere Diffs, Kürzel anhängen
+                    -- Name: append abbreviation when multiple difficulties exist
                     local displayName = raid.name
                     if #activeDiffs > 1 then
                         displayName = raid.name .. " " .. dcHex .. "[" .. diffLabel .. "]" .. FONT_COLOR_CODE_CLOSE
@@ -997,7 +996,7 @@ function AklimeMod_CT_Refresh()
                                 txt = dcHex .. (killed > 0 and tostring(killed) or "L") .. FONT_COLOR_CODE_CLOSE
                             end
 
-                            -- Hover-Button für Boss-Liste
+                            -- Hover button for boss list
                             local btn = CreateFrame("Button", nil, row)
                             btn:SetSize(COL_W, ROW_H)
                             btn:SetPoint("LEFT", row, "LEFT", colX + (ci-1)*COL_W, 0)
@@ -1018,7 +1017,7 @@ function AklimeMod_CT_Refresh()
                                 GameTooltip:AddLine(NORMAL_FONT_COLOR_CODE .. raidName .. FONT_COLOR_CODE_CLOSE
                                     .. "  " .. string.format("|cFF%02x%02x%02x%s|r",
                                         dc2.r*255, dc2.g*255, dc2.b*255, diffLabel2))
-                                local toon = siDB and siDB.Toons and siDB.Toons[charName]
+                                local toon = trackerDB and trackerDB.Toons and trackerDB.Toons[charName]
                                 if toon then
                                     local r, g, b = ToonClassCol(toon)
                                     GameTooltip:AddLine(string.format("|cFF%02x%02x%02x%s|r",
@@ -1034,7 +1033,7 @@ function AklimeMod_CT_Refresh()
                                         0.8,0.8,0.8, 1,0.82,0)
                                 end
                                 GameTooltip:AddLine(" ")
-                                -- Boss-Liste aus gespeichertem save.bosses (von DataCollector)
+                                -- Boss list from stored save.bosses (from DataCollector)
                                 if saveRef.bosses and #saveRef.bosses > 0 then
                                     for _, boss in ipairs(saveRef.bosses) do
                                         if boss.killed then
@@ -1044,7 +1043,7 @@ function AklimeMod_CT_Refresh()
                                         end
                                     end
                                 elseif saveRef.Link then
-                                    -- Fallback: Boss-Namen per LFG-API
+                                    -- Fallback: boss names via LFG API
                                     local lid = saveRef.Link:match("instancelock:[^:]+:(%d+):")
                                     lid = lid and tonumber(lid)
                                     if lid then
@@ -1072,7 +1071,7 @@ function AklimeMod_CT_Refresh()
         end
     end
 
-    -- ── Währungen ─────────────────────────────────────────────
+    -- ── Currencies ───────────────────────────────────────────
     local currencies = BuildCurrencies(sel)
     if #currencies > 0 then
         y = y + 4
@@ -1082,11 +1081,11 @@ function AklimeMod_CT_Refresh()
         wFs:SetText(NORMAL_FONT_COLOR_CODE .. (L["ct_sec_currencies"] or "Currencies") .. FONT_COLOR_CODE_CLOSE)
         y = y + ROW_H
 
-        local lastExp = -999  -- Sentinel der nie matcht
+        local lastExp = -999  -- sentinel that never matches
         for ri, ce in ipairs(currencies) do
             if ce.exp ~= lastExp then
                 lastExp = ce.exp
-                -- Trennlinie
+                -- Divider
                 y = y + 4
                 local sep = contentFrame:CreateTexture(nil, "ARTWORK")
                 sep:SetHeight(1)
@@ -1094,7 +1093,7 @@ function AklimeMod_CT_Refresh()
                 sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -y)
                 sep:SetColorTexture(0.4, 0.35, 0.1, 0.7)
                 y = y + 2
-                -- Expansion-Header (gleicher Style wie Realm-Header)
+                -- Expansion header (same style as realm header)
                 local eHdr = MkHdr(contentFrame, y)
                 local eFs  = eHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 eFs:SetPoint("LEFT", eHdr, "LEFT", 8, 0)
@@ -1109,7 +1108,7 @@ function AklimeMod_CT_Refresh()
                 8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
 
             for ci, ch in ipairs(sel) do
-                local toon = siDB.Toons[ch]
+                local toon = trackerDB.Toons[ch]
                 local amt  = toon and toon.currency and toon.currency[ce.id]
                            and toon.currency[ce.id].amount
                 local txt
@@ -1119,7 +1118,7 @@ function AklimeMod_CT_Refresh()
                     txt = GRAY_FONT_COLOR_CODE .. "-" .. FONT_COLOR_CODE_CLOSE
                 end
 
-                -- Hover-Button: alle Chars für diese Währung anzeigen
+                -- Hover button: show all characters for this currency
                 local btn = CreateFrame("Button", nil, row)
                 btn:SetSize(COL_W, ROW_H)
                 btn:SetPoint("LEFT", row, "LEFT", colX + (ci-1)*COL_W, 0)
@@ -1172,7 +1171,7 @@ function AklimeMod_CT_Refresh()
 end
 
 -- ============================================================
--- Char-Auswahl
+-- Character selection
 -- ============================================================
 function AklimeMod_CT_ShowChars()
     CreateUI()
@@ -1180,15 +1179,15 @@ function AklimeMod_CT_ShowChars()
     view = "chars"
     if mainFrame and mainFrame.charBtn then mainFrame.charBtn:SetText(L["ct_btn_overview"] or "Overview") end
 
-    local siDB = GetDataDB()
+    local trackerDB = GetDataDB()
     local myDB = GetDB()
-    if not siDB or not siDB.Toons or not myDB then
+    if not trackerDB or not trackerDB.Toons or not myDB then
         contentFrame:Show(); return
     end
     myDB.chars = myDB.chars or {}
 
     local toons = {}
-    for name, data in pairs(siDB.Toons) do
+    for name, data in pairs(trackerDB.Toons) do
         toons[#toons+1] = { name=name, data=data }
     end
     table.sort(toons, function(a, b)
@@ -1218,10 +1217,10 @@ function AklimeMod_CT_ShowChars()
         local data  = entry.data
         local realm = name:match("%-(.+)$") or ""
 
-        -- Realm-Header VOR den Chars dieses Realms
+        -- Realm header BEFORE the characters of this realm
         if realm ~= lastRealm then
             lastRealm = realm
-            -- Trennlinie
+            -- Divider
             y = y + 4
             local sep = contentFrame:CreateTexture(nil, "ARTWORK")
             sep:SetHeight(1)
@@ -1229,7 +1228,7 @@ function AklimeMod_CT_ShowChars()
             sep:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -y)
             sep:SetColorTexture(0.4, 0.35, 0.1, 0.7)
             y = y + 2
-            -- Realm-Name
+            -- Realm name
             local rHdr = MkHdr(contentFrame, y)
             local rFs = rHdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             rFs:SetPoint("LEFT", rHdr, "LEFT", 8, 0)
@@ -1239,7 +1238,7 @@ function AklimeMod_CT_ShowChars()
 
         local row = MkRow(contentFrame, y, ri%2==0)
 
-        -- Auswahl-Highlight (grünlich wenn ausgewählt)
+        -- Selection highlight (greenish when selected)
         local selBg = row:CreateTexture(nil, "BACKGROUND")
         selBg:SetAllPoints()
         selBg:SetColorTexture(0.08, 0.35, 0.08, 0.45)
@@ -1269,13 +1268,13 @@ function AklimeMod_CT_ShowChars()
         local r, g, b = ToonClassCol(data)
         MkTxt(row, string.format("|cFF%02x%02x%02x%s|r", r*255, g*255, b*255, dispName),
             36, 200, "GameFontNormalSmall")
-        -- Klasse: erste Buchstabe groß
+        -- Class: first letter uppercase
         local classDisp = data.Class and (data.Class:sub(1,1):upper() .. data.Class:sub(2):lower()) or "-"
         MkTxt(row, classDisp, 240, 130, "GameFontNormalSmall")
         MkTxt(row, tostring(data.Level or "-"), 375, 50, "GameFontNormalSmall")
         MkTxt(row, data.IL and string.format("%.0f", data.IL) or "-", 430, 55, "GameFontNormalSmall")
 
-        -- Löschen-Button
+        -- Delete button
         local delBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
         delBtn:SetSize(60, 16)
         delBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
@@ -1283,7 +1282,7 @@ function AklimeMod_CT_ShowChars()
         delBtn:GetFontString():SetTextColor(1, 0.3, 0.3)
         local delName = name
         delBtn:SetScript("OnClick", function()
-            -- Aus Auswahl und aus Tracker-DB entfernen
+            -- Remove from selection and from tracker DB
             if myDB.chars then myDB.chars[delName] = nil end
             local tdb = AklimeModDB and AklimeModDB.tracker
             if tdb then

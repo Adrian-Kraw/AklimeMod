@@ -1,4 +1,4 @@
--- ColorizerSkins_Windows.lua — 1:1 Port von FrameColor
+-- ColorizerSkins_Windows.lua: window and panel skin definitions for the colorizer.
 
 local C  = AklimeMod_Colorizer
 local D  = C.defaults
@@ -731,8 +731,8 @@ C:Register("winFriends", {
                 local c=bnetAFK and {1,1,0,1} or bnetDND and {1,0,0,1} or {0,1,0,1}
                 FriendsFrameBg:SetVertexColor(c[1],c[2],c[3],c[4])
             end
-            -- Kein hooksecurefunc auf BNGetInfo (würde Stack overflow verursachen)
-            -- Stattdessen: Event bei Status-Änderung
+            -- No hooksecurefunc on BNGetInfo (would cause a stack overflow)
+            -- Instead: event on status change
             if not AklimeMod_FriendsFrame_BNFrame then
                 AklimeMod_FriendsFrame_BNFrame = CreateFrame("Frame")
                 AklimeMod_FriendsFrame_BNFrame:RegisterEvent("BN_INFO_CHANGED")
@@ -759,7 +759,7 @@ C:Register("winFriends", {
         R(FriendsFrameStatusDropdown and FriendsFrameStatusDropdown.Background)
         R(WhoFrameDropdown and WhoFrameDropdown.Background)
         for _,tab in pairs({FriendsFrameTab1,FriendsFrameTab2,FriendsFrameTab3,FriendsFrameTab4,FriendsTabHeaderTab1,FriendsTabHeaderTab2,FriendsTabHeaderTab3}) do SkinTabs(tab,1,1,1,1) end
-        -- Event-Callback deaktivieren
+        -- Disable event callback
         AklimeMod_FriendsFrame_BGCallback = nil
     end,
 })
@@ -767,8 +767,8 @@ C:Register("winFriends", {
 -- ========================================================
 -- Game Menu
 -- ========================================================
--- Die Menue-Buttons kommen aus einem Frame-Pool und werden bei jedem
--- Oeffnen neu aufgebaut, daher Faerbung als eigene Funktion plus Hook.
+-- The menu buttons come from a frame pool and are rebuilt on every
+-- open, so tinting is handled as a separate function plus hook.
 local function EachGameMenuButton(fn)
     local gm = GameMenuFrame
     if not gm then return end
@@ -793,9 +793,9 @@ local function TintGameMenuButtons(r,g,b,a,des)
     end)
 end
 
--- Buttons je nach Toggle behandeln. Der Standard belaesst Blizzards rote
--- Originaltextur mit Verlauf und Goldkante. Ist das Einfaerben aktiv, wird die
--- Textur entsaettigt und mit der gewaehlten Farbe getoent.
+-- Handle buttons depending on the toggle. The default leaves Blizzard's red
+-- original texture with gradient and gold trim. When coloring is enabled,
+-- the texture is desaturated and tinted with the chosen color.
 local function ApplyGameMenuButtons()
     if C:GetToggle("winGameMenu", "colorButtons") then
         local r,g,b,a = col("winGameMenu","buttons")
@@ -822,7 +822,7 @@ C:Register("winGameMenu", {
         end
         local bg = GameMenuFrame.Border and GameMenuFrame.Border.Bg
         if bg then
-            -- Original-Textur cachen beim ersten apply
+            -- Cache original texture on first apply
             if not self._bgOrigTex then
                 self._bgOrigTex = bg:GetTexture()
             end
@@ -830,8 +830,8 @@ C:Register("winGameMenu", {
             bg:SetColorTexture(br, bg2, bb, ba)
             bg:SetVertexColor(br, bg2, bb, ba)
         end
-        -- Buttons je nach Toggle nativ lassen oder einfaerben, auch nach jedem
-        -- Neuaufbau des Menues ueber den Hook.
+        -- Leave buttons native or tint them per toggle, also after every
+        -- menu rebuild via the hook.
         ApplyGameMenuButtons()
         if not self._btnHook and GameMenuFrame then
             self._btnHook = true
@@ -855,7 +855,7 @@ C:Register("winGameMenu", {
         if bg then
             bg:SetDesaturation(0)
             bg:SetVertexColor(1, 1, 1, 1)
-            -- Original Blizzard Textur wiederherstellen
+            -- Restore original Blizzard texture
             if self._bgOrigTex then
                 bg:SetTexture(self._bgOrigTex)
             else
@@ -1368,7 +1368,7 @@ C:Register("winQuest", {
         local mr,mg,mb,ma=col("winQuest","main"); local br,bg2,bb,ba=col("winQuest","background")
         local ir,ig,ib,ia=col("winQuest","borders"); local cr,cg,cb,ca=col("winQuest","controls")
         SkinNS(QuestFrame,mr,mg,mb,ma)
-        -- QuestModelScene nur wenn vorhanden (nicht immer geladen)
+        -- QuestModelScene only when present (not always loaded)
         if QuestModelScene then
             T(QuestModelScene.TopBarBg,mr,mg,mb,ma)
             T(QuestModelScene.Border,mr,mg,mb,ma)
@@ -1377,11 +1377,11 @@ C:Register("winQuest", {
         end
         T(QuestFrameBg,br,bg2,bb,ba)
         SkinNS(QuestFrameInset,ir,ig,ib,ia)
-        -- ScrollBars: QuestFrame selbst hat ScrollBar in 12.0.1
+        -- ScrollBars: QuestFrame itself has a ScrollBar since 12.0.1
         SkinScrollBar(QuestFrame,cr,cg,cb,ca)
         SkinScrollBar(QuestDetailScrollFrame,cr,cg,cb,ca)
         SkinScrollBar(QuestNPCModelTextScrollFrame,cr,cg,cb,ca)
-        -- Hook damit Färbung beim Öffnen erhalten bleibt
+        -- Hook to preserve tinting when the frame opens
         if not C._questHooked then
             C._questHooked = true
             hooksecurefunc("QuestFrameGreetingPanel_Show", function()
@@ -1640,17 +1640,17 @@ C:Register("winCommunities", {
 
 
 -- ========================================================
--- AklimeMod selbst (eigenes Fenster färben)
+-- AklimeMod itself (color own window)
 -- ========================================================
 C:Register("winAklimeMod", {
     label  = "Aklime Mod Tools",
     group  = "Addons",
     colors = {
         main       = { label="Frame",          r=DM.r, g=DM.g,  b=DM.b,  a=1,   order=1 },
-        -- Default #1D1D1D, dunkle Toenung der Stein-Textur
+        -- Default #1D1D1D, dark tint of the stone texture
         background = { label="Background",     r=0.114, g=0.114, b=0.114, a=1,  order=2 },
         borders    = { label="Inset Borders",  r=DR.r, g=DR.g,  b=DR.b,  a=1,   order=3 },
-        -- Defaults entsprechen AklimeMod_Theme (rowBg, rowBorder, line, selection)
+        -- Defaults match AklimeMod_Theme (rowBg, rowBorder, line, selection)
         boxBg      = { label="Box Background", r=0.08, g=0.075, b=0.06,  a=1,   order=4 },
         boxBorder  = { label="Box Borders",    r=0.50, g=0.40,  b=0.12,  a=0.7, order=5 },
         lines      = { label="Lines",          r=0.85, g=0.68,  b=0.15,  a=0.6, order=6 },
@@ -1665,13 +1665,13 @@ C:Register("winAklimeMod", {
         local cr,cg,cb,ca = col("winAklimeMod","controls")
         local frame = AklimeModFrame
         if not frame or not frame.SetBackdropBorderColor then return end
-        -- Fenster: Rahmen (main) und Hintergrund (background)
+        -- Window: border (main) and background
         frame:SetBackdropBorderColor(mr,mg,mb,ma)
         frame:SetBackdropColor(br,bg2,bb,ba)
-        -- Linkes und rechtes Panel: Rahmenfarbe
+        -- Left and right panel: border color
         frame.leftInset:SetBackdropBorderColor(ir,ig,ib,ia)
         frame.rightInset:SetBackdropBorderColor(ir,ig,ib,ia)
-        -- Listen-Boxen, Trennlinien und Kategorie-Auswahl
+        -- List boxes, dividers and category selection
         local g1r,g1g,g1b,g1a = col("winAklimeMod","boxBg")
         local g2r,g2g,g2b,g2a = col("winAklimeMod","boxBorder")
         local l1r,l1g,l1b,l1a = col("winAklimeMod","lines")
@@ -1683,26 +1683,26 @@ C:Register("winAklimeMod", {
             selection = { r=s1r, g=s1g, b=s1b, a=s1a },
         }
         if AklimeMod_RefreshRowTheme then AklimeMod_RefreshRowTheme() end
-        -- Portrait-Ring
+        -- Portrait ring
         local rr,rg2,rb,ra = col("winAklimeMod","ring")
         if frame.portraitRing then
             frame.portraitRing:SetDesaturated(true)
             frame.portraitRing:SetVertexColor(rr,rg2,rb,ra)
         end
-        -- Stein-Textur: Toenung folgt der Background-Farbe, multiplikativ
-        -- auf die natuerliche Textur (weiss = ungetoent)
+        -- Stone texture: tint follows the background color, multiplicative
+        -- on the natural texture (white = untinted)
         if frame.bgTexture then
             frame.bgTexture:SetVertexColor(br,bg2,bb,ba)
         end
-        -- Suchfeld
+        -- Search box
         SkinBox(AklimeModSearchBox, cr,cg,cb,ca)
-        -- ScrollBar der rechten Seite
+        -- Scroll bar of the right panel
         SkinScrollBar(frame.rightInset, cr,cg,cb,ca)
     end,
     remove = function(self)
         local frame = AklimeModFrame
         if not frame or not frame.SetBackdropBorderColor then return end
-        -- Zurueck auf die Theme-Standardfarben
+        -- Restore theme default colors
         local T = AklimeMod_Theme
         if T then
             frame:SetBackdropBorderColor(T.windowBorder.r, T.windowBorder.g, T.windowBorder.b, T.windowBorder.a)
@@ -1725,8 +1725,8 @@ C:Register("winAklimeMod", {
 })
 
 -- ========================================================
--- Elite Frame (faerbt den Elite-Drachen am Player-Frame,
--- sichtbar nur wenn das Elite-Frame-Modul aktiv ist)
+-- Elite Frame (colors the elite dragon on the player frame,
+-- visible only when the elite frame module is active)
 -- ========================================================
 C:Register("eliteFrame", {
     label  = "Elite Frame",
@@ -1734,8 +1734,8 @@ C:Register("eliteFrame", {
     colors = {
         main = { label="Frame", r=DM.r, g=DM.g, b=DM.b, a=1, order=1 },
     },
-    -- Die eigentliche Faerbung passiert in AklimeMod_ApplyEliteFrame,
-    -- die den Skin-Status selbst liest. Hier nur neu anwenden.
+    -- Actual tinting happens in AklimeMod_ApplyEliteFrame,
+    -- which reads the skin state itself. Just re-apply here.
     apply = function(self)
         if AklimeMod_ApplyEliteFrame then AklimeMod_ApplyEliteFrame() end
     end,
@@ -1745,9 +1745,9 @@ C:Register("eliteFrame", {
 })
 
 -- ========================================================
--- Gruppen-Reihenfolge
+-- Group order
 -- ========================================================
--- An Position 1: Addons stehen direkt unter "Alle aktivieren / deaktivieren"
+-- At position 1: Addons appear directly below "Enable all / Disable all"
 table.insert(AklimeMod_Colorizer.groupOrder, 1, {
     label = "Addons",
     keys  = { "winAklimeMod", "eliteFrame" },

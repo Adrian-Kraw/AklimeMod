@@ -1,8 +1,8 @@
 -- Modules/Interface/GearCheck.lua
--- Itemlevel, Sockel und Verzauberung an Equipment-Slots.
--- Sockel: line.type == 3 (locale-unabhaengig), Icon = Sockelloch oder Edelstein
--- Verzauberung: ENCHANTED_TOOLTIP_LINE Pattern (locale-unabhaengig)
--- Linke Spalte: Indikatoren rechts vom Slot. Rechte Spalte: links vom Slot.
+-- Item level, sockets and enchant on equipment slots.
+-- Sockets: line.type == 3 (locale-independent), icon = socket hole or gem
+-- Enchant: ENCHANTED_TOOLTIP_LINE pattern (locale-independent)
+-- Left column: indicators to the right of the slot. Right column: to the left of the slot.
 
 local L = AklimeModL or {}
 
@@ -13,8 +13,8 @@ local GetItemQualCol     = (C_Item and C_Item.GetItemQualityColor)      and C_It
 
 local ENCHANT_PATTERN = ENCHANTED_TOOLTIP_LINE and ENCHANTED_TOOLTIP_LINE:gsub("%%s", "(.+)") or "(.+)"
 
--- Verzauberbare Slots nach Erweiterungsnummer.
--- Neues DLC: neuen Block [N] = { [INVSLOT_...]=true, ... } hinzufuegen.
+-- Enchantable slots by expansion number.
+-- New DLC: add a new block [N] = { [INVSLOT_...]=true, ... }.
 local ENCHANT_SLOTS_BY_EXP = {
     [11] = {
         [INVSLOT_MAINHAND]=true, [INVSLOT_HEAD]=true,
@@ -37,21 +37,21 @@ local ENCHANT_SLOTS_BY_EXP = {
     },
 }
 
--- Linke Spalte des Charakterfensters: Indikatoren erscheinen rechts vom Slot.
--- Rechte Spalte: Indikatoren erscheinen links vom Slot.
--- Waffen unten: Hauptwaffe links → Text links (auswärts), Nebenwaffe rechts → Text rechts (auswärts).
--- Linke Spalte: Helm(1), Hals(2), Schultern(3), Ruecken(15), Brust(5), Hemd(4), Handgelenk(9), Wappenrock(19), Nebenwaffe(17)
--- Rechte Spalte: Handschuhe(10), Guertel(6), Beine(7), Fuesse(8), Ringe(11,12), Schmuck(13,14), Hauptwaffe(16)
+-- Left column of the character frame: indicators appear to the right of the slot.
+-- Right column: indicators appear to the left of the slot.
+-- Weapons at the bottom: main hand left -> text left (outward), off hand right -> text right (outward).
+-- Left column: head(1), neck(2), shoulders(3), back(15), chest(5), shirt(4), wrist(9), tabard(19), off hand(17)
+-- Right column: hands(10), waist(6), legs(7), feet(8), rings(11,12), trinkets(13,14), main hand(16)
 local LEFT_COLUMN = {
-    [1]=true,  -- Helm
-    [2]=true,  -- Hals
-    [3]=true,  -- Schultern
-    [4]=true,  -- Hemd
-    [5]=true,  -- Brust
-    [9]=true,  -- Handgelenk
-    [15]=true, -- Ruecken
-    [17]=true, -- Nebenwaffe
-    [19]=true, -- Wappenrock
+    [1]=true,  -- Head
+    [2]=true,  -- Neck
+    [3]=true,  -- Shoulders
+    [4]=true,  -- Shirt
+    [5]=true,  -- Chest
+    [9]=true,  -- Wrist
+    [15]=true, -- Back
+    [17]=true, -- Off hand
+    [19]=true, -- Tabard
 }
 
 local MAX_SOCKETS    = 3
@@ -85,7 +85,7 @@ local INSPECT_FRAMES = {
 local itemLoadQueue = {}
 
 -- ============================================================
--- Prueffunktion: Verzauberung
+-- Check function: enchant
 -- ============================================================
 
 local function GetEnchantStatus(unit, slotID)
@@ -112,14 +112,14 @@ local function GetEnchantStatus(unit, slotID)
 end
 
 -- ============================================================
--- UI: Overlays pro Slot-Button
+-- UI: overlays per slot button
 -- ============================================================
 
 local function EnsureOverlays(button)
     if button._gearReady then return end
     button._gearReady = true
 
-    -- Sockel-Texturen (bis zu MAX_SOCKETS): Sockelloch oder Edelstein-Icon
+    -- Socket textures (up to MAX_SOCKETS): socket hole or gem icon
     button._gearSockets = {}
     for i = 1, MAX_SOCKETS do
         local tex = button:CreateTexture(nil, "OVERLAY")
@@ -128,13 +128,13 @@ local function EnsureOverlays(button)
         button._gearSockets[i] = tex
     end
 
-    -- Verzauberungs-Text
+    -- Enchant text
     local ench = button:CreateFontString(nil, "OVERLAY")
     ench:SetFont(BADGE_FONT, 11, "OUTLINE")
     ench:Hide()
     button._gearEnchant = ench
 
-    -- Itemlevel unten rechts (auf dem Button)
+    -- Item level bottom right (on the button)
     local ilvl = button:CreateFontString(nil, "OVERLAY")
     ilvl:SetFont(BADGE_FONT, 11, "OUTLINE")
     ilvl:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
@@ -163,7 +163,7 @@ local function UpdateSlotForReal(unit, slotID, button)
 
     local isLeft = LEFT_COLUMN[slotID]
 
-    -- Itemlevel in Qualitaetsfarbe
+    -- Item level in quality color
     local ilvl = GetDetailedItemLvl and GetDetailedItemLvl(itemLink)
     if ilvl and ilvl > 0 then
         local quality = GetInvItemQuality(unit, slotID)
@@ -175,14 +175,14 @@ local function UpdateSlotForReal(unit, slotID, button)
         button._gearILvl:Hide()
     end
 
-    -- Sockel aus Tooltip-Daten lesen (line.type == 3, locale-unabhaengig)
+    -- Read sockets from tooltip data (line.type == 3, locale-independent)
     local socketIcons = {}
     if C_TooltipInfo and C_TooltipInfo.GetInventoryItem then
         local data = C_TooltipInfo.GetInventoryItem(unit, slotID)
         if data then
             for _, line in ipairs(data.lines) do
                 if line.type == 3 then
-                    -- Edelstein eingesetzt: gemIcon. Leer: leftIcon aus Tooltip-Daten (natives WoW-Sockelloch-Icon).
+                    -- Gem inserted: gemIcon. Empty: leftIcon from tooltip data (native WoW socket-hole icon).
                     local icon = line.gemIcon or line.leftIcon or EMPTY_SOCK_TEX
                     socketIcons[#socketIcons + 1] = icon
                 end
@@ -190,7 +190,7 @@ local function UpdateSlotForReal(unit, slotID, button)
         end
     end
 
-    -- Sockel-Texturen positionieren: oben beginnend, nach unten gestapelt
+    -- Position socket textures: starting at the top, stacked downward
     for i = 1, MAX_SOCKETS do
         local tex = button._gearSockets[i]
         if i <= #socketIcons then
@@ -208,7 +208,7 @@ local function UpdateSlotForReal(unit, slotID, button)
         end
     end
 
-    -- Verzauberungs-Text am unteren Rand neben dem Button
+    -- Enchant text at the bottom next to the button
     button._gearEnchant:ClearAllPoints()
     if isLeft then
         button._gearEnchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", SIDE_OFFSET, 0)
@@ -247,7 +247,7 @@ local function UpdateSlot(unit, slotID, button)
 end
 
 -- ============================================================
--- Modul-API
+-- Module API
 -- ============================================================
 AklimeMod_GearCheck = {}
 
@@ -266,7 +266,7 @@ function AklimeMod_GearCheck.SetEnabled(v)
 end
 
 -- ============================================================
--- Events und Hooks
+-- Events and hooks
 -- ============================================================
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")

@@ -1,5 +1,5 @@
 -- Modules/QoL/ReadyCheck.lua
--- Bereitschaftsabfragen automatisch annehmen mit sichtbarem Countdown.
+-- Automatically accept ready checks with a visible countdown.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.readyCheck then return AklimeModDB.readyCheck end

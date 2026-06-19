@@ -1,13 +1,13 @@
 -- Modules/QoL/AutoSellJunk.lua
--- Verkauft automatisch alle grauen Items beim Haendler.
--- Nutzt hooksecurefunc auf MerchantFrame_UpdateMerchantInfo —
--- wird im sicheren Kontext aufgerufen wenn der Haendler geladen ist.
+-- Automatically sells all gray items at the merchant.
+-- Uses hooksecurefunc on MerchantFrame_UpdateMerchantInfo.
+-- Called in a secure context once the merchant is loaded.
 
 local function GetDB()
     return AklimeModDB and AklimeModDB.autoSellJunk
 end
 
-local sold = false  -- Pro Haendler-Besuch nur einmal ausfuehren
+local sold = false  -- Run only once per merchant visit
 
 local function DoSell()
     if sold then return end
@@ -17,8 +17,8 @@ local function DoSell()
     C_MerchantFrame.SellAllJunkItems()
 end
 
--- MerchantFrame_UpdateMerchantInfo laeuft im sicheren Kontext
--- und wird aufgerufen sobald der Haendler vollstaendig geladen ist
+-- MerchantFrame_UpdateMerchantInfo runs in a secure context
+-- and is called once the merchant is fully loaded
 hooksecurefunc("MerchantFrame_UpdateMerchantInfo", DoSell)
 
 local frame = CreateFrame("Frame")

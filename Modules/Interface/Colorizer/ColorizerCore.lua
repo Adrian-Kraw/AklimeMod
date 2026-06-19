@@ -1,5 +1,5 @@
 -- Modules/Interface/Colorizer/ColorizerCore.lua
--- Gemeinsame Basis: Registry, Cache, Helfer, Init
+-- Shared base: registry, cache, helpers, init
 
 AklimeMod_Colorizer = AklimeMod_Colorizer or {}
 local C = AklimeMod_Colorizer
@@ -7,7 +7,7 @@ local C = AklimeMod_Colorizer
 C.skins      = C.skins      or {}
 C.groupOrder = C.groupOrder or {}
 
--- Standard-Farben (wie FrameColor Init.lua)
+-- Default colors used as the base theme for every skin.
 C.defaults = {
     main       = { r=0.28, g=0.28, b=0.28, a=1 },
     background = { r=0.55, g=0.55, b=0.55, a=1 },
@@ -16,7 +16,7 @@ C.defaults = {
     tabs       = { r=0.18, g=0.18, b=0.18, a=1 },
 }
 
--- Klassenfarben (alle 13 WoW-Klassen)
+-- Class colors (all 13 WoW classes)
 C.classColors = {
     DEATHKNIGHT = {r=0.77,g=0.12,b=0.23},
     DEMONHUNTER = {r=0.64,g=0.19,b=0.79},
@@ -42,7 +42,7 @@ function C:Register(key, def)
 end
 
 -- ============================================================
--- Original-Cache (Bug-Fix)
+-- Original-Cache 
 -- ============================================================
 local origCache = {}
 
@@ -89,7 +89,7 @@ function C.RestoreAll(list)
     for _, tex in pairs(list) do C.Restore(tex) end
 end
 
--- Alpha-erhaltend (für Chat-Background etc.)
+-- Alpha preserving (for chat background etc.)
 function C.TintAlpha(tex, r, g, b)
     if not tex then return end
     CacheTex(tex)
@@ -110,7 +110,7 @@ function C.RestoreAlpha(tex)
 end
 
 -- ============================================================
--- Helfer-Funktionen (portiert von FrameColor SkinUtilMixin)
+-- Helper functions for tinting and restoring frame textures.
 -- ============================================================
 
 -- NineSlice
@@ -140,7 +140,7 @@ function C.SkinBox(box, r, g, b, a)
     C.TintAll({ box.Left, box.Middle, box.Right }, r, g, b, a)
 end
 
--- SkinTabs — unterstützt TabSystem und direkte Left/Middle/Right
+-- SkinTabs supports TabSystem and direct Left/Middle/Right
 function C.SkinTabs(tab, r, g, b, a)
     if not tab then return end
     if tab.TabSystem then
@@ -188,7 +188,7 @@ function C.RestoreScrollBar(frame)
     })
 end
 
--- SkinBorderOf — unterstützt frame.Border, frame.BorderTopMiddle, frame.TopLeftTex
+-- SkinBorderOf supports frame.Border, frame.BorderTopMiddle, frame.TopLeftTex
 function C.SkinBorder(frame, r, g, b, a)
     if not frame then return end
     local textures = {}
@@ -239,8 +239,8 @@ function C.RestoreBorder(frame)
     C.RestoreAll(textures)
 end
 
--- LoadOnDemand-Helper: wendet Funktion sofort an wenn AddOn geladen,
--- sonst registriert ADDON_LOADED-Event
+-- LoadOnDemand helper: applies the function immediately if the addon is loaded,
+-- otherwise registers an ADDON_LOADED event
 function C.WhenLoaded(addonName, fn)
     if C_AddOns.IsAddOnLoaded(addonName) then
         fn()
@@ -257,7 +257,7 @@ function C.WhenLoaded(addonName, fn)
 end
 
 -- ============================================================
--- DB-Zugriff
+-- DB access
 -- ============================================================
 function C:GetColor(skinKey, colorKey)
     local db = AklimeModDB.colorizer[skinKey]
@@ -268,7 +268,7 @@ function C:GetColor(skinKey, colorKey)
         if cc then return cc.r, cc.g, cc.b, 1 end
     end
     if co then return co.r, co.g, co.b, co.a end
-    -- Fallback auf Skin-Default
+    -- Fall back to the skin default
     local skin = self.skins[skinKey]
     if skin and skin.colors and skin.colors[colorKey] then
         local d = skin.colors[colorKey]
@@ -277,7 +277,7 @@ function C:GetColor(skinKey, colorKey)
     return 0.28, 0.28, 0.28, 1
 end
 
--- Gibt Farbe als Array {r,g,b,a} zurück (für TintAllRGBA)
+-- Returns the color as an array {r,g,b,a} (for TintAllRGBA)
 function C:GetColorArr(skinKey, colorKey)
     local r,g,b,a = self:GetColor(skinKey, colorKey)
     return {r,g,b,a}
@@ -301,7 +301,7 @@ function C:IsEnabled(skinKey)
 end
 
 -- ============================================================
--- DB-Initialisierung
+-- DB initialization
 -- ============================================================
 function C:InitDB()
     AklimeModDB.colorizer = AklimeModDB.colorizer or {}

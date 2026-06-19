@@ -1,6 +1,6 @@
 -- Modules/QoL/GroupInvites.lua
--- Gruppeneinladungen blockieren oder automatisch annehmen.
--- Blockieren und Auto-Annehmen schließen sich gegenseitig aus.
+-- Block or automatically accept group invites.
+-- Blocking and auto-accept are mutually exclusive.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.groupInvites then return AklimeModDB.groupInvites end
@@ -8,7 +8,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 local function IsGuildMember(name)
     local total = GetNumGuildMembers()
@@ -84,14 +84,14 @@ eventFrame:SetScript("OnEvent", function(_, _, unitName, _, _, _, _, _, unitID)
             return
         end
 
-        -- Kein Filter: alle annehmen
+        -- No filter: accept all
         AcceptGroup()
         StaticPopup_Hide("PARTY_INVITE")
         return
     end
 
     if db.block then
-        -- Ausnahmen prüfen: Einladung trotz Block annehmen
+        -- Check exceptions: accept the invite despite the block
         if db.blockExceptGuild and IsGuildMember(unitName) then return end
         if db.blockExceptFriend and IsFriend(unitID) then return end
         DeclineGroup()

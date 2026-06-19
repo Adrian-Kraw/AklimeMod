@@ -1,29 +1,29 @@
 -- Modules/QoL/ManaWarning.lua
--- Sendet Gruppenwarnung bei 30% (Low Mana) und 10% (OOM) Mana.
+-- Sends a group warning at 30% (Low Mana) and 10% (OOM) mana.
 --
--- Strategie:
---   Primaer: UNIT_POWER_UPDATE + UnitPower("player"). Exakte Schwellen,
---   in und ausser Kampf. Jede Schwelle feuert einmal und wird erst wieder
---   scharf wenn das Mana 5 Punkte ueber der Schwelle liegt. Das verhindert
---   Chat-Spam wenn das Mana genau um die Schwelle pendelt.
+-- Strategy:
+--   Primary: UNIT_POWER_UPDATE + UnitPower("player"). Exact thresholds,
+--   in and out of combat. Each threshold fires once and is only re-armed
+--   when mana is 5 points above the threshold. This prevents
+--   chat spam when mana hovers right around the threshold.
 --
---   Fallback: Im instanzierten Kampf kann Blizzard die Mana-Werte sperren
---   (Secret Values, 12.0). Dann uebernehmen Blizzard-eigene Signale:
---   COMBAT_TEXT_UPDATE "MANA_LOW" fuer Low und der "Nicht genug Mana"
---   Spell-Fail im UIErrorsFrame fuer OOM, je einmal pro Kampf.
+--   Fallback: in instanced combat Blizzard can lock the mana values
+--   (Secret Values, 12.0). Then Blizzard's own signals take over:
+--   COMBAT_TEXT_UPDATE "MANA_LOW" for Low and the "not enough mana"
+--   spell fail in UIErrorsFrame for OOM, once each per combat.
 
 -- ============================================================
--- Konstanten
+-- Constants
 -- ============================================================
 local THRESHOLD_LOW = 30
 local THRESHOLD_OOM = 10
--- Schwelle gilt erst wieder als scharf wenn Mana so viele Punkte drueber liegt
+-- A threshold is only re-armed when mana is this many points above it
 local REARM_MARGIN  = 5
 
 local MSG_LOW = "BEWARE, I'M LOW ON MANA!"
 local MSG_OOM = "OUT OF MANA - BELOW 10%"
 
--- issecretvalue existiert erst seit 12.0
+-- issecretvalue exists only since 12.0
 local issecretvalue = issecretvalue or function() return false end
 
 -- ============================================================
@@ -39,7 +39,7 @@ local function IsEnabled()
 end
 
 -- ============================================================
--- Kanal
+-- Channel
 -- ============================================================
 local INSTANCE_CAT = LE_PARTY_CATEGORY_INSTANCE or 2
 
@@ -50,7 +50,7 @@ local function GetChatChannel()
     return nil
 end
 
--- Gibt true zurueck wenn tatsaechlich gesendet wurde (Solo: false).
+-- Returns true if a message was actually sent (solo: false).
 local function Send(msg)
     local ch = GetChatChannel()
     if not ch then return false end
@@ -61,14 +61,14 @@ end
 -- ============================================================
 -- State
 -- ============================================================
--- Schwellen-Pfad: einmal pro Unterschreitung
+-- Threshold path: once per drop below the threshold
 local firedLow, firedOOM = false, false
--- Fallback-Pfad: einmal pro Low-Phase
+-- Fallback path: once per low phase
 local fallbackLowFired, fallbackOOMFired = false, false
 
--- Blizzards Signale wiederholen sich alle ~10 Sek solange der Zustand
--- anhaelt. Eine groessere Pause zwischen zwei Signalen bedeutet: dazwischen
--- war das Mana erholt, also wieder scharf stellen.
+-- Blizzard's signals repeat every ~10 sec as long as the state
+-- persists. A longer gap between two signals means mana recovered
+-- in between, so re-arm.
 local FALLBACK_REARM_GAP = 15
 local lastFallbackLow, lastFallbackOOM = 0, 0
 
@@ -79,9 +79,9 @@ local function ResetAll()
 end
 
 -- ============================================================
--- Mana lesen
+-- Read mana
 -- ============================================================
--- nil = nicht auswertbar (kein Mana-Nutzer oder Werte gesperrt).
+-- nil = not evaluable (not a mana user or values locked).
 local function GetManaPercent()
     if UnitPowerType("player") ~= Enum.PowerType.Mana then return nil end
     local cur = UnitPower("player", Enum.PowerType.Mana)
@@ -92,19 +92,19 @@ local function GetManaPercent()
 end
 
 -- ============================================================
--- Schwellen-Logik (Primaer-Pfad)
+-- Threshold logic (primary path)
 -- ============================================================
 local function CheckThresholds()
     if not IsEnabled() then return end
     local pct = GetManaPercent()
     if not pct then return end
 
-    -- Rearm: erst deutlich ueber der Schwelle wird wieder scharf gestellt
+    -- Rearm: only re-arms well above the threshold
     if pct >= THRESHOLD_LOW + REARM_MARGIN then firedLow = false end
     if pct >= THRESHOLD_OOM + REARM_MARGIN then firedOOM = false end
 
     if pct <= THRESHOLD_OOM then
-        -- Beide Flags setzen damit nicht zusaetzlich die 30%-Nachricht kommt
+        -- Set both flags so the 30% message does not also fire
         if not firedOOM and Send(MSG_OOM) then
             firedOOM = true
             firedLow = true
@@ -117,7 +117,7 @@ local function CheckThresholds()
 end
 
 -- ============================================================
--- Blizzard-Strings (lokalisiert)
+-- Blizzard strings (localized)
 -- ============================================================
 local S_OUT_OF_MANA = nil
 
@@ -126,7 +126,7 @@ local function CacheStrings()
 end
 
 -- ============================================================
--- UIErrorsFrame Hook (Fallback fuer OOM bei gesperrten Werten)
+-- UIErrorsFrame hook (fallback for OOM when values are locked)
 -- ============================================================
 local uiHooked = false
 
@@ -138,21 +138,21 @@ local function HookUIErrors()
         if not IsEnabled() then return end
         if type(text) ~= "string" then return end
         if S_OUT_OF_MANA == "" then return end
-        -- Nur einspringen wenn der Schwellen-Pfad die Werte nicht lesen kann
+        -- Only step in when the threshold path cannot read the values
         if GetManaPercent() ~= nil then return end
 
         local clean = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
         if clean:find(S_OUT_OF_MANA, 1, true) then
             local now = GetTime()
-            -- Lange Pause seit dem letzten OOM-Fail: Mana war erholt, rearm
+            -- Long gap since the last OOM fail: mana recovered, rearm
             if fallbackOOMFired and (now - lastFallbackOOM) > FALLBACK_REARM_GAP then
                 fallbackOOMFired = false
             end
             lastFallbackOOM = now
             if not fallbackOOMFired then
                 fallbackOOMFired = true
-                -- Low-Fallback und Schwellen-Flags mitsetzen damit direkt
-                -- danach keine redundante 30%-Warnung kommt
+                -- Also set the low fallback and threshold flags so no
+                -- redundant 30% warning follows right after
                 fallbackLowFired = true
                 lastFallbackLow = now
                 firedOOM = true
@@ -187,13 +187,13 @@ frame:SetScript("OnEvent", function(_, event, arg1, arg2)
         end
 
     elseif event == "COMBAT_TEXT_UPDATE" then
-        -- Fallback fuer Low Mana: Blizzard feuert MANA_LOW selbst, alle
-        -- ~10 Sek solange das Mana niedrig ist.
-        -- Nur einspringen wenn der Schwellen-Pfad die Werte nicht lesen kann.
+        -- Fallback for low mana: Blizzard fires MANA_LOW itself, every
+        -- ~10 sec as long as mana is low.
+        -- Only step in when the threshold path cannot read the values.
         if arg1 == "MANA_LOW" and IsEnabled() then
             if GetManaPercent() == nil then
                 local now = GetTime()
-                -- Lange Pause seit dem letzten MANA_LOW: Mana war erholt, rearm
+                -- Long gap since the last MANA_LOW: mana recovered, rearm
                 if fallbackLowFired and (now - lastFallbackLow) > FALLBACK_REARM_GAP then
                     fallbackLowFired = false
                 end
@@ -207,10 +207,10 @@ frame:SetScript("OnEvent", function(_, event, arg1, arg2)
         end
 
     elseif event == "PLAYER_REGEN_ENABLED" then
-        -- Kampfende ist immer ein sicherer Reset fuer den Fallback-Pfad
+        -- End of combat is always a safe reset for the fallback path
         fallbackLowFired = false
         fallbackOOMFired = false
-        -- Falls die Werte jetzt wieder lesbar sind: Stand pruefen
+        -- If the values are readable again now: check the state
         CheckThresholds()
 
     elseif event == "PLAYER_ENTERING_WORLD" then

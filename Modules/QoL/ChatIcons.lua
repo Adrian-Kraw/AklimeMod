@@ -1,5 +1,5 @@
 -- Modules/QoL/ChatIcons.lua
--- Zeigt Item- und Währungssymbole sowie Itemlevel vor/in Links im Chat.
+-- Shows item and currency icons as well as item level before/in chat links.
 
 local ICON_SIZE = 12
 local ITEM_LINK_PATTERN     = "|Hitem:.-|h%[.-%]|h|r"
@@ -40,7 +40,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 
 local function GetItemTexture(link)
@@ -64,7 +64,7 @@ local function FormatCurrencyLink(link, id)
 end
 
 local function FormatItemLinkWithLevel(link)
-    -- Link-Teile extrahieren: Hyperlink-Teil, Label, Suffix
+    -- Extract link parts: hyperlink part, label, suffix
     local prefix, label, suffix = link:match("^(|Hitem:[^|]+|h)%[(.-)%](|h|r)$")
     if not prefix or not label or not suffix then return link end
 
@@ -78,7 +78,7 @@ local function FormatItemLinkWithLevel(link)
         if not level or level == 0 then level = baseLevel end
     end
 
-    -- Nur ausrüstbare Gegenstände
+    -- Equippable items only
     if not level or level <= 0 then return link end
     if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP_IGNORE" then return link end
 

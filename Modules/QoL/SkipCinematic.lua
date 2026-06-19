@@ -1,5 +1,5 @@
 -- Modules/QoL/SkipCinematic.lua
--- Cutscenes und Cinematics automatisch überspringen.
+-- Automatically skip cutscenes and cinematics.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.skipCinematic then return AklimeModDB.skipCinematic end

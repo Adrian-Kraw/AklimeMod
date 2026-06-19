@@ -1,6 +1,6 @@
 -- Modules/QoL/TalentReminder.lua
--- Zeigt beim Betreten einer Instanz ein Popup: "Passen die Talente?"
--- Nur beim echten Eintreten, nicht beim Login oder Reload.
+-- Shows a popup when entering an instance: "Do the talents fit?"
+-- Only on a real entry, not on login or reload.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.talentReminder then return AklimeModDB.talentReminder end
@@ -8,7 +8,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Talentfenster öffnen
+-- Open the talent window
 -- ============================================================
 local function OpenTalents()
     C_AddOns.LoadAddOn("Blizzard_PlayerSpells")

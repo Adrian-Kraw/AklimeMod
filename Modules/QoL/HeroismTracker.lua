@@ -1,47 +1,47 @@
 -- Modules/QoL/HeroismTracker.lua
--- Zeigt "HT AKTIV" auf dem Bildschirm wenn Heldentum / Bloodlust /
--- Trommeln oder der zugehörige Erschöpfungs-Debuff aktiv ist.
--- Position frei verschiebbar, wird gespeichert.
+-- Shows "HT AKTIV" on screen when Heroism / Bloodlust /
+-- Drums or the related exhaustion debuff is active.
+-- Position freely movable, is saved.
 
 -- ============================================================
 -- Spell-IDs
 -- ============================================================
 
--- Aktive Haste-Buffs (40 Sekunden)
+-- Active haste buffs (40 seconds)
 local BUFF_IDS = {
     [2825]    = true, -- Bloodlust
-    [32182]   = true, -- Heroism (Heldentum)
-    [80353]   = true, -- Time Warp (Zeitsprung)
-    [90355]   = true, -- Ancient Hysteria (Kerbelwind)
+    [32182]   = true, -- Heroism
+    [80353]   = true, -- Time Warp
+    [90355]   = true, -- Ancient Hysteria
     [160452]  = true, -- Netherwinds
-    [264667]  = true, -- Primal Rage (Urtümliche Raserei)
-    [390386]  = true, -- Fury of the Aspects (Zorn der Aspekte, Rufer)
-    [466904]  = true, -- Harrier's Cry (Jäger Treffsicherheit, seit 11.1)
-    [178207]  = true, -- Trommeln des Zorns (WoD)
-    [230935]  = true, -- Trommeln des Berges (Legion)
-    [256740]  = true, -- Trommeln des Mahlstroms (BfA)
-    [309658]  = true, -- Trommeln der tödlichen Wildheit (SL)
-    [381301]  = true, -- Trommeln der Wut (DF)
-    [424258]  = true, -- Donnernde Trommeln (TWW)
-    [424261]  = true, -- Leerenberührte Trommeln (TWW)
-    [1243972] = true, -- Leerentrommel (Midnight)
+    [264667]  = true, -- Primal Rage
+    [390386]  = true, -- Fury of the Aspects (Evoker)
+    [466904]  = true, -- Harrier's Cry (Hunter Marksmanship, since 11.1)
+    [178207]  = true, -- Drums of Wrath (WoD)
+    [230935]  = true, -- Drums of the Mountain (Legion)
+    [256740]  = true, -- Drums of the Maelstrom (BfA)
+    [309658]  = true, -- Drums of Deadly Ferocity (SL)
+    [381301]  = true, -- Drums of Fury (DF)
+    [424258]  = true, -- Thundering Drums (TWW)
+    [424261]  = true, -- Void-touched Drums (TWW)
+    [1243972] = true, -- Void Drum (Midnight)
 }
 
--- Erschoepfungs-Debuffs der Lust-Quellen. Im instanzierten Kampf sperrt
--- Blizzard die Haste-Buffs selbst (Secret Values), die Erschoepfung bleibt
--- aber lesbar (in-game verifiziert). Sie erscheint im selben Moment wie der
--- Buff und haelt immer 600 Sekunden, daraus laesst sich das Buff-Ende exakt
--- ableiten, egal wer den Lust gewirkt hat und welche Aura-ID der Buff hat.
+-- Exhaustion debuffs of the lust sources. In instanced combat Blizzard
+-- locks the haste buffs themselves (Secret Values), but the exhaustion
+-- stays readable (verified in game). It appears at the same moment as the
+-- buff and always lasts 600 seconds, from which the buff end can be derived
+-- exactly, no matter who cast the lust and which aura ID the buff has.
 local SATED_IDS = {
-    [57723]  = true, -- Erschöpfung (Heldentum, Trommeln)
-    [57724]  = true, -- Übersättigt (Kampfrausch)
-    [80354]  = true, -- Zeitliche Verschiebung (Zeitsprung)
-    [264689] = true, -- Ermüdet (Urtümliche Raserei)
-    [390435] = true, -- Erschöpfung (Zorn der Aspekte)
+    [57723]  = true, -- Exhaustion (Heroism, Drums)
+    [57724]  = true, -- Sated (Bloodlust)
+    [80354]  = true, -- Temporal Displacement (Time Warp)
+    [264689] = true, -- Fatigued (Primal Rage)
+    [390435] = true, -- Exhaustion (Fury of the Aspects)
 }
 
-local BUFF_DURATION  = 40  -- Lust-Buffs dauern immer 40 Sekunden
-local SATED_DURATION = 600 -- Erschoepfung dauert immer 10 Minuten
+local BUFF_DURATION  = 40  -- lust buffs always last 40 seconds
+local SATED_DURATION = 600 -- exhaustion always lasts 10 minutes
 
 
 -- ============================================================
@@ -53,20 +53,20 @@ local function GetDB()
 end
 
 -- ============================================================
--- Aura-Prüfung
+-- Aura check
 -- ============================================================
--- issecretvalue existiert erst seit 12.0
+-- issecretvalue only exists since 12.0
 local issecretvalue = issecretvalue or function() return false end
 
--- true = Buff aktiv, false = kein Buff, nil = Werte gesperrt (Secret).
--- Bei true wird zusaetzlich expirationTime geliefert falls lesbar.
--- Achtung: Im instanzierten Kampf sperrt Blizzard einzelne Auren komplett.
--- Die Per-ID-Abfrage gibt fuer gesperrte Auren nil zurueck (leugnet sie),
--- deshalb kann ein aktiver Lust-Buff hier unsichtbar sein.
+-- true = buff active, false = no buff, nil = values locked (Secret).
+-- On true expirationTime is also returned if readable.
+-- Note: in instanced combat Blizzard locks individual auras completely.
+-- The per ID query returns nil for locked auras (denies them),
+-- so an active lust buff can be invisible here.
 local function CheckAuras()
-    -- GetPlayerAuraBySpellID: Spell-ID wird als Parameter uebergeben,
-    -- kein Zugriff auf geschuetzte Felder der Rueckgabe-Tabelle noetig.
-    -- UnitBuff und aura.spellId sind in TWW nicht zugaenglich.
+    -- GetPlayerAuraBySpellID: the spell ID is passed as a parameter,
+    -- no access to protected fields of the return table is needed.
+    -- UnitBuff and aura.spellId are not accessible in TWW.
     local secretSeen = false
     for spellID in pairs(BUFF_IDS) do
         local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
@@ -82,10 +82,10 @@ local function CheckAuras()
     return false
 end
 
--- Leitet das Buff-Ende aus der Erschoepfung ab (GetTime-Basis).
--- Erschoepfung erscheint zusammen mit dem Buff und haelt 600 Sekunden:
--- Buff-Ende = Erschoepfungs-Ende - 600 + 40.
--- nil wenn keine lesbare Erschoepfung aktiv ist.
+-- Derives the buff end from the exhaustion (GetTime based).
+-- Exhaustion appears together with the buff and lasts 600 seconds:
+-- buff end = exhaustion end - 600 + 40.
+-- nil when no readable exhaustion is active.
 local function GetBuffEndFromSated()
     for spellID in pairs(SATED_IDS) do
         local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
@@ -126,9 +126,9 @@ local function ApplyPosition()
     end
 end
 
--- Bis zu diesem GetTime()-Zeitpunkt gilt der Buff als sicher aktiv.
--- Gesetzt durch die zuletzt lesbare Aura oder die Erschoepfungs-Ableitung.
--- Traegt die Anzeige durch Phasen, in denen die Aura-Daten gesperrt sind.
+-- Up to this GetTime() point the buff counts as reliably active.
+-- Set by the last readable aura or the exhaustion derivation.
+-- Carries the display through phases where the aura data is locked.
 local forcedUntil = 0
 
 local function UpdateDisplay()
@@ -145,9 +145,9 @@ local function UpdateDisplay()
         frame:Show()
         return
     end
-    -- Kein direkter Treffer: Buff-Ende aus der Erschoepfung ableiten.
-    -- Deckt im Kampf gesperrte Buffs und unbekannte Aura-IDs ab,
-    -- unabhaengig davon wer den Lust gewirkt hat.
+    -- No direct hit: derive the buff end from the exhaustion.
+    -- Covers buffs locked in combat and unknown aura IDs,
+    -- regardless of who cast the lust.
     local satedEnd = GetBuffEndFromSated()
     if satedEnd and satedEnd > now then
         forcedUntil = satedEnd
@@ -155,12 +155,12 @@ local function UpdateDisplay()
         return
     end
     if active == false then
-        -- Werte lesbar, kein Buff, keine frische Erschoepfung: definitiv aus
+        -- Values readable, no buff, no fresh exhaustion: definitely off
         forcedUntil = 0
         frame:Hide()
         return
     end
-    -- Werte gesperrt: letztes sicheres Wissen entscheidet
+    -- Values locked: last reliable knowledge decides
     if now < forcedUntil then
         frame:Show()
     else
@@ -169,7 +169,7 @@ local function UpdateDisplay()
 end
 
 local function SliderToPx(v)
-    -- 0 = 18px (Standard), 100 = 72px (Riesig)
+    -- 0 = 18px (default), 100 = 72px (huge)
     return math.floor(18 + v * 0.54)
 end
 
@@ -177,7 +177,7 @@ local function ApplyFontSize()
     if not frame then return end
     local px = SliderToPx(GetDB().fontSizeSlider or 20)
     frame.text:SetFont("Fonts\\FRIZQT__.TTF", px, "OUTLINE")
-    -- Breite großzügig bemessen damit OUTLINE nicht abgeschnitten wird
+    -- Width generously sized so OUTLINE is not cut off
     frame:SetSize(px * 10, px * 2)
 end
 
@@ -199,8 +199,8 @@ local function BuildFrame()
     text:SetWordWrap(false)
     frame.text = text
 
-    -- Drag: RegisterForDrag wuerde frame:Show() im Kampf (InCombatLockdown) blockieren.
-    -- OnMouseDown/OnMouseUp erreichen dasselbe ohne diese Einschraenkung.
+    -- Drag: RegisterForDrag would block frame:Show() in combat (InCombatLockdown).
+    -- OnMouseDown/OnMouseUp achieve the same without this restriction.
     frame:SetMovable(true)
     frame:EnableMouse(GetDB().locked == false)
     frame:SetScript("OnMouseDown", function(self, button)
@@ -213,7 +213,7 @@ local function BuildFrame()
         SavePosition()
     end)
 
-    -- Tooltip wenn nicht gesperrt
+    -- Tooltip when not locked
     frame:SetScript("OnEnter", function(self)
         if not GetDB().locked then
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -235,7 +235,7 @@ end
 -- API
 -- ============================================================
 function M:IsEnabled() return GetDB().enabled == true end
--- nil und true gelten als gesperrt. Nur explizit false = entsperrt.
+-- nil and true count as locked. Only explicit false = unlocked.
 function M:IsLocked()  return GetDB().locked ~= false end
 
 function M:SetEnabled(v)
@@ -249,7 +249,7 @@ function M:SetEnabled(v)
 end
 
 function M:SetLocked(v)
-    GetDB().locked = v ~= false  -- false bleibt false, nil/true wird true
+    GetDB().locked = v ~= false  -- false stays false, nil/true becomes true
     if frame and not InCombatLockdown() then
         frame:EnableMouse(GetDB().locked == false)
     end
@@ -274,12 +274,12 @@ end
 -- Events
 -- ============================================================
 
--- Ticker laeuft nur waehrend des Kampfes und pollt UpdateDisplay jede Sekunde.
--- Fallback falls UNIT_AURA nicht zuverlaessig feuert.
+-- Ticker runs only during combat and polls UpdateDisplay every second.
+-- Fallback in case UNIT_AURA does not fire reliably.
 local combatTicker = nil
 
 local eventFrame = CreateFrame("Frame")
--- RegisterUnitEvent garantiert UNIT_AURA-Zustellung fuer den Spieler-Unit.
+-- RegisterUnitEvent guarantees UNIT_AURA delivery for the player unit.
 eventFrame:RegisterUnitEvent("UNIT_AURA", "player")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -289,14 +289,14 @@ eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
         local db = GetDB()
-        -- Alten Ticker aufraumen: nach einem Zonenwechsel ist der Combat-State
-        -- zurueckgesetzt, ein veralteter Ticker wuerde sonst weiterlaufen.
+        -- Clean up the old ticker: after a zone change the combat state is
+        -- reset, a stale ticker would otherwise keep running.
         if combatTicker then combatTicker:Cancel(); combatTicker = nil end
         if db.enabled then
             BuildFrame()
             UpdateDisplay()
-            -- Reconnect oder Instanzeintritt mitten im Kampf:
-            -- PLAYER_REGEN_DISABLED feuert nicht nochmal, Ticker manuell starten.
+            -- Reconnect or instance entry in the middle of combat:
+            -- PLAYER_REGEN_DISABLED does not fire again, start the ticker manually.
             if UnitAffectingCombat("player") then
                 combatTicker = C_Timer.NewTicker(1, function()
                     if GetDB().enabled then UpdateDisplay() end
@@ -308,9 +308,9 @@ eventFrame:SetScript("OnEvent", function(_, event)
 
     if event == "PLAYER_REGEN_DISABLED" then
         if GetDB().enabled then
-            -- Sofort pruefen (z.B. Trommeln vor dem Zug)
+            -- Check immediately (e.g. drums before the pull)
             C_Timer.After(0, UpdateDisplay)
-            -- Ticker als Fallback falls UNIT_AURA ausbleibt
+            -- Ticker as fallback in case UNIT_AURA does not arrive
             if not combatTicker then
                 combatTicker = C_Timer.NewTicker(1, function()
                     if GetDB().enabled then UpdateDisplay() end
@@ -327,7 +327,7 @@ eventFrame:SetScript("OnEvent", function(_, event)
     end
 
     if event == "UNIT_AURA" then
-        -- Sofortige Reaktion, auch ausserhalb des Kampfes (z.B. Preview).
+        -- Immediate reaction, also outside of combat (e.g. preview).
         if GetDB().enabled then C_Timer.After(0, UpdateDisplay) end
     end
 end)
@@ -339,8 +339,8 @@ SLASH_AKM_HT1 = "/akht"
 SlashCmdList["AKM_HT"] = function(input)
     local cmd = strtrim(input or ""):lower()
 
-    -- "/akht buffs": alle aktiven Buffs mit Spell-ID auflisten,
-    -- um unbekannte Lust-Varianten zu identifizieren
+    -- "/akht buffs": list all active buffs with spell ID,
+    -- to identify unknown lust variants
     if cmd == "buffs" then
         print("|cFFFFD100Aklime Mod Tools HT:|r Aktive Buffs:")
         local found = false
@@ -404,7 +404,7 @@ SlashCmdList["AKM_HT"] = function(input)
         satedText = "|cFFFF8800GESPERRT|r"
     end
 
-    -- Aus der Erschoepfung abgeleitetes Buff-Ende
+    -- Buff end derived from the exhaustion
     local derivedText = "nein"
     local satedEnd = GetBuffEndFromSated()
     if satedEnd then

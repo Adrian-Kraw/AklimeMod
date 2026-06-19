@@ -1,6 +1,6 @@
 -- Modules/QoL/MapCoords.lua
--- Zeigt Maus- und Spieler-Koordinaten unten mittig auf der Weltkarte.
--- Format: "Maus: X / Y - Spieler: X / Y"
+-- Shows mouse and player coordinates at the bottom center of the world map.
+-- Format: "Mouse: X / Y - Player: X / Y"
 
 local function GetDB()
     return AklimeModDB and AklimeModDB.mapCoords
@@ -12,7 +12,7 @@ local function IsEnabled()
 end
 
 -- ============================================================
--- Koordinaten-Text Frame
+-- Coordinate text frame
 -- ============================================================
 local coordFrame = nil
 
@@ -36,7 +36,7 @@ local function CreateCoordFrame()
 end
 
 -- ============================================================
--- Koordinaten lesen
+-- Read coordinates
 -- ============================================================
 local function fmt(x, y)
     if not x or not y then return "n/a" end
@@ -46,14 +46,14 @@ end
 local function UpdateCoords()
     if not coordFrame or not coordFrame:IsShown() then return end
 
-    -- Maus-Koordinaten via GetNormalizedCursorPosition (wie MapCoords Addon)
+    -- Mouse coordinates via GetNormalizedCursorPosition
     local cursorX, cursorY
     local nx, ny = WorldMapFrame:GetNormalizedCursorPosition()
     if nx and ny and nx > 0 and ny > 0 and nx < 1 and ny < 1 then
         cursorX, cursorY = nx, ny
     end
 
-    -- Spieler-Koordinaten
+    -- Player coordinates
     local playerX, playerY
     local mapID = C_Map.GetBestMapForUnit("player")
     if mapID then
@@ -83,7 +83,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "AklimeModTools" then
         CreateCoordFrame()
 
-        -- Anzeigen wenn Weltkarte geöffnet wird
+        -- Show when the world map is opened
         hooksecurefunc(WorldMapFrame, "Show", function()
             if IsEnabled() and coordFrame then
                 coordFrame:Show()
@@ -93,7 +93,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
             if coordFrame then coordFrame:Hide() end
         end)
 
-        -- OnUpdate für Echtzeit-Koordinaten
+        -- OnUpdate for real-time coordinates
         coordFrame:SetScript("OnUpdate", UpdateCoords)
     end
 end)

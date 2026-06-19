@@ -1,7 +1,7 @@
 -- Modules/Interface/HideMacroNames.lua
--- Blendet Makro-Namen auf allen Action Buttons aus.
--- Nutzt hooksecurefunc auf ActionButton_UpdateName damit
--- auch neu erstellte oder geänderte Makros sofort ausgeblendet werden.
+-- Hides macro names on all action buttons.
+-- Uses hooksecurefunc on ActionButton_UpdateName so that
+-- newly created or changed macros are hidden immediately too.
 
 local function GetDB()
     return AklimeModDB and AklimeModDB.hideMacroNames
@@ -12,10 +12,10 @@ local function IsEnabled()
     return db and db.enabled
 end
 
--- Alle Standard Action Button Namen
+-- All standard action button names
 local function GetAllButtons()
     local buttons = {}
-    -- Hauptleiste + MultiBar-Buttons
+    -- Main bar + MultiBar buttons
     local bars = {
         "ActionButton",
         "MultiBarBottomLeftButton",
@@ -45,8 +45,8 @@ local function Remove()
     for _, btn in ipairs(GetAllButtons()) do
         if btn.Name then btn.Name:Show() end
     end
-    -- Name-Sichtbarkeit wird von Blizzard per UpdateName gesteuert
-    -- nach Remove einfach alle neu auswerten lassen
+    -- Name visibility is controlled by Blizzard via UpdateName
+    -- after Remove, just let them all re-evaluate
     for i = 1, 12 do
         local btn = _G["ActionButton" .. i]
         if btn and btn.UpdateName then btn:UpdateName() end
@@ -59,8 +59,8 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 frame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "AklimeModTools" then
-        -- In 12.0 gibt es keine globale ActionButton_UpdateName mehr
-        -- Wir hooken UpdateName direkt auf jedem Button
+        -- In 12.0 there is no global ActionButton_UpdateName anymore
+        -- We hook UpdateName directly on each button
         C_Timer.After(0.5, function()
             for _, btn in ipairs(GetAllButtons()) do
                 if btn.UpdateName then

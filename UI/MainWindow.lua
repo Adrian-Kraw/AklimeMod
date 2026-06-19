@@ -1,44 +1,43 @@
--- UI/MainWindow.lua — Hauptfenster, Insets, Initializer
--- Flat-Design im Stil von Mythic Mentor: dunkles Panel, duenne warme
--- Rahmen, Orange als Akzentfarbe. Aufbau und Funktionen unveraendert.
+-- UI/MainWindow.lua: main window, insets and row initializers.
+-- Flat dark theme with a near black panel, thin warm borders and a gold accent.
 
 -- ============================================================
 -- Theme
 -- ============================================================
--- Zentrale Farbwerte. Der Colorizer-Skin "Aklime Mod Tools" nutzt diese
--- Tabelle als Default wenn er zurueckgesetzt wird.
+-- Central color values. The colorizer skin "Aklime Mod Tools" uses this
+-- table as the default when it is reset.
 AklimeMod_Theme = {
     windowBg     = { r = 0.03, g = 0.03, b = 0.03, a = 0.95 },
-    -- Toenung der Stein-Hintergrund-Textur (#1D1D1D)
+    -- Tint of the stone background texture (#1D1D1D)
     windowTexTint = { r = 0.114, g = 0.114, b = 0.114, a = 1 },
     windowBorder = { r = 0.85, g = 0.68, b = 0.15, a = 0.9  },
     panelBg      = { r = 0.05, g = 0.05, b = 0.05, a = 0.85 },
     panelBorder  = { r = 0.55, g = 0.45, b = 0.12, a = 0.9  },
     accent       = { r = 1.00, g = 0.82, b = 0.00, a = 1.0  },
-    -- Standardfarben der Listen-Boxen, muessen den Werten in
-    -- AklimeMod_Templates.xml entsprechen
+    -- Default colors of the list boxes, must match the values in
+    -- AklimeMod_Templates.xml
     rowBg        = { r = 0.08, g = 0.075, b = 0.06, a = 1.0 },
     rowBorder    = { r = 0.50, g = 0.40,  b = 0.12, a = 0.7 },
-    -- Trennlinien unter Ueberschriften und in Separatoren
+    -- Separator lines under headings and in separators
     line         = { r = 0.85, g = 0.68,  b = 0.15, a = 0.6 },
-    -- Auswahl-Hervorhebung der Kategorie-Buttons
+    -- Selection highlight of the category buttons
     selection    = { r = 0.40, g = 0.30,  b = 0.11, a = 1.0 },
 }
 
--- Override fuer Boxen, Linien und Auswahl, gesetzt vom Colorizer-Skin.
--- nil = Standardfarben aus AklimeMod_Theme.
+-- Override for boxes, lines and selection, set by the colorizer skin.
+-- nil = default colors from AklimeMod_Theme.
 AklimeMod_RowColors = nil
 
--- Faerbt die Theme-Texturen einer Listen-Zeile (Boxen, Trennlinie, Auswahl).
--- Wird von allen Zeilen-Initializern aufgerufen, damit auch frisch
--- recycelte Frames immer die aktuell aktive Farbe bekommen.
+-- Colors the theme textures of a list row (boxes, separator line, selection).
+-- Called by all row initializers so that freshly recycled frames also
+-- always get the currently active color.
 function AklimeMod_ApplyRowTheme(button)
     local c = AklimeMod_RowColors
     local bg     = (c and c.bg)        or AklimeMod_Theme.rowBg
     local border = (c and c.border)    or AklimeMod_Theme.rowBorder
     local line   = (c and c.line)      or AklimeMod_Theme.line
     local sel    = (c and c.selection) or AklimeMod_Theme.selection
-    -- Kategorie-Buttons: abgerundeter Backdrop, Fuellung je nach Auswahl
+    -- Category buttons: rounded backdrop, fill depending on selection
     if button._isCategory and button.SetBackdropColor then
         local fill = button._selected and sel or bg
         button:SetBackdropColor(fill.r, fill.g, fill.b, fill.a)
@@ -50,12 +49,12 @@ function AklimeMod_ApplyRowTheme(button)
     if button.background      then button.background:SetVertexColor(bg.r, bg.g, bg.b, bg.a) end
     if button.lineBottom      then button.lineBottom:SetVertexColor(line.r, line.g, line.b, line.a) end
     if button.selectedTexture then button.selectedTexture:SetVertexColor(sel.r, sel.g, sel.b, sel.a) end
-    -- Innerer Button einer Aktions-Zeile
+    -- Inner button of an action row
     if button.button and button.button._styled then AklimeMod_StyleActionButton(button.button) end
 end
 
--- Macht den inneren Frame einer Aktions-Zeile zum abgerundeten Button
--- im Theme-Look (gleiche Technik wie die Kategorie-Buttons links).
+-- Turns the inner frame of an action row into a rounded button
+-- in the theme look (same technique as the category buttons on the left).
 local ACTION_BACKDROP = {
     bgFile   = WHITE8X8,
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -85,8 +84,8 @@ function AklimeMod_StyleActionButton(btn)
     btn:SetBackdropBorderColor(border.r, border.g, border.b, border.a)
 end
 
--- Statische Trennlinien (Panel-Titel, Dashboard) fuer das Theme registrieren.
--- Sie werden sofort gefaerbt und bei jedem Theme-Wechsel mitgezogen.
+-- Register static separator lines (panel title, dashboard) for the theme.
+-- They are colored immediately and updated on every theme change.
 local themeLines = {}
 function AklimeMod_RegisterThemeLine(tex)
     themeLines[#themeLines + 1] = tex
@@ -130,9 +129,9 @@ table.insert(UISpecialFrames, frame:GetName())
 
 ApplyFlatStyle(frame, AklimeMod_Theme.windowBg, AklimeMod_Theme.windowBorder)
 
--- Stein-Hintergrund wie beim alten Portrait-Rahmen (dessen eingebaute
--- Bg-Textur), ungetoent. Der Background-Farbregler im Colorizer-Skin
--- "Aklime Mod Tools" toent diese Textur.
+-- Stone background like the old portrait frame (its built in Bg texture),
+-- untinted. The background color slider in the colorizer skin
+-- "Aklime Mod Tools" tints this texture.
 frame.bgTexture = frame:CreateTexture(nil, "BACKGROUND")
 frame.bgTexture:SetPoint("TOPLEFT", 1, -1)
 frame.bgTexture:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -143,7 +142,7 @@ frame.bgTexture:SetVertexColor(
     AklimeMod_Theme.windowTexTint.r, AklimeMod_Theme.windowTexTint.g,
     AklimeMod_Theme.windowTexTint.b, AklimeMod_Theme.windowTexTint.a)
 
--- Drag am gesamten Fenster-Hintergrund (es gibt keine Titelleiste mehr)
+-- Drag on the entire window background (there is no title bar anymore)
 frame:EnableMouse(true)
 frame:SetScript("OnMouseDown", function(self, button)
     if button == "LeftButton" then self:StartMoving(); self:SetAlpha(0.75) end
@@ -152,7 +151,7 @@ frame:SetScript("OnMouseUp", function(self)
     self:StopMovingOrSizing(); self:SetAlpha(1)
 end)
 
--- Schliessen-Button als flache rote Box oben rechts (wie im Charakter-Tracker)
+-- Close button as a flat red box top right (like in the character tracker)
 local CLOSE_RED = { r = 0.38, g = 0.06, b = 0.06, a = 0.95 }
 frame.closeButton = CreateFrame("Button", nil, frame, "BackdropTemplate")
 frame.closeButton:SetSize(26, 26)
@@ -169,14 +168,14 @@ frame.closeButton:SetScript("OnLeave", function(self)
 end)
 frame.closeButton:SetScript("OnClick", function() frame:Hide() end)
 
--- Versionsnummer unten links
+-- Version number bottom left
 local version = C_AddOns.GetAddOnMetadata("AklimeModTools", "Version") or ""
 frame.versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 frame.versionText:SetPoint("BOTTOMLEFT", 14, 10)
 frame.versionText:SetText(version ~= "" and ("v" .. version) or "")
 
--- Rundes Addon-Portrait oben links, ragt wie beim alten
--- Portrait-Rahmen leicht ueber die Fensterecke hinaus
+-- Round addon portrait top left, sticks out slightly over the window
+-- corner like the old portrait frame
 frame.portrait = frame:CreateTexture(nil, "OVERLAY", nil, 2)
 frame.portrait:SetSize(52, 52)
 frame.portrait:SetPoint("TOPLEFT", -10, 10)
@@ -187,13 +186,13 @@ portraitMask:SetAtlas("CircleMaskScalable")
 portraitMask:SetAllPoints(frame.portrait)
 frame.portrait:AddMaskTexture(portraitMask)
 
--- Goldener Ring um das Portrait
+-- Golden ring around the portrait
 frame.portraitRing = frame:CreateTexture(nil, "OVERLAY", nil, 3)
 frame.portraitRing:SetSize(58, 58)
 frame.portraitRing:SetPoint("CENTER", frame.portrait, "CENTER", 0, 0)
 frame.portraitRing:SetAtlas("talents-node-choiceflyout-circle-yellow")
 
--- Fenster-Titel mittig oben mit Trennbalken (wie im alten Design)
+-- Window title centered at the top with separator bar (like the old design)
 frame.titleText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 frame.titleText:SetPoint("TOP", frame, "TOP", 0, -13)
 frame.titleText:SetText("Aklime Mod Tools")
@@ -217,7 +216,7 @@ end)
 frame.resizeHandle:SetScript("OnMouseUp", function() frame:StopMovingOrSizing() end)
 
 -- ============================================================
--- Left Inset (Kategorie-Liste)
+-- Left Inset (category list)
 -- ============================================================
 frame.leftInset = CreateFrame("Frame", nil, frame, "BackdropTemplate")
 frame.leftInset:SetPoint("TOPLEFT", 12, -46)
@@ -242,7 +241,7 @@ ScrollUtil.InitScrollBoxListWithScrollBar(
 )
 
 -- ============================================================
--- Suchleiste (oben rechts im Fenster)
+-- Search bar (top right in the window)
 -- ============================================================
 local searchBox = CreateFrame("EditBox", "AklimeModSearchBox", frame, "SearchBoxTemplate")
 searchBox:SetSize(220, 26)
@@ -266,11 +265,11 @@ if searchBox.Instructions then
     searchBox.Instructions:SetText(AklimeModL and AklimeModL["search_placeholder"] or "Search...")
 end
 
--- Globale Referenz damit Categories.lua zugreifen kann
+-- Global reference so Categories.lua can access it
 AklimeModSearchBox = searchBox
 
 -- ============================================================
--- Right Inset (Inhalt)
+-- Right Inset (content)
 -- ============================================================
 frame.rightInset = CreateFrame("Frame", nil, frame, "BackdropTemplate")
 frame.rightInset:SetPoint("TOPRIGHT",   frame,           "TOPRIGHT",   -12, -46)
@@ -293,10 +292,10 @@ function AklimeMod_SetRightHeader(text) rightHeader:SetText(text) end
 
 frame.rightInset.scrollBox = CreateFrame("Frame", nil, frame.rightInset, "WowScrollBoxList")
 frame.rightInset.scrollBox:SetPoint("TOPLEFT",     frame.rightInset, "TOPLEFT",     4, -36)
--- Rechts Platz fuer die innenliegende ScrollBar lassen
+-- Leave space on the right for the inner scroll bar
 frame.rightInset.scrollBox:SetPoint("BOTTOMRIGHT", frame.rightInset, "BOTTOMRIGHT", -22,  4)
 
--- ScrollBar liegt im Panel statt daneben, sonst ragt sie aus dem Fenster
+-- ScrollBar sits inside the panel instead of next to it, otherwise it sticks out of the window
 frame.rightInset.scrollBar = CreateFrame("EventFrame", nil, frame.rightInset, "MinimalScrollBar")
 frame.rightInset.scrollBar:SetPoint("TOPRIGHT",    frame.rightInset, "TOPRIGHT",    -6, -38)
 frame.rightInset.scrollBar:SetPoint("BOTTOMRIGHT", frame.rightInset, "BOTTOMRIGHT", -6,   6)
@@ -328,7 +327,7 @@ AklimeMod_RightScrollView:SetElementExtentCalculator(function(index, node)
 end)
 
 -- ============================================================
--- Shared Initializer (wie FrameColor)
+-- Shared row initializers.
 -- ============================================================
 local function headerInitializer(button, node)
     local data = node:GetData()
@@ -348,20 +347,20 @@ local function toggleInitializer(button, node)
     button.name:SetText(data.name)
     button.toggle:SetScript("OnClick", function(self)
         data.setVal(self:GetChecked())
-        -- Zustand immer aus der DB spiegeln: Radio-Optionen lassen sich so
-        -- nicht abwaehlen und der Haken zeigt nie einen veralteten Stand.
+        -- Always mirror the state from the DB: radio options can thus not
+        -- be deselected and the check never shows a stale state.
         self:SetChecked(data.getVal())
     end)
     button.toggle:SetChecked(data.getVal())
 end
 
--- Synchronisiert alle sichtbaren Checkboxen mit ihren Gettern.
--- Jeder Initializer hinterlegt dafuer _refreshCheckbox am Frame.
--- Laeuft synchron und nur ueber die tatsaechlich angezeigten Frames,
--- damit nach einem Radio-Klick nie zwei Haken gleichzeitig stehen
--- und keine recycelten Frames falsche Zustaende bekommen.
--- Erst sammeln, dann ausfuehren: ein Refresh-Callback darf Sektionen
--- zuklappen (Colorizer), was die Frame-Liste der ScrollBox veraendert.
+-- Synchronizes all visible checkboxes with their getters.
+-- Each initializer stores _refreshCheckbox on the frame for this.
+-- Runs synchronously and only over the actually displayed frames,
+-- so that after a radio click two checks are never set at once
+-- and no recycled frames get wrong states.
+-- Collect first, then run: a refresh callback may collapse sections
+-- (colorizer), which changes the frame list of the ScrollBox.
 function AklimeMod_RefreshRightToggles()
     local scrollBox = frame.rightInset and frame.rightInset.scrollBox
     if not scrollBox or not scrollBox.ForEachFrame then return end
@@ -372,9 +371,9 @@ function AklimeMod_RefreshRightToggles()
     for _, refresh in ipairs(pending) do refresh() end
 end
 
--- Faerbt alle sichtbaren Listen-Zeilen beider Seiten und die statischen
--- Linien neu. Wird vom Colorizer-Skin nach dem Setzen von
--- AklimeMod_RowColors gerufen.
+-- Recolors all visible list rows on both sides and the static
+-- lines. Called by the colorizer skin after setting
+-- AklimeMod_RowColors.
 function AklimeMod_RefreshRowTheme()
     local function refreshAll(scrollBox)
         if scrollBox and scrollBox.ForEachFrame then
@@ -392,9 +391,9 @@ local function sliderInitializer(frame, node)
     if frame.label then frame.label:SetText(data.label or "") end
     local s = frame.slider
     if s then
-        -- Alten Callback entfernen bevor Bereich/Wert geaendert werden.
-        -- Sonst feuert der recycelte Callback vom vorherigen Node beim
-        -- SetMinMaxValues-Clamping und schreibt den falschen Wert in die DB.
+        -- Remove the old callback before range/value are changed.
+        -- Otherwise the recycled callback from the previous node fires on
+        -- SetMinMaxValues clamping and writes the wrong value into the DB.
         s:SetScript("OnValueChanged", nil)
         s:SetMinMaxValues(data.sliderMin or 0, data.sliderMax or 100)
         s:SetValueStep(data.sliderStep or 1)
@@ -402,7 +401,7 @@ local function sliderInitializer(frame, node)
         local cur = data.getVal and data.getVal() or 0
         s:SetValue(cur)
         local actual = math.floor(s:GetValue() + 0.5)
-        -- Wenn der gespeicherte Wert ausserhalb des Slider-Bereichs lag, korrigieren.
+        -- If the stored value was outside the slider range, correct it.
         if actual ~= cur and data.setVal then data.setVal(actual) end
         if frame.valueText then
             frame.valueText:SetText(data.formatFn and data.formatFn(actual) or tostring(actual))
@@ -416,7 +415,7 @@ local function sliderInitializer(frame, node)
         end)
     end
 end
--- Global damit ColorizerUI.lua denselben Initializer nutzen kann
+-- Global so ColorizerUI.lua can use the same initializer
 AklimeMod_SliderInitializer = sliderInitializer
 
 function AklimeMod_RightFactory(factory, node)
@@ -431,7 +430,7 @@ function AklimeMod_RightFactory(factory, node)
 end
 
 -- ============================================================
--- Bestaetigungs-Dialog fuer destruktive Aktionen
+-- Confirmation dialog for destructive actions
 -- ============================================================
 StaticPopupDialogs["AKLIMEMOD_CONFIRM"] = {
     text = "%s",
@@ -446,7 +445,7 @@ StaticPopupDialogs["AKLIMEMOD_CONFIRM"] = {
     preferredIndex = 3,
 }
 
--- Zeigt "Bist du sicher?" mit Ja / Nein und fuehrt fn nur bei Ja aus.
+-- Shows "Are you sure?" with Yes / No and runs fn only on Yes.
 function AklimeMod_Confirm(actionLabel, fn)
     local L = AklimeModL or {}
     local text = (L["confirm_action"] or "Are you sure you want to do this?")

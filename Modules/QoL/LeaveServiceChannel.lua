@@ -1,7 +1,7 @@
 -- Modules/QoL/LeaveServiceChannel.lua
--- Haken im Addon an  -> LeaveChannelByName("Dienste")  (Haken raus, Eintrag bleibt)
--- Haken im Addon aus -> JoinChannelByName("Dienste")   (Haken rein)
--- Wenn Spieler manuell /join Dienste macht -> Addon-Haken automatisch deaktivieren
+-- Addon toggle on  -> LeaveChannelByName("Dienste")  (toggle off, entry stays)
+-- Addon toggle off -> JoinChannelByName("Dienste")   (toggle on)
+-- If the player manually does /join Dienste -> automatically disable the addon toggle
 
 local CHANNEL_NAME = "Dienste"
 
@@ -20,25 +20,25 @@ local function IsInChannel()
 end
 
 -- ============================================================
--- Systemnachrichten filtern
+-- Filter system messages
 -- ============================================================
 local suppress = false
 
 ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", function(_, _, msg)
     if type(msg) ~= "string" then return false end
 
-    -- Eigene Leave/Join Nachrichten unterdruecken
+    -- Suppress our own leave/join messages
     if suppress and msg:find(CHANNEL_NAME, 1, true) then
         return true
     end
 
-    -- Spieler tritt manuell bei -> Addon-Haken deaktivieren
+    -- Player joins manually -> disable the addon toggle
     if IsEnabled() and msg:find(CHANNEL_NAME, 1, true) then
         if msg:find("beigetreten") or msg:find("joined") then
             local db = GetDB()
             if db then db.enabled = false end
-            -- UI Checkbox aktualisieren (kein Neuaufbau, der wuerde alle
-            -- aufgeklappten Sektionen zuklappen)
+            -- Refresh the UI checkbox (no rebuild, that would collapse all
+            -- expanded sections)
             if AklimeModFrame and AklimeModFrame:IsShown() and AklimeMod_RefreshRightToggles then
                 AklimeMod_RefreshRightToggles()
             end
@@ -62,7 +62,7 @@ end
 local function DoJoin()
     suppress = true
     JoinChannelByName(CHANNEL_NAME)
-    -- Anzeige-Haken in der Chat-UI aktivieren (Channel-Nachrichten einblenden)
+    -- Enable the display toggle in the chat UI (show channel messages)
     C_Timer.After(0.5, function()
         local idx = GetChannelName(CHANNEL_NAME)
         if idx and idx > 0 then

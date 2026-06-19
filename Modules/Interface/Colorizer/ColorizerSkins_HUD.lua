@@ -1,4 +1,4 @@
--- ColorizerSkins_HUD.lua — 1:1 Port von FrameColor
+-- ColorizerSkins_HUD.lua: HUD and chat skin definitions for the colorizer.
 
 local C = AklimeMod_Colorizer
 local D = C.defaults
@@ -27,7 +27,7 @@ C:Register("buffFrame", {
                     local b = CreateFrame("Frame",nil,widget,"BackdropTemplate")
                     b:SetPoint("TOPLEFT",widget.Icon,"TOPLEFT",-2,2)
                     b:SetPoint("BOTTOMRIGHT",widget.Icon,"BOTTOMRIGHT",2,-2)
-                    b:SetSize(36, 36)  -- explizit damit kein Secret-Number GetWidth Taint
+                    b:SetSize(36, 36)  -- explicit so there is no Secret Number GetWidth taint
                     b:SetBackdrop({ edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", edgeSize=10, insets={left=2,right=2,top=2,bottom=2} })
                     b:SetBackdropBorderColor(mr,mg,mb,ma)
                     widget.border = b
@@ -133,10 +133,10 @@ C:Register("tooltips", {
 })
 
 -- ============================================================
--- Chat Frame — exakt FrameColor
+-- Chat frame skin.
 -- ============================================================
 local function skinChatBorderOf(frameName, bordersColor, desaturation)
-    -- SkinBorderOf für Chat (Border-Textur-Set)
+    -- SkinBorderOf for chat (border texture set)
     local frame = type(frameName)=="string" and _G[frameName] or frameName
     if not frame then return end
     local border = frame.Border
@@ -183,8 +183,8 @@ local function applyToChatFrame(chatFrameName, mc, bgc, boc, cc, tc, des)
         local stb = cf.ScrollToBottomButton:GetNormalTexture()
         if stb then stb:SetDesaturation(des); stb:SetVertexColor(cc[1],cc[2],cc[3],cc[4]) end
     end
-    -- Tab: inaktive, aktive und Hover-Texturen (sonst bleibt der
-    -- gerade aktive Reiter ungefaerbt)
+    -- Tab: inactive, active and hover textures (otherwise the
+    -- currently active tab stays uncolored)
     local tab = _G[chatFrameName.."Tab"]
     if tab then
         for _,tex in pairs({
@@ -352,7 +352,7 @@ C:Register("spellFlyout", {
 })
 
 -- ============================================================
--- Pop-up Dialogs — exakt FrameColor
+-- Pop-up dialog skin.
 -- ============================================================
 C:Register("popupDialogs", {
     label  = "Pop-up Dialoge",
@@ -447,7 +447,7 @@ C:Register("compactRaidFrameManager", {
 })
 
 -- ============================================================
--- Menu Style (Rechtsklick-Menü)
+-- Menu Style (right-click menu)
 -- ============================================================
 C:Register("menuStyle", {
     label  = "Context Menu",
@@ -465,11 +465,11 @@ C:Register("menuStyle", {
             end)
         end
     end,
-    remove = function(self) end, -- Hook kann nicht rückgängig gemacht werden
+    remove = function(self) end, -- Hook cannot be undone
 })
 
 -- ============================================================
--- Gruppen-Reihenfolge
+-- Group order
 -- ============================================================
 table.insert(AklimeMod_Colorizer.groupOrder, {
     label = "HUD",

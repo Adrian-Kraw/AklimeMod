@@ -1,6 +1,6 @@
 -- Modules/QoL/PvPChatBlock.lua
--- Blockiert Enter (Chat öffnen) in PvP-Instanzen (Arena + Schlachtfeld, rated + unrated).
--- Toggle über den Minimap-Radialmenü-Button.
+-- Blocks Enter (open chat) in PvP instances (arena + battleground, rated + unrated).
+-- Toggle via the minimap radial menu button.
 
 -- ============================================================
 -- DB
@@ -15,7 +15,7 @@ local function IsEnabled()
 end
 
 -- ============================================================
--- PvP-Instanz erkennen
+-- Detect a PvP instance
 -- ============================================================
 local function IsInPvPInstance()
     local inInstance, instanceType = IsInInstance()
@@ -23,7 +23,7 @@ local function IsInPvPInstance()
 end
 
 -- ============================================================
--- Chat-Block
+-- Chat block
 -- ============================================================
 local blocked = false
 local hooked  = false
@@ -32,8 +32,8 @@ local function Block()
     if blocked then return end
     blocked = true
 
-    -- ChatFrame1EditBox ist die Haupteingabe
-    -- Wir hookon das OnKeyDown um Enter abzufangen
+    -- ChatFrame1EditBox is the main input
+    -- We hook OnKeyDown to intercept Enter
     if not hooked and ChatFrame1EditBox then
         hooked = true
         hooksecurefunc(ChatFrame1EditBox, "Show", function(self)
@@ -43,7 +43,7 @@ local function Block()
         end)
     end
 
-    -- Alle ChatFrameEditBoxen verstecken falls gerade offen
+    -- Hide all chat frame edit boxes if currently open
     for i = 1, 50 do
         local editBox = _G["ChatFrame" .. i .. "EditBox"]
         if editBox and editBox:IsShown() then
@@ -55,7 +55,7 @@ end
 
 local function Unblock()
     blocked = false
-    -- Hook bleibt aber IsEnabled() gibt false zurück → Show() wird nicht geblockt
+    -- Hook stays but IsEnabled() returns false, so Show() is not blocked
 end
 
 -- ============================================================

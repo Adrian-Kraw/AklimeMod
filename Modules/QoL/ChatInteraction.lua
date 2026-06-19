@@ -1,6 +1,6 @@
 -- ChatInteraction.lua
--- C-Button am Chat (verschiebbar, Größe wie Kontakte-Icon)
--- Links klickbar mit eigenem Popup-Fenster
+-- C button on the chat (movable, size like the contacts icon)
+-- Links clickable with a dedicated popup window
 
 AklimeMod_Defaults = AklimeMod_Defaults or {}
 AklimeMod_Defaults.chatInteraction = {
@@ -16,7 +16,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Chat-Copy Fenster
+-- Chat copy window
 -- ============================================================
 local copyFrame = nil
 
@@ -34,7 +34,7 @@ local function GetOrCreateCopyFrame()
     f:Hide()
     tinsert(UISpecialFrames, "AklimeMod_ChatCopyFrame")
 
-    -- Hintergrund: leicht transparent, dunkler Ton
+    -- Background: slightly transparent, dark tone
     f:SetBackdrop({
         bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
@@ -44,26 +44,26 @@ local function GetOrCreateCopyFrame()
     f:SetBackdropColor(0.08, 0.08, 0.08, 0.85)
     f:SetBackdropBorderColor(1, 0.82, 0, 1)
 
-    -- Titelleiste (drag-Bereich)
+    -- Title bar (drag area)
     local titleBar = CreateFrame("Frame", nil, f)
     titleBar:SetPoint("TOPLEFT"); titleBar:SetPoint("TOPRIGHT"); titleBar:SetHeight(32)
     titleBar:EnableMouse(true)
     titleBar:SetScript("OnMouseDown", function() f:StartMoving() end)
     titleBar:SetScript("OnMouseUp",   function() f:StopMovingOrSizing() end)
 
-    -- Trennlinie unter Titel
+    -- Divider below the title
     local divider = f:CreateTexture(nil, "ARTWORK")
     divider:SetColorTexture(1, 0.82, 0, 0.4)
     divider:SetHeight(1)
     divider:SetPoint("TOPLEFT",  f, "TOPLEFT",  10, -32)
     divider:SetPoint("TOPRIGHT", f, "TOPRIGHT", -10, -32)
 
-    -- Titel-Text
+    -- Title text
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", f, "TOP", 0, -10)
     title:SetText("|cFFFFD100Chat|r")
 
-    -- Schließen-Button
+    -- Close button
     local closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButton")
     closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
     closeBtn:SetScript("OnClick", function() f:Hide() end)
@@ -86,14 +86,14 @@ local function GetOrCreateCopyFrame()
     sf:SetScrollChild(eb)
     f.editBox = eb
 
-    -- Trennlinie über Buttons
+    -- Divider above the buttons
     local divider2 = f:CreateTexture(nil, "ARTWORK")
     divider2:SetColorTexture(1, 0.82, 0, 0.4)
     divider2:SetHeight(1)
     divider2:SetPoint("BOTTOMLEFT",  f, "BOTTOMLEFT",  10, 42)
     divider2:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -10, 42)
 
-    -- Buttons zentriert unten
+    -- Buttons centered at the bottom
     local btnAll = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
     btnAll:SetSize(140, 26)
     btnAll:SetPoint("BOTTOM", f, "BOTTOM", -76, 12)
@@ -130,7 +130,7 @@ local function OpenChatCopy(chatIdx, url)
     f.editBox:SetText("")
 
     if url then
-        -- URL-Modus: klein, URL markiert
+        -- URL mode: small, URL highlighted
         f:SetHeight(100)
         f.editBox:SetWidth(f.scrollFrame:GetWidth())
         f.editBox:Insert(url)
@@ -141,8 +141,8 @@ local function OpenChatCopy(chatIdx, url)
         local cf = _G["ChatFrame"..(chatIdx or 1)]
         if not cf then return end
 
-        -- Breite vor dem Einfuegen setzen, sonst berechnet WoW Zeilenumbrueche
-        -- mit der falschen Breite und Klicks landen auf der falschen Zeile.
+        -- Set the width before inserting, otherwise WoW computes line breaks
+        -- with the wrong width and clicks land on the wrong line.
         f.editBox:SetWidth(f.scrollFrame:GetWidth())
 
         local maxLines = cf:GetNumMessages() or 0
@@ -157,8 +157,8 @@ local function OpenChatCopy(chatIdx, url)
             end
         end
 
-        -- Nach unten scrollen, damit die neuesten Nachrichten sichtbar sind.
-        -- Einen Frame warten, weil GetVerticalScrollRange erst nach dem Render aktuell ist.
+        -- Scroll to the bottom so the newest messages are visible.
+        -- Wait one frame because GetVerticalScrollRange is only current after render.
         C_Timer.After(0, function()
             f.scrollFrame:SetVerticalScroll(f.scrollFrame:GetVerticalScrollRange())
         end)
@@ -167,7 +167,7 @@ local function OpenChatCopy(chatIdx, url)
 end
 
 -- ============================================================
--- C-Button: verschiebbar, Größe wie Kontakte-Icon (~32x32)
+-- C button: movable, size like the contacts icon (~32x32)
 -- ============================================================
 local chatBtn = nil
 
@@ -182,7 +182,7 @@ local function CreateChatBtn()
     btn:RegisterForDrag("LeftButton")
     btn:SetToplevel(true)
 
-    -- Position wiederherstellen oder default neben Chat
+    -- Restore position or default next to the chat
     local db = GetDB()
     if db.btnX and db.btnY then
         btn:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", db.btnX, db.btnY)
@@ -190,7 +190,7 @@ local function CreateChatBtn()
         btn:SetPoint("BOTTOMLEFT", ChatFrame1, "BOTTOMRIGHT", 4, 0)
     end
 
-    -- Aussehen: wie Kontakte-Icon
+    -- Appearance: like the contacts icon
     btn:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8X8",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -207,7 +207,7 @@ local function CreateChatBtn()
     local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     label:SetAllPoints()
     label:SetText("|cFFFFD100C|r")
-    tex:Hide()  -- Text statt Textur
+    tex:Hide()  -- Text instead of texture
 
     -- Drag
     btn:SetScript("OnDragStart", function(self)
@@ -221,7 +221,7 @@ local function CreateChatBtn()
         local y = self:GetBottom()
         GetDB().btnX = x
         GetDB().btnY = y
-        -- Neu verankern damit Position gespeichert bleibt
+        -- Re-anchor so the position stays saved
         self:ClearAllPoints()
         self:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x, y)
     end)
@@ -244,7 +244,7 @@ local function CreateChatBtn()
         if copyFrame and copyFrame:IsShown() then
             copyFrame:Hide()
         else
-            -- Welches ChatFrame ist gerade aktiv (sichtbar)?
+            -- Which ChatFrame is currently active (visible)?
             local idx = 1
             for i = 1, NUM_CHAT_WINDOWS do
                 local cf = _G["ChatFrame"..i]
@@ -264,7 +264,7 @@ local function UpdateChatBtn()
 end
 
 -- ============================================================
--- URL-Erkennung & klickbare Links
+-- URL detection and clickable links
 -- ============================================================
 local URL_PATTERNS = {
     "^(%a[%w+.-]+://%S+)",
@@ -297,8 +297,8 @@ local function MakeClickable(_, _, msg, ...)
     return false, msg, ...
 end
 
--- URL-Klick öffnet das Copy-Fenster mit der URL.
--- hooksecurefunc statt direkter Ersetzung, damit kein Taint auf ItemRefTooltip entsteht.
+-- A URL click opens the copy window with the URL.
+-- hooksecurefunc instead of direct replacement, so no taint is placed on ItemRefTooltip.
 hooksecurefunc(ItemRefTooltip, "SetHyperlink", function(self, link)
     if link and link:sub(1, 3) == "url" then
         OpenChatCopy(nil, link:sub(5))
@@ -329,7 +329,7 @@ local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 initFrame:SetScript("OnEvent", function()
-    -- C-Button erstellen (aber nur zeigen wenn aktiviert)
+    -- Create the C button (but only show it when enabled)
     CreateChatBtn()
     UpdateChatBtn()
     -- Links

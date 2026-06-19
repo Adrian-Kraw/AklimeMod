@@ -1,11 +1,11 @@
 -- Modules/Interface/EliteFrame.lua
--- Exakte Werte aus BetterBlizzFrames (midnight):
+-- Exact values for the elite/rare portrait styles:
 --
 -- mode 1: Rare Silver       → Atlas: Boss-Rare-Silver,    80x78,  TOPLEFT(10.5,-10),  normal
 -- mode 2: Boss Silver Wing  → Atlas: Boss-Gold-Winged,    99x80,  TOPLEFT(-9,-9),     desaturated
 -- mode 3: Boss Gold Wing    → Atlas: Boss-Gold-Winged,    99x80,  TOPLEFT(-9,-9),     normal
 -- mode 4: Elite Gold        → Atlas: Boss-Gold,           80x78,  TOPLEFT(10.5,-10),  normal
--- Alle: SetTexCoord(1,0,0,1) — gespiegelt
+-- All: SetTexCoord(1,0,0,1) mirrored
 
 local MODES = {
     silver     = { atlas="UI-HUD-UnitFrame-Target-PortraitOn-Boss-Rare-Silver", w=80, h=78, x=10.5, y=-10, desaturated=false },
@@ -43,9 +43,9 @@ function AklimeMod_ApplyEliteFrame(style)
     tex:SetPoint("TOPLEFT", PlayerFrame.PlayerFrameContainer, "TOPLEFT", mode.x, mode.y)
     tex:SetDesaturated(mode.desaturated)
 
-    -- Faerbung durch den Colorizer-Skin "Elite Frame" (Gruppe Addons).
-    -- Hier statt im Skin selbst, damit Style-Wechsel und spaeteres
-    -- Aktivieren die Farbe automatisch mitnehmen.
+    -- Coloring via the Colorizer skin "Elite Frame" (Addons group).
+    -- Done here instead of in the skin itself, so style changes and later
+    -- activation carry the color automatically.
     local C = AklimeMod_Colorizer
     if C and C.IsEnabled and C:IsEnabled("eliteFrame") then
         local r, g, b, a = C:GetColor("eliteFrame", "main")

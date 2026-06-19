@@ -1,6 +1,6 @@
 -- Core/Commands.lua
--- Zentrale Registry aller /akm Slash-Commands.
--- Dashboard und /akm help nutzen diese Liste als einzige Quelle.
+-- Central registry of all /akm slash commands.
+-- Dashboard and /akm help use this list as the single source.
 
 local L = AklimeModL or {}
 
@@ -22,7 +22,7 @@ local function PrintHelp()
     end
 end
 
--- Hook auf den bestehenden /akm Slash-Handler
+-- Hook into the existing /akm slash handler
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, _, arg1)

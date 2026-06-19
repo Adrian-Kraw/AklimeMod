@@ -1,6 +1,6 @@
 -- Modules/QoL/PreyPercent.lua
--- Phasen-Leiste oben mittig wenn Jagd aktiv.
--- progressState direkt aus PreyHunt-Frame gelesen.
+-- Phase bar at the top center when a hunt is active.
+-- progressState read directly from the PreyHunt frame.
 
 local BAR_W      = 200
 local BAR_H      = 16
@@ -18,7 +18,7 @@ local function IsEnabled()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 local function IsValidQuestID(id)
     return type(id) == "number" and id > 0
@@ -148,7 +148,7 @@ local function HideBar()
 end
 
 -- ============================================================
--- Ticker — läuft dauerhaft wenn enabled
+-- Ticker: runs continuously while enabled
 -- ============================================================
 local ticker = nil
 
@@ -168,7 +168,7 @@ local function StartTicker()
             return
         end
 
-        -- Quest aktiv: nur zeigen wenn PreyHunt-Frame auch sichtbar (= in der Zone)
+        -- Quest active: only show when the PreyHunt frame is visible too (= in the zone)
         local f = FindPreyFrame()
         if not f or not f:IsShown() then
             if isShowing then HideBar() end
@@ -184,7 +184,7 @@ local function StopTicker()
 end
 
 -- ============================================================
--- Events — nur für Cleanup
+-- Events: only for cleanup
 -- ============================================================
 local eventFrame = CreateFrame("Frame")
 local registered = false
@@ -241,6 +241,6 @@ end
 function AklimeMod_PreyPercent.Init()
     if IsEnabled() then
         RegisterEvents()
-        StartTicker()  -- einfach sofort starten, Ticker verträgt nil-Quest problemlos
+        StartTicker()  -- just start immediately, the ticker handles a nil quest fine
     end
 end

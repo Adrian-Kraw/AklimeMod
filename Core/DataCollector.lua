@@ -1,10 +1,10 @@
 -- Modules/DataCollector.lua
--- Sammelt beim Login alle Char-Daten, Instanzen und Währungen.
--- Unabhängig von SavedInstances — speichert in AklimeModDB.tracker.
--- Struktur identisch zu SavedInstancesDB damit CharacterTracker beide nutzen kann.
+-- Collects all character data, instance lockouts and currencies on login.
+-- Everything is stored under AklimeModDB.tracker in a stable shared structure
+-- that the character tracker UI reads from.
 
 -- ============================================================
--- Alle Currency-IDs (1:1 aus SI Currency.lua)
+-- Tracked currency IDs, resolved through C_CurrencyInfo.
 -- ============================================================
 local CURRENCY_IDS = {
     81, 515, 2588, 3363, 241,
@@ -28,13 +28,13 @@ local CURRENCY_IDS = {
 }
 
 -- ============================================================
--- EJ-Cache: Name (normalisiert) + EJ-ID → Expansion (0-11)
--- Global damit er per /dump AklimeMod_InstExpCache debuggbar ist.
--- Tier-Name via EJ_GetTierInfo bestimmen (zuverlässiger als Arithmetik).
+-- EJ cache: name (normalized) + EJ ID maps to expansion (0-11)
+-- Global so it can be debugged via /dump AklimeMod_InstExpCache.
+-- Determine the tier name via EJ_GetTierInfo (more reliable than arithmetic).
 -- ============================================================
 
--- Mapping Tier-Name (lowercase) → Expansion-Index
--- Als erste Verteidigungslinie wenn EJ_GetTierInfo einen bekannten Namen liefert.
+-- Mapping tier name (lowercase) to expansion index
+-- As a first line of defense when EJ_GetTierInfo returns a known name.
 local TIER_TO_EXP = {
     ["classic"] = 0, ["klassisch"] = 0,
     ["the burning crusade"] = 1, ["der brennende kreuzzug"] = 1,
@@ -58,26 +58,26 @@ local function NormName(name)
 end
 
 local function BuildInstanceExpCache()
-    AklimeMod_InstExpCache = {}  -- global, debuggbar per /dump
+    AklimeMod_InstExpCache = {}  -- global, debuggable via /dump
     local numTiers  = EJ_GetNumTiers and EJ_GetNumTiers() or 0
-    -- EJ-Tiers sind neueste zuerst (tier 1 = aktuelle Erweiterung).
-    -- GetExpansionLevel() gibt die aktuelle Expansion-ID zurueck (z.B. 11 fuer Midnight).
-    -- Formel: exp = GetExpansionLevel() - (tier - 1)
+    -- EJ tiers are newest first (tier 1 = current expansion).
+    -- GetExpansionLevel() returns the current expansion ID (e.g. 11 for Midnight).
+    -- Formula: exp = GetExpansionLevel() - (tier - 1)
     local curExp    = GetExpansionLevel and GetExpansionLevel() or 11
     for tier = 1, numTiers do
-        -- Tier-Name-Tabelle als erste Option
+        -- Tier name table as the first option
         local exp
         if EJ_GetTierInfo then
             local tierName = EJ_GetTierInfo(tier)
             if tierName then exp = TIER_TO_EXP[tierName:lower()] end
         end
-        -- Fallback: GetExpansionLevel() - (tier - 1) (korrekt fuer neueste-zuerst)
+        -- Fallback: GetExpansionLevel() - (tier - 1) (correct for newest first)
         if exp == nil then
             exp = curExp - (tier - 1)
         end
-        -- Expansion ausserhalb des gueltigen Bereichs: ueberspringen
+        -- Expansion outside the valid range: skip
         if exp < 0 or exp > 11 then
-            -- continue (kein goto in Lua 5.1, leere if-Klausel)
+            -- continue (no goto in Lua 5.1, empty if clause)
         else
             EJ_SelectTier(tier)
             for i = 1, 500 do
@@ -97,7 +97,7 @@ local function BuildInstanceExpCache()
 end
 
 -- ============================================================
--- DB-Zugriff
+-- DB access
 -- ============================================================
 local function GetTrackerDB()
     if not AklimeModDB then return nil end
@@ -108,7 +108,7 @@ local function GetTrackerDB()
 end
 
 -- ============================================================
--- Toon-Name ermitteln (wie SI: "Name - Realm")
+-- Build the character key in the form "Name - Realm".
 -- ============================================================
 local function GetToonKey()
     local name  = UnitName("player")
@@ -120,7 +120,7 @@ local function GetToonKey()
 end
 
 -- ============================================================
--- Währungen sammeln (wie SI Currency:UpdateCurrency)
+-- Collect the player's currency amounts.
 -- ============================================================
 local function CollectCurrencies(toon)
     toon.currency = toon.currency or {}
@@ -144,7 +144,7 @@ local function CollectCurrencies(toon)
 end
 
 -- ============================================================
--- Instanzen sammeln (wie SI Refresh / GetSavedInstanceInfo)
+-- Collect saved instance lockouts from the Blizzard API.
 -- ============================================================
 local function CollectInstances(db, toonKey)
     local numSaved = GetNumSavedInstances()
@@ -154,7 +154,7 @@ local function CollectInstances(db, toonKey)
         local name, id, expires, diff, locked, extended, mostsig, isRaid, players, diffName, numBosses, bossesKilled =
             GetSavedInstanceInfo(i)
         if name and expires and expires > 0 then
-            -- Instanz-Eintrag anlegen/aktualisieren
+            -- Create/update instance entry
             if not db.Instances[name] then
                 db.Instances[name] = {
                     Raid = isRaid,
@@ -164,19 +164,19 @@ local function CollectInstances(db, toonKey)
             local inst = db.Instances[name]
             inst.Raid = isRaid
 
-            -- LFDID aus Link (korrekte Extraktion: GUID ueberspringen)
+            -- LFDID from link (correct extraction: skip the GUID)
             local link = GetSavedInstanceChatLink(i) or ""
             local lid  = link:match("instancelock:[^:]+:(%d+):")
             if lid then
                 inst.LFDID = tonumber(lid)
             end
 
-            -- Expansion: Name-Lookup, dann ID-Fallback, dann 0
+            -- Expansion: name lookup, then ID fallback, then 0
             local cachedExp = (name and AklimeMod_InstExpCache and AklimeMod_InstExpCache[NormName(name)])
                 or (inst.LFDID and AklimeMod_InstExpCache and AklimeMod_InstExpCache[inst.LFDID])
             inst.Expansion = type(cachedExp) == "number" and cachedExp or 0
 
-            -- Char-Eintrag
+            -- Character entry
             inst[toonKey]       = inst[toonKey] or {}
             inst[toonKey][diff] = inst[toonKey][diff] or {}
             local save = inst[toonKey][diff]
@@ -185,10 +185,10 @@ local function CollectInstances(db, toonKey)
             save.Extended = extended
             save.Link     = link ~= "" and link or nil
             save.ID       = id or -1
-            -- Boss-Kills direkt aus API (zuverlässiger als Link-Dekodierung)
+            -- Boss kills directly from the API (more reliable than link decoding)
             save.Total    = numBosses    or 0
             save.Killed   = bossesKilled or 0
-            -- Pro-Boss-Status
+            -- Per boss status
             save.bosses = {}
             for j = 1, (numBosses or 0) do
                 local bossName, _, isKilled = GetSavedInstanceEncounterInfo(i, j)
@@ -199,7 +199,7 @@ local function CollectInstances(db, toonKey)
         end
     end
 
-    -- Abgelaufene Einträge für diesen Char bereinigen
+    -- Clean up expired entries for this character
     for instName, inst in pairs(db.Instances) do
         if inst[toonKey] then
             for d, save in pairs(inst[toonKey]) do
@@ -215,7 +215,7 @@ local function CollectInstances(db, toonKey)
 end
 
 -- ============================================================
--- Weekly Vault (Große Schatzkammer)
+-- Weekly Vault (Great Vault)
 -- Enum.WeeklyRewardChestThresholdType: Raid=1, MythicPlus=2, World=4
 -- ============================================================
 local VAULT_TYPES = {
@@ -249,7 +249,7 @@ local function CollectWeeklyVault(toon)
 end
 
 -- ============================================================
--- Haupt-Sammelfunktion (beim Login aufrufen)
+-- Main collection function (call on login)
 -- ============================================================
 local function CollectToonData()
     local db = GetTrackerDB()
@@ -258,11 +258,11 @@ local function CollectToonData()
     local toonKey = GetToonKey()
     if not toonKey then return end
 
-    -- Toon-Eintrag anlegen
+    -- Create toon entry
     db.Toons[toonKey] = db.Toons[toonKey] or {}
     local t = db.Toons[toonKey]
 
-    -- Basis-Infos (wie SI toonInit + UpdateToonData)
+    -- Basic character info.
     local lclass, class = UnitClass("player")
     t.LClass = lclass
     t.Class  = class
@@ -286,24 +286,24 @@ local function CollectToonData()
     t.Money    = GetMoney()
     t.LastSeen = time()
     t.MaxXP    = UnitXPMax("player")
-    -- GUID fuer eindeutige Zuordnung bei Waehrungs-Transfers
+    -- GUID for unique mapping on currency transfers
     t.GUID     = UnitGUID("player")
 
-    -- Wartungsmodus/Resting
+    -- Resting state
     t.isResting = IsResting()
 
-    -- Währungen sammeln
+    -- Collect currencies
     CollectCurrencies(t)
 
-    -- Weekly Vault sammeln
+    -- Collect weekly vault
     CollectWeeklyVault(t)
 
-    -- Instanzen sammeln
+    -- Collect instances
     CollectInstances(db, toonKey)
 end
 
 -- ============================================================
--- Weekly Reset: abgelaufene Instanzen aus DB entfernen
+-- Weekly reset: remove expired instances from the DB
 -- ============================================================
 local function CleanExpiredInstances()
     local db = GetTrackerDB()
@@ -312,7 +312,7 @@ local function CleanExpiredInstances()
     for instName, inst in pairs(db.Instances) do
         for key, val in pairs(inst) do
             if type(val) == "table" and type(key) == "string" and key:find(" - ") then
-                -- Char-Eintrag
+                -- Character entry
                 for diff, save in pairs(val) do
                     if type(diff) == "number" and save.Expires and save.Expires > 0
                     and save.Expires < now then
@@ -326,9 +326,9 @@ local function CleanExpiredInstances()
 end
 
 -- ============================================================
--- Instanz-Betreten tracken (fuer 10/h Limit-Anzeige)
--- Logik nach SavedInstances: Dict statt Array, Key = instName:diff.
--- Gleiche Instanz zaehlt nur einmal (last-Timestamp wird aktualisiert).
+-- Track instance entries (for the 10/h limit display)
+-- Tracks instance entries for the per hour limit display. Each entry is
+-- stored with a timestamp and pruned once it is older than one hour.
 -- ============================================================
 local function TrackInstanceEntry()
     local db = GetTrackerDB()
@@ -343,10 +343,10 @@ local function TrackInstanceEntry()
     db.instanceHistory = db.instanceHistory or {}
     local now = time()
 
-    -- Jeden Eintritt einzeln speichern (gleiche Instanz zaehlt mehrfach)
+    -- Store each entry separately (the same instance counts multiple times)
     db.instanceHistory[#db.instanceHistory + 1] = { t = now, name = instName }
 
-    -- Eintraege aelter als 1 Stunde entfernen
+    -- Remove entries older than 1 hour
     local cutoff  = now - 3600
     local cleaned = {}
     for _, e in ipairs(db.instanceHistory) do
@@ -356,18 +356,18 @@ local function TrackInstanceEntry()
 end
 
 -- ============================================================
--- Waehrungs-Transfer zwischen eigenen Chars (Account-Waehrungen)
--- Beim Transfer aendert sich der Stand des Quell-Chars, ohne dass er
--- eingeloggt ist. Nach jedem Transfer werden deshalb die echten Salden
--- aller Chars vom Server geholt und in die Tracker-DB geschrieben.
+-- Currency transfer between your own characters (account currencies)
+-- On transfer the balance of the source character changes without it being
+-- logged in. After every transfer the real balances of all characters are
+-- fetched from the server and written into the tracker DB.
 -- ============================================================
 
 local function NormRealm(realm)
     return (realm or ""):gsub("[%s%-']", ""):lower()
 end
 
--- Findet den Toon-Key zu einem Account-Currency-Eintrag.
--- Reihenfolge: GUID (eindeutig), voller Name mit Realm, eindeutiger Kurzname.
+-- Finds the toon key for an account currency entry.
+-- Order: GUID (unique), full name with realm, unique short name.
 local function FindToonKey(db, entry)
     if entry.characterGUID then
         for key, toon in pairs(db.Toons) do
@@ -405,8 +405,8 @@ local function SyncCurrencyFromAccountData(currencyID)
     local ok, list = pcall(C_CurrencyInfo.FetchCurrencyDataFromAccountCharacters, currencyID)
     if not ok or type(list) ~= "table" then return end
 
-    -- Der eingeloggte Char ist in den Account-Daten nie enthalten und wird
-    -- ueber CollectCurrencies separat gepflegt, daher hier ausgenommen.
+    -- The logged in character is never included in the account data and is
+    -- maintained separately via CollectCurrencies, so it is excluded here.
     local currentKey = GetToonKey()
     local seen = {}
     for _, entry in ipairs(list) do
@@ -420,10 +420,10 @@ local function SyncCurrencyFromAccountData(currencyID)
         end
     end
 
-    -- Die API liefert nur Chars mit Bestand > 0. Ein getrackter Char der
-    -- diese Waehrung hatte aber nicht mehr gelistet ist, hat jetzt 0 (z.B.
-    -- der Quell-Char nach dem Wegtransferieren). Nur abgleichen wenn die
-    -- Account-Daten als bereit gemeldet werden, sonst nicht faelschlich nullen.
+    -- The API only returns characters with a balance > 0. A tracked character
+    -- that had this currency but is no longer listed now has 0 (e.g. the
+    -- source character after transferring away). Only reconcile when the
+    -- account data is reported as ready, otherwise do not wrongly zero it.
     local ready = (not C_CurrencyInfo.IsAccountCharacterCurrencyDataReady)
         or C_CurrencyInfo.IsAccountCharacterCurrencyDataReady()
     if ready then
@@ -441,12 +441,12 @@ local function SyncCurrencyFromAccountData(currencyID)
     end
 end
 
--- Waehrungen mit ausstehendem Server-Abgleich nach einem Transfer
+-- Currencies with a pending server reconciliation after a transfer
 local currencySyncPending = {}
 
--- Frische Account-Daten vom Server anfordern (ohne Argument, holt alle
--- Waehrungen). Die Antwort kommt asynchron ueber das RECEIVED-Event. Der
--- Timer-Fallback gleicht ab, falls dieses Event nicht feuert.
+-- Request fresh account data from the server (without argument, fetches all
+-- currencies). The response comes asynchronously via the RECEIVED event. The
+-- timer fallback reconciles in case this event does not fire.
 local function RequestAccountCurrencyData()
     pcall(C_CurrencyInfo.RequestCurrencyDataForAccountCharacters)
     C_Timer.After(2, function()
@@ -457,7 +457,7 @@ local function RequestAccountCurrencyData()
     end)
 end
 
--- Eigener Char: Waehrungsstand bei jeder Aenderung nachziehen (gebuendelt)
+-- Own character: update the currency balance on every change (bundled)
 local ownCurrencyDirty = false
 local function CollectOwnCurrenciesSoon()
     if ownCurrencyDirty then return end
@@ -483,7 +483,7 @@ eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 eventFrame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
 eventFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
--- Transfer-Events: pcall falls ein Event in dieser Client-Version fehlt
+-- Transfer events: pcall in case an event is missing in this client version
 pcall(eventFrame.RegisterEvent, eventFrame, "CURRENCY_TRANSFER_LOG_UPDATE")
 pcall(eventFrame.RegisterEvent, eventFrame, "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED")
 
@@ -491,14 +491,14 @@ eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
         if event == "PLAYER_ENTERING_WORLD" then
             CleanExpiredInstances()
-            -- EJ-Cache + Toon-Daten nach laengerem Delay
+            -- EJ cache + toon data after a longer delay
             C_Timer.After(3, function()
                 BuildInstanceExpCache()
                 CollectToonData()
             end)
         else
-            -- ZONE_CHANGED_NEW_AREA: Instanz-Eintritt zaehlen
-            -- Delay: GetInstanceInfo() ist beim Zonenwechsel noch nicht stabil
+            -- ZONE_CHANGED_NEW_AREA: count instance entry
+            -- Delay: GetInstanceInfo() is not yet stable on a zone change
             C_Timer.After(2, TrackInstanceEntry)
         end
 
@@ -511,7 +511,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
         end
 
     elseif event == "UPDATE_INSTANCE_INFO" then
-        -- Instanzen aktualisieren + abgelaufene bereinigen
+        -- Update instances and clean up expired ones
         local db = GetTrackerDB()
         if not db then return end
         local toonKey = GetToonKey()
@@ -534,12 +534,12 @@ eventFrame:SetScript("OnEvent", function(self, event)
         end)
 
     elseif event == "CURRENCY_DISPLAY_UPDATE" then
-        -- Eigener Char: Stand aktuell halten (looten, ausgeben, Transfer)
+        -- Own character: keep the balance current (looting, spending, transfer)
         CollectOwnCurrenciesSoon()
 
     elseif event == "CURRENCY_TRANSFER_LOG_UPDATE" then
-        -- Ein Transfer wurde verbucht: betroffene Waehrungen aus dem Log
-        -- ermitteln und frische Account-Daten anfordern (Antwort asynchron)
+        -- A transfer was booked: determine the affected currencies from the
+        -- log and request fresh account data (response is asynchronous)
         if C_CurrencyInfo.FetchCurrencyTransferTransactions then
             local ok, txs = pcall(C_CurrencyInfo.FetchCurrencyTransferTransactions)
             if ok and type(txs) == "table" then
@@ -553,7 +553,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
         if C_CurrencyInfo.RequestCurrencyDataForAccountCharacters then
             RequestAccountCurrencyData()
         else
-            -- Keine Request-API: direkt mit dem Cache abgleichen
+            -- No request API: reconcile directly with the cache
             for cid in pairs(currencySyncPending) do
                 SyncCurrencyFromAccountData(cid)
                 currencySyncPending[cid] = nil
@@ -561,8 +561,8 @@ eventFrame:SetScript("OnEvent", function(self, event)
         end
 
     elseif event == "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED" then
-        -- Frische Account-Daten sind da: alle vorgemerkten Waehrungen abgleichen
-        -- (Event hat keine Payload, daher immer ueber die Pending-Liste)
+        -- Fresh account data has arrived: reconcile all flagged currencies
+        -- (event has no payload, so always via the pending list)
         for cid in pairs(currencySyncPending) do
             SyncCurrencyFromAccountData(cid)
             currencySyncPending[cid] = nil

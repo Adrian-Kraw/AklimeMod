@@ -1,16 +1,16 @@
 -- DungeonEye.lua
--- LFG-Auge (QueueStatusButton) an den Minimap-Rand heften.
--- Default: X=-90.4 Y=-77.0 relativ zu Minimap CENTER (empirisch ermittelt).
--- Drag: nur am Rand möglich (fester Radius, nur Winkel ändert sich).
+-- Pin the LFG eye (QueueStatusButton) to the minimap edge.
+-- Default: X=-90.4 Y=-77.0 relative to Minimap CENTER (determined empirically).
+-- Drag: only possible along the edge (fixed radius, only the angle changes).
 
 AklimeMod_Defaults = AklimeMod_Defaults or {}
 AklimeMod_Defaults.dungeonEye = {
     enabled = false,
     locked  = false,
-    angle   = -139.6,  -- Grad, entspricht X=-90.4 Y=-77.0 bei Radius=118.7
+    angle   = -139.6,  -- degrees, equals X=-90.4 Y=-77.0 at radius=118.7
 }
 
--- Fester Radius (empirisch aus Spielwerten: sqrt(90.4²+77²) = 118.7)
+-- Fixed radius (empirically from game values: sqrt(90.4²+77²) = 118.7)
 local RADIUS = 118.7
 
 local function GetDB()
@@ -23,13 +23,13 @@ local inited = false
 local FLAG   = "_akm_eye"
 local origAnchor = nil
 
--- Winkel → X/Y mit festem Radius
+-- Angle to X/Y with a fixed radius
 local function AngleToXY(deg)
     local r = math.rad(deg)
     return math.cos(r) * RADIUS, math.sin(r) * RADIUS
 end
 
--- Button an gespeichertem Winkel positionieren
+-- Position the button at the stored angle
 local function Snap()
     if not btn then return end
     local x, y = AngleToXY(GetDB().angle or -139.6)
@@ -69,8 +69,8 @@ local function Setup()
     btn:SetScript("OnDragStart", function(self)
         if not GetDB().enabled then return end
         if GetDB().locked then return end
-        -- Kein freies Bewegen — wir tracken die Maus direkt
-        -- und snappen den Button live auf den Rand
+        -- No free movement. We track the mouse directly
+        -- and snap the button to the edge live
         self:SetScript("OnUpdate", function()
             local mapCX, mapCY = Minimap:GetCenter()
             if not mapCX then return end
@@ -93,10 +93,10 @@ local function Setup()
 
     btn:SetScript("OnDragStop", function(self)
         self:SetScript("OnUpdate", nil)
-        -- Position ist bereits korrekt durch OnUpdate gesetzt
+        -- Position is already set correctly by OnUpdate
     end)
 
-    -- Blizzard-SetPoint abfangen → korrigieren
+    -- Intercept Blizzard's SetPoint and correct it
     hooksecurefunc(btn, "SetPoint", function(self)
         if self[FLAG] then return end
         if not GetDB().enabled then return end

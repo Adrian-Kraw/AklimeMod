@@ -1,19 +1,19 @@
 -- Modules/QoL/ChatHistory.lua
--- Speichert den Chatverlauf sitzungsuebergreifend in SavedVariables
--- und stellt ihn beim naechsten Login wieder her.
+-- Stores the chat history across sessions in SavedVariables
+-- and restores it on the next login.
 --
--- Speicherort:
---   WTF/Account/<Konto>/SavedVariables/AklimeMod.lua
+-- Storage location:
+--   WTF/Account/<Account>/SavedVariables/AklimeMod.lua
 --   AklimeModDB.chatHistory.messages.f1  (ChatFrame1)
---   AklimeModDB.chatHistory.messages.f2  (ChatFrame2) usw.
+--   AklimeModDB.chatHistory.messages.f2  (ChatFrame2) etc.
 --
--- Format pro Eintrag: { t = "Nachrichtentext", r = 1, g = 1, b = 1 }
+-- Format per entry: { t = "message text", r = 1, g = 1, b = 1 }
 
 local M = {}
 AklimeMod_ChatHistory = M
 
 local MAX_DEFAULT    = 100
-local MAX_MSG_LENGTH = 400   -- Einzelne Nachricht wird auf 400 Zeichen gekuerzt
+local MAX_MSG_LENGTH = 400   -- A single message is truncated to 400 characters
 local restoring      = false
 local hooked         = {}
 
@@ -48,7 +48,7 @@ function M:SetMaxMessages(v)
 end
 
 -- ============================================================
--- Hooks -- wird pro Frame einmalig gesetzt
+-- Hooks (set once per frame)
 -- ============================================================
 function M:HookFrames()
     for i = 1, NUM_CHAT_WINDOWS do
@@ -61,7 +61,7 @@ function M:HookFrames()
                     if restoring then return end
                     local db = GetDB()
                     if not db.enabled then return end
-                    -- Zu lange Nachrichten kuerzen (z.B. Item-Link-Spam im Trade-Chat)
+                    -- Truncate overly long messages (e.g. item link spam in trade chat)
                     local t = text
                     if #t > MAX_MSG_LENGTH then
                         t = t:sub(1, MAX_MSG_LENGTH) .. "..."
@@ -80,7 +80,7 @@ function M:HookFrames()
 end
 
 -- ============================================================
--- Verlauf beim Login wiederherstellen
+-- Restore history on login
 -- ============================================================
 function M:RestoreHistory()
     local db = GetDB()
@@ -99,7 +99,7 @@ function M:RestoreHistory()
 end
 
 -- ============================================================
--- Loeschen
+-- Clear
 -- ============================================================
 function M:ClearAll()
     for i = 1, NUM_CHAT_WINDOWS do
@@ -133,7 +133,7 @@ eventFrame:SetScript("OnEvent", function(_, event)
     if event ~= "PLAYER_LOGIN" then return end
     if not GetDB().enabled then return end
     M:HookFrames()
-    -- Kurz warten bis alle Chat-Frames initialisiert sind
+    -- Wait briefly until all chat frames are initialized
     C_Timer.After(0.5, function()
         M:RestoreHistory()
     end)

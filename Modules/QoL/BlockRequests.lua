@@ -1,5 +1,5 @@
 -- Modules/QoL/BlockRequests.lua
--- Blockiert eingehende Duellanfragen und Haustierkampf-Duellanfragen.
+-- Blocks incoming duel requests and pet battle duel requests.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.blockRequests then return AklimeModDB.blockRequests end

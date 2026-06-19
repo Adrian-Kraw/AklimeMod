@@ -1,11 +1,11 @@
--- ColorizerSkins_UnitFrames.lua — 1:1 Port von FrameColor
+-- ColorizerSkins_UnitFrames.lua: unit frame skin definitions for the colorizer.
 
 local C = AklimeMod_Colorizer
 local D = C.defaults
 local function T(tex,r,g,b,a) if tex then tex:SetDesaturation(1); tex:SetVertexColor(r,g,b,a or 1) end end
 local function R(tex) if tex then C.Restore(tex) end end
 local function col(k,ck) return C:GetColor(k,ck) end
-local function rgb(c) return c[1],c[2],c[3],c[4] end -- für Arrays
+local function rgb(c) return c[1],c[2],c[3],c[4] end -- for arrays
 
 -- ============================================================
 -- Player Frame
@@ -390,7 +390,7 @@ local function skinRaidGroup(i, mr,mg,mb,ma)
         "BorderFrameBorderTopRight","BorderFrameBorderBottomRight","BorderFrameBorderTopLeft","BorderFrameBorderBottomLeft" }) do
         T(_G[pfx..sfx], mr,mg,mb,ma)
     end
-    -- Deaktiviert: koennte Debuff-Typ-Indikatoren (Magie/Gift/Fluch/Krankheit) ueberschreiben.
+    -- Disabled: could overwrite debuff type indicators (magic/poison/curse/disease).
     -- for n=1,5 do
     --     for _,sfx in ipairs({ "HorizBottomBorder","HorizTopBorder","VertRightBorder","VertLeftBorder" }) do
     --         T(_G[pfx.."Member"..n..sfx], mr,mg,mb,ma)
@@ -403,7 +403,7 @@ local function restoreRaidGroup(i)
         "BorderFrameBorderTopRight","BorderFrameBorderBottomRight","BorderFrameBorderTopLeft","BorderFrameBorderBottomLeft" }) do
         R(_G[pfx..sfx])
     end
-    -- Member-Borders ebenfalls wiederherstellen, falls aus aelteren Versionen noch getinted.
+    -- Also restore member borders in case they are still tinted from older versions.
     for n=1,5 do
         for _,sfx in ipairs({ "HorizBottomBorder","HorizTopBorder","VertRightBorder","VertLeftBorder" }) do
             R(_G[pfx.."Member"..n..sfx])
@@ -425,7 +425,7 @@ C:Register("compactRaidGroup", {
 })
 
 -- ============================================================
--- Gruppen-Reihenfolge
+-- Group order
 -- ============================================================
 table.insert(AklimeMod_Colorizer.groupOrder, {
     label = "Unit Frames",

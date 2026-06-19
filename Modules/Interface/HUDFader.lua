@@ -1,14 +1,14 @@
 -- Modules/Interface/HUDFader.lua
--- Zwei unabhaengige Modi: Ruhezonen (mode1) und Offene Welt (mode2).
--- Beide koennen gleichzeitig aktiv sein. Die finale Alpha ist das Maximum aller aktiven Modi.
--- Kampf: sofort volle Alpha, komplette Zeit sichtbar.
--- Instanzen: kein Modus wirkt.
+-- Two independent modes: resting zones (mode1) and open world (mode2).
+-- Both can be active at the same time. The final alpha is the maximum of all active modes.
+-- Combat: immediately full alpha, visible the whole time.
+-- Instances: no mode applies.
 
 local M = {}
 AklimeMod_HUDFader = M
 
 -- ============================================================
--- UI-Elemente (SetAlpha-Fade)
+-- UI elements (SetAlpha fade)
 -- ============================================================
 local ELEMENTS = {
     { key = "actionBars", frames = function()
@@ -41,7 +41,7 @@ local ELEMENTS = {
         return f
     end },
     { key = "minimap", frames = function()
-        -- Nur MinimapCluster faden. Minimap erbt die Parent-Alpha automatisch.
+        -- Only fade MinimapCluster. Minimap inherits the parent alpha automatically.
         return MinimapCluster and {MinimapCluster} or {}
     end },
     { key = "buffs",        frames = function() return BuffFrame             and {BuffFrame}             or {} end },
@@ -114,17 +114,17 @@ local function FadeTo(frame, alpha)
 end
 
 -- ============================================================
--- Minimap-Overlays
--- Namenlose MinimapCluster-Kinder (Spielerpfeil, Quest-Blobs,
--- Haendler-Icons) ignorieren Parent-Alpha. Loesung: Hide() + OnShow-Hook.
+-- Minimap overlays
+-- Nameless MinimapCluster children (player arrow, quest blobs,
+-- merchant icons) ignore the parent alpha. Solution: Hide() + OnShow hook.
 -- ============================================================
 local minimapIdleActive  = false
 local hookedOverlays     = {}
 local currentHidden      = {}
-local minimapShowHooked  = false  -- Einmalig: hooksecurefunc auf Minimap.Show im Housing
+local minimapShowHooked  = false  -- One-time: hooksecurefunc on Minimap.Show in housing
 
 local function HideMinimapOverlays()
-    if minimapIdleActive then return end  -- bereits versteckt, kein zweites wipe
+    if minimapIdleActive then return end  -- already hidden, no second wipe
     minimapIdleActive = true
     wipe(currentHidden)
     if not MinimapCluster then return end
@@ -132,9 +132,9 @@ local function HideMinimapOverlays()
     local inHousing = inInst and (instType == "interior" or instType == "neighborhood")
 
     if inHousing then
-        -- Im Housing ignoriert Minimap die Parent-Alpha von MinimapCluster.
-        -- Minimap direkt verstecken (Hide) damit Pfeil und alle Kinder verschwinden.
-        -- MinimapCluster-Kinder nicht anfassen (verhindert Layout-Reflow).
+        -- In housing the Minimap ignores the parent alpha of MinimapCluster.
+        -- Hide the Minimap directly so the arrow and all children disappear.
+        -- Do not touch MinimapCluster children (prevents a layout reflow).
         if not Minimap then return end
         if not minimapShowHooked then
             minimapShowHooked = true
@@ -165,9 +165,9 @@ local function HideMinimapOverlays()
 end
 
 local function ShowMinimapOverlays()
-    if not minimapIdleActive then return end  -- bereits sichtbar
+    if not minimapIdleActive then return end  -- already visible
     minimapIdleActive = false
-    -- Im Housing wurde Minimap direkt versteckt, wieder einblenden.
+    -- In housing the Minimap was hidden directly, show it again.
     if Minimap and not Minimap:IsShown() then
         Minimap:Show()
     end
@@ -178,7 +178,7 @@ local function ShowMinimapOverlays()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 local function GetChatFrames()
     local f = {}
@@ -197,14 +197,14 @@ end
 
 -- ============================================================
 -- Unified Alpha
--- Jeder Modus meldet seine gewuenschte Alpha (nil = nicht aktiv).
--- Finale Alpha = Maximum aller gemeldeten Werte.
--- Keine Modi aktiv: volle Alpha (1.0).
+-- Each mode reports its desired alpha (nil = not active).
+-- Final alpha = maximum of all reported values.
+-- No modes active: full alpha (1.0).
 -- ============================================================
 local modeAlphas = {}
 local inCombat   = false
 
--- Mapping: ELEMENTS-Key -> DB-exclude-Key
+-- Mapping: ELEMENTS key -> DB exclude key
 local EXCLUDE_KEY = {
     actionBars  = "actionBars",
     microMenu   = "microMenu",
@@ -223,7 +223,7 @@ local EXCLUDE_KEY = {
     damageMeter = "damageMeter",
 }
 
--- Gibt true zurueck wenn der excludeKey in einem aktiven Modus als Ausnahme markiert ist
+-- Returns true if the excludeKey is marked as an exception in an active mode
 local function IsExcluded(excludeKey)
     if not excludeKey then return false end
     for dbKey in pairs(modeAlphas) do
@@ -270,9 +270,9 @@ local function GoFullAll()
 end
 
 -- ============================================================
--- Mode-Factory
--- dbKey:     Schlussel in AklimeModDB.interfaceFade (z.B. "mode1")
--- zoneCheck: function() -> bool  (true = Modus gilt in dieser Zone)
+-- Mode factory
+-- dbKey:     key in AklimeModDB.interfaceFade (e.g. "mode1")
+-- zoneCheck: function() -> bool  (true = mode applies in this zone)
 -- ============================================================
 local function CreateMode(dbKey, zoneCheck)
     local mode      = {}
@@ -437,7 +437,7 @@ local function CreateMode(dbKey, zoneCheck)
 end
 
 -- ============================================================
--- Modi
+-- Modes
 -- ============================================================
 local Mode1 = CreateMode("mode1", function()
     return IsResting() and not IsInInstance()
@@ -447,8 +447,8 @@ local Mode2 = CreateMode("mode2", function()
     return not IsResting() and not IsInInstance()
 end)
 
--- Housing: Instanztyp "neighborhood" ist Housing-exklusiv (TWW 11.1+).
--- Gilt fuer Alliance und Horde, alle Sprachen, Aussen- und Innenbereich.
+-- Housing: instance type "neighborhood" is housing-exclusive.
+-- Applies to Alliance and Horde, all languages, exterior and interior.
 local Mode3 = CreateMode("mode3", function()
     local inInst, instType = IsInInstance()
     return inInst and (instType == "neighborhood" or instType == "interior")
@@ -481,8 +481,8 @@ ef:SetScript("OnEvent", function(_, event)
 
     if event == "PLAYER_ENTERING_WORLD" then
         inCombat = false
-        -- Minimap-Idle-Zustand zuruecksetzen bevor Show() aufgerufen wird.
-        -- Sonst wuerde der hooksecurefunc-Hook Minimap sofort wieder verstecken.
+        -- Reset the minimap idle state before Show() is called.
+        -- Otherwise the hooksecurefunc hook would hide the Minimap again immediately.
         ShowMinimapOverlays()
         if Minimap then Minimap:SetAlpha(1.0) end
         for _, m in ipairs(ALL_MODES) do m:OnEnteringWorld() end

@@ -1,12 +1,12 @@
 -- Modules/QoL/ChatLearnFilter.lua
--- Blendet Lernen/Verlernen-Meldungen im Chat aus.
+-- Hides learn/unlearn messages in the chat.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.chatLearnFilter then return AklimeModDB.chatLearnFilter end
     return { enabled = false }
 end
 
--- Wandelt einen Blizzard-Formatstring ("Du hast %s gelernt.") in ein Lua-Pattern um.
+-- Converts a Blizzard format string ("You have learned %s.") into a Lua pattern.
 local function FmtToPattern(fmt)
     if type(fmt) ~= "string" then return nil end
     local pattern = fmt
@@ -33,9 +33,9 @@ local function BuildPatterns()
     end
 end
 
--- Fallback für Retail-Format mit Spell-Links.
--- Retail benutzt ein neues Format: "Ihr habt einen neuen Zauber erlernt: [X]"
--- wobei [X] ein echter |Hspell:-Hyperlink ist.
+-- Fallback for the retail format with spell links.
+-- Retail uses a new format: "You have learned a new spell: [X]"
+-- where [X] is a real |Hspell: hyperlink.
 local LEARN_VERBS = { "erlernt", "gelernt", "verlernt", "learned", "unlearned" }
 
 local function IsRetailLearnMessage(msg)

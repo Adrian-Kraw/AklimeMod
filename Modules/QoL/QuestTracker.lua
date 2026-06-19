@@ -1,8 +1,8 @@
 -- Modules/QoL/QuestTracker.lua
--- Quest-Tracker-Erweiterungen:
--- 1. Quest-Anzahl im Tracker-Header (z.B. "15/25")
--- 2. Header ausblenden wenn zugeklappt (nur Minimieren-Button sichtbar)
--- 3. Zugeklappten Zustand zwischen Sessions merken
+-- Quest tracker extensions:
+-- 1. Quest count in the tracker header (e.g. "15/25")
+-- 2. Hide the header when collapsed (only the minimize button visible)
+-- 3. Remember the collapsed state between sessions
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.questTracker then return AklimeModDB.questTracker end
@@ -10,7 +10,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Quest-Anzahl
+-- Quest count
 -- ============================================================
 
 local QUEST_COUNT_COLOR = { r = 1, g = 210 / 255, b = 0 }
@@ -99,7 +99,7 @@ local function UpdateQuestCount()
 end
 
 -- ============================================================
--- Minimieren-Button (nur Button wenn zugeklappt)
+-- Minimize button (only the button when collapsed)
 -- ============================================================
 
 local MINIMIZE_ANCHORS = {

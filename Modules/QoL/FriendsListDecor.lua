@@ -231,7 +231,7 @@ local M = {}
 AklimeMod_FriendsListDecor = M
 
 local function FindFavoriteStar(button)
-    -- Atlas-Name ist bekannt: "friendslist-favorite"
+    -- Atlas name is known: "friendslist-favorite"
     for _, region in ipairs({ button:GetRegions() }) do
         local ok, atlas = pcall(function() return region:GetAtlas() end)
         if ok and atlas == "friendslist-favorite" then return region end
@@ -250,10 +250,10 @@ local function MoveStarRight(button, nameFont)
         return
     end
 
-    -- Original verstecken (wuerde ausserhalb der Clip-Region landen)
+    -- Hide the original, it would land outside the clip region
     star:Hide()
 
-    -- Ersatz-Textur einmalig pro Button erstellen
+    -- Create the replacement texture once per button
     local repl = starReplacements[button]
     if not repl then
         repl = button:CreateTexture(nil, "ARTWORK", nil, 7)
@@ -262,7 +262,7 @@ local function MoveStarRight(button, nameFont)
         starReplacements[button] = repl
     end
 
-    -- Position: direkt nach dem Text-Ende
+    -- Position right after the end of the text
     repl:ClearAllPoints()
     if nameFont then
         repl:SetPoint("LEFT", nameFont, "LEFT", nameFont:GetStringWidth() + 2, 0)
@@ -310,10 +310,10 @@ local function DecorateWoWFriend(button)
 
     if infoFont then
         if isConnected then
-            -- Online: Ort und Realm anzeigen.
+            -- Online: show area and realm.
             infoFont:SetText(BuildLocationText(info.area, realm) or "")
         end
-        -- Offline: nicht anfassen, Blizzard zeigt "Zuletzt online".
+        -- Offline: do not touch, Blizzard shows "Last online".
     end
 
     SetFactionIcon(button, nil)
@@ -392,8 +392,8 @@ local function DecorateBNetFriend(button)
 
     nameFont:SetText(displayName)
     if not isOnline then nameFont:SetTextColor(0.6, 0.6, 0.6) end
-    -- Info-Zeile nur setzen wenn online oder tatsaechlich Text vorhanden.
-    -- Offline ohne Text: Blizzard zeigt "Zuletzt online", nicht ueberschreiben.
+    -- Only set the info line when online or there is actually text.
+    -- Offline without text: Blizzard shows "Last online", do not overwrite.
     if infoFont then
         if isOnline or (infoText and infoText ~= "") then
             infoFont:SetText(infoText or "")
@@ -414,18 +414,18 @@ local function DecorateBNetFriend(button)
     MoveStarRight(button, nameFont)
 end
 
--- Prueft ob ein Button zum Housing-System gehoert.
--- FriendsFrame_UpdateFriendButton wird vom Housing-System fuer Kontakt-Buttons aufgerufen.
--- Das Housing-Popup ist oft ein Kind von FriendsFrame, daher reicht IsDescendantOf(FriendsFrame)
--- allein nicht aus - Housing-Buttons wuerden faelschlich als Friends-Buttons erkannt.
--- Addon-Code der auf Housing-Buttons schreibt taintet sie und blockiert VisitHouse().
+-- Checks whether a button belongs to the housing system.
+-- FriendsFrame_UpdateFriendButton is called by the housing system for contact buttons.
+-- The housing popup is often a child of FriendsFrame, so IsDescendantOf(FriendsFrame)
+-- alone is not enough. Housing buttons would be wrongly detected as friend buttons.
+-- Addon code that writes to housing buttons taints them and blocks VisitHouse().
 local function IsHousingButton(button)
-    -- Expliziter Check gegen bekannte Housing-Frame-Globals (Blizzard_HouseList Addon)
+    -- Explicit check against known housing frame globals (Blizzard_HouseList addon)
     local housingFrame = _G["HouseListFrame"]
     if housingFrame and button.IsDescendantOf and button:IsDescendantOf(housingFrame) then
         return true
     end
-    -- Fallback: Parent-Kette nach "HouseList" im Frame-Namen durchsuchen (nur lesen, kein Taint)
+    -- Fallback: search the parent chain for "HouseList" in the frame name (read only, no taint)
     local frame = button:GetParent()
     local depth = 0
     while frame and depth < 8 do
@@ -439,7 +439,7 @@ end
 
 local function UpdateFriendButton(button)
     if not button or not button.buttonType then return end
-    -- Housing-Buttons niemals anfassen, auch wenn sie FriendsFrame-Nachkommen sind.
+    -- Never touch housing buttons, even if they are FriendsFrame descendants.
     if IsHousingButton(button) then return end
     if not GetDB().enabled then
         if button._aklimeFactionIcon then button._aklimeFactionIcon:Hide() end
@@ -448,7 +448,7 @@ local function UpdateFriendButton(button)
         return
     end
 
-    -- Nur Buttons innerhalb von FriendsFrame dekorieren.
+    -- Only decorate buttons inside FriendsFrame.
     if FriendsFrame and button.IsDescendantOf and not button:IsDescendantOf(FriendsFrame) then
         return
     end
@@ -462,9 +462,9 @@ local function UpdateFriendButton(button)
     end
 end
 
--- Buttons die im naechsten OnUpdate dekoriert werden sollen.
--- Der Hook schreibt nur in diese Tabelle (kein Frame-Code im Blizzard-Tick).
--- OnUpdate liest sie im selben Frame vor dem Render aus — kein Flicker, kein Taint.
+-- Buttons to be decorated on the next OnUpdate.
+-- The hook only writes into this table (no frame code in the Blizzard tick).
+-- OnUpdate reads them in the same frame before the render, no flicker, no taint.
 local pendingButtons = {}
 local decorRunner = CreateFrame("Frame")
 decorRunner:SetScript("OnUpdate", function()
@@ -480,9 +480,9 @@ local function EnsureHook()
     if hookInstalled then return true end
     if type(FriendsFrame_UpdateFriendButton) ~= "function" then return false end
     hooksecurefunc("FriendsFrame_UpdateFriendButton", function(button)
-        -- Guard: nur wenn FriendsFrame sichtbar ist dekorieren.
-        -- Housing-Panel oeffnet FriendsFrame nicht - damit werden Housing-Buttons
-        -- beim Refresh/Hover nicht in pendingButtons aufgenommen und nicht taintet.
+        -- Guard: only decorate when FriendsFrame is visible.
+        -- The housing panel does not open FriendsFrame, so housing buttons
+        -- are not added to pendingButtons on refresh or hover and stay untainted.
         if not FriendsFrame or not FriendsFrame:IsShown() then return end
         if debugstack():find("HouseList", 1, true) then return end
         if IsHousingButton(button) then return end
@@ -494,17 +494,17 @@ end
 
 function M:Refresh()
     if not hookInstalled then EnsureHook() end
-    -- Blizzards Update-Funktionen (FriendsList_UpdateFriends etc.) duerfen hier
-    -- nicht direkt aufgerufen werden. Der Aufruf aus Addon-Code taintet alle
-    -- Daten die sie schreiben (button.id, friendInfo, DataProvider). Blizzards
-    -- Kontextmenue liest diese Daten beim Rechtsklick und VisitHouse() wird
-    -- dann als ADDON_ACTION_FORBIDDEN blockiert.
-    -- Stattdessen: Server-Update anfordern. FRIENDLIST_UPDATE laesst Blizzard
-    -- die Liste selbst (secure) neu aufbauen, unser Hook dekoriert danach.
+    -- Blizzard update functions (FriendsList_UpdateFriends etc.) must not be
+    -- called directly here. Calling them from addon code taints all data they
+    -- write (button.id, friendInfo, DataProvider). Blizzard reads this data in
+    -- the right click context menu and VisitHouse() is then blocked as
+    -- ADDON_ACTION_FORBIDDEN.
+    -- Instead request a server update. FRIENDLIST_UPDATE lets Blizzard rebuild
+    -- the list itself (secure), our hook decorates afterwards.
     if C_FriendList and C_FriendList.ShowFriends then
         C_FriendList.ShowFriends()
     end
-    -- Sichtbare Buttons sofort neu dekorieren (rein lesender Zugriff).
+    -- Redecorate visible buttons immediately (read only access).
     local scrollBox = (FriendsListFrame and FriendsListFrame.ScrollBox)
         or (FriendsFrame and FriendsFrame.ScrollBox)
     if scrollBox and scrollBox.ForEachFrame then

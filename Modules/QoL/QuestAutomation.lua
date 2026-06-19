@@ -1,8 +1,8 @@
 -- Modules/QoL/QuestAutomation.lua
--- Quests automatisch annehmen und abgeben beim NPC-Gespräch.
--- Modifier-Taste konfigurierbar. Filter für Daily/Trivial/Warband-Quests.
--- Wowhead-URL-Button im Quest-Rechtsklick-Menü.
--- NPC-Ignoreliste via Rechtsklick auf Ziel.
+-- Automatically accept and turn in quests during NPC dialog.
+-- Modifier key configurable. Filters for daily/trivial/warband quests.
+-- Wowhead URL button in the quest right-click menu.
+-- NPC ignore list via right-click on the target.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.questAutomation then return AklimeModDB.questAutomation end
@@ -10,7 +10,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 
 local function GetNPCIDFromGUID(guid)
@@ -35,7 +35,7 @@ local function ShouldAutoQuest()
     if mod == "SHIFT" or mod == "CTRL" or mod == "ALT" then
         return IsModifierHeld(mod)
     end
-    -- NONE: immer automatisch, außer Shift gedrückt (Legacy-Schutz)
+    -- NONE: always automatic, unless Shift is held (legacy protection)
     return not IsShiftKeyDown()
 end
 
@@ -87,7 +87,7 @@ local function OnGossipShow()
     local available    = C_GossipInfo.GetAvailableQuests()
     local hasAvailable = #available > 0
 
-    -- Abgeschlossene aktive Quests abgeben
+    -- Turn in completed active quests
     if hasActive then
         for _, quest in pairs(C_GossipInfo.GetActiveQuests()) do
             if quest.isComplete then
@@ -96,7 +96,7 @@ local function OnGossipShow()
         end
     end
 
-    -- Verfügbare Quests annehmen
+    -- Accept available quests
     if hasAvailable then
         for _, quest in pairs(available) do
             if not ShouldFilterQuest(quest.questID, quest.isTrivial, quest.frequency) then
@@ -166,7 +166,7 @@ local function OnQuestComplete()
 end
 
 -- ============================================================
--- Wowhead-Link im Quest-Kontextmenü
+-- Wowhead link in the quest context menu
 -- ============================================================
 
 local menuHooked = false
@@ -241,7 +241,7 @@ local function HookMenus()
     Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE",     AddWowheadEntry)
     Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", AddWowheadEntry)
 
-    -- NPC-Ignoreliste per Rechtsklick auf Ziel
+    -- NPC ignore list via right-click on the target
     Menu.ModifyMenu("MENU_UNIT_TARGET", function(owner, root, ctx)
         if not GetDB().enabled then return end
         if not UnitExists("target") or UnitPlayerControlled("target") then return end

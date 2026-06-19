@@ -1,6 +1,6 @@
 -- Core/DB.lua
--- Hinweis: Colorizer-DB wird von ColorizerCore.lua:InitDB() befuellt.
--- Hier nur die restlichen Addon-Einstellungen.
+-- Note: the Colorizer DB is populated by ColorizerCore.lua:InitDB().
+-- This file holds only the remaining addon settings.
 
 AklimeModDB = AklimeModDB or {}
 
@@ -59,7 +59,7 @@ function AklimeMod_InitDB()
     def(db.leaveServiceChannel, "enabled", false)
 
     db.mapCoords = db.mapCoords or {}
-    def(db.mapCoords, "enabled", false)  -- Default: an
+    def(db.mapCoords, "enabled", false)  -- Default: on
 
     db.drinkReminder = db.drinkReminder or {}
     def(db.drinkReminder, "enabled",           false)
@@ -154,7 +154,7 @@ function AklimeMod_InitDB()
     def(db.questTracker, "minimizeButtonOnly",  false)
     def(db.questTracker, "minimizeButtonAnchor","TOPRIGHT")
     def(db.questTracker, "rememberState",       false)
-    -- questTracker.collapsed: kein Default, wird beim ersten Zustandswechsel gesetzt
+    -- questTracker.collapsed: no default, set on the first state change
 
     db.blockRequests = db.blockRequests or {}
     def(db.blockRequests, "blockDuels",      false)
@@ -261,6 +261,6 @@ function AklimeMod_InitDB()
     db.playedTime.chars = db.playedTime.chars or {}
     def(db.playedTime, "enabled", false)
 
-    -- Colorizer: wird von AklimeMod_Colorizer:InitDB() befuellt (ColorizerCore.lua)
+    -- Colorizer: populated by AklimeMod_Colorizer:InitDB() (ColorizerCore.lua)
     db.colorizer = db.colorizer or {}
 end

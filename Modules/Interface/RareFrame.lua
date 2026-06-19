@@ -1,14 +1,14 @@
 -- Modules/Interface/RareFrame.lua
--- Ergänzt seltene Gegner im TargetFrame mit Silberdrachen
--- Stern bleibt drunter, Drachen wird oben drüber gelegt
+-- Adds a silver dragon to rare enemies in the TargetFrame
+-- The star stays below, the dragon is placed on top
 --
--- Exakte Werte aus ElitePlayerFrame (Mainline/Frame.xml + Core.lua):
+-- Exact values for the rare silver-dragon overlay:
 --   Atlas: UI-HUD-UnitFrame-Target-PortraitOn-Boss-Rare-Silver
---   Frame anchort RIGHT an TargetFrame.TargetFrameContainer.FrameTexture
---   Portrait anchort RIGHT an TargetFrame.TargetFrameContainer.TargetPortrait
+--   Frame anchors RIGHT to TargetFrame.TargetFrameContainer.FrameTexture
+--   Portrait anchors RIGHT to TargetFrame.TargetFrameContainer.TargetPortrait
 --   Offset: Frame x=9,y=0 / Portrait x=20,y=13
---   flipHorizontally auf dem TargetFrame = NICHT gespiegelt (normaler TexCoord 0,1,0,1)
---   (ElitePlayerFrame spiegelt NUR den PlayerFrame weil der links sitzt)
+--   flipHorizontally on the TargetFrame = NOT mirrored (normal TexCoord 0,1,0,1)
+--   (the PlayerFrame version is mirrored ONLY because it sits on the left)
 
 local FRAME_OX    =  9
 local FRAME_OY    =  0
@@ -37,14 +37,14 @@ local function BuildRareFrames()
     rareContainer:SetAllPoints(tf)
     rareContainer:Hide()
 
-    -- Frame-Textur: BACKGROUND, anchor RIGHT an TargetFrame FrameTexture
+    -- Frame texture: BACKGROUND, anchor RIGHT to TargetFrame FrameTexture
     rareFrameTex = rareContainer:CreateTexture(nil, "BACKGROUND", nil, 1)
     rareFrameTex:Hide()
     if refFrameTex then
         rareFrameTex:SetPoint("RIGHT", refFrameTex, "RIGHT", FRAME_OX, FRAME_OY)
     end
 
-    -- Portrait-Textur: ARTWORK, anchor RIGHT an TargetPortrait
+    -- Portrait texture: ARTWORK, anchor RIGHT to TargetPortrait
     rarePortTex = rareContainer:CreateTexture(nil, "ARTWORK", nil, 2)
     rarePortTex:Hide()
     if refPortrait then
@@ -57,7 +57,7 @@ local function ApplyAtlas(tex, atlas)
     local info = C_Texture.GetAtlasInfo(atlas)
     if info then tex:SetSize(info.width, info.height) end
     tex:SetAtlas(atlas, false)
-    -- TargetFrame sitzt rechts → NICHT spiegeln (0,1,0,1 = normal)
+    -- TargetFrame sits on the right, do NOT mirror (0,1,0,1 = normal)
     tex:SetTexCoord(0, 1, 0, 1)
     tex:Show()
 end
@@ -69,7 +69,7 @@ function AklimeMod_UpdateRareFrame()
     end
 
     local class = UnitExists("target") and UnitClassification("target")
-    -- Nur bei "rare" anzeigen — "rareelite" hat schon den goldenen Drachen von Blizzard
+    -- Only show for "rare". "rareelite" already has Blizzard's golden dragon
     if class == "rare" then
         BuildRareFrames()
         if not rareContainer then return end

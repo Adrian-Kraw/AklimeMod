@@ -1,6 +1,6 @@
 -- Modules/Interface/RaidFrameCenter.lua
--- Zentriert Raid-Frames horizontal. Y-Position bleibt erhalten.
--- MT-Frame haengt links raus und wird beim Zentrieren ignoriert.
+-- Centers raid frames horizontally. The Y position is kept.
+-- The MT frame sticks out to the left and is ignored when centering.
 
 AklimeMod_Defaults = AklimeMod_Defaults or {}
 AklimeMod_Defaults.raidFrameCenter = { enabled = true, offsetX = 0 }
@@ -64,7 +64,7 @@ local function RepositionContainer()
     end
     if gWidth == 0 then gWidth = 220 end
 
-    -- MT-Offset messen (immer aktuell, relativ zwischen Container und Group1)
+    -- Measure the MT offset (always current, relative between container and Group1)
     local mtOffset = 0
     local g1 = _G["CompactRaidGroup1"]
     if g1 and g1:IsShown() then
@@ -72,7 +72,7 @@ local function RepositionContainer()
         if off and off > 10 then mtOffset = off end
     end
 
-    -- Nur neu setzen wenn sich Gruppenanzahl ODER MT-Offset geaendert hat
+    -- Only reposition when the group count OR MT offset has changed
     if count == lastCount and mtOffset == lastMtOffset and hasModified then return end
     lastCount    = count
     lastMtOffset = mtOffset
@@ -152,7 +152,7 @@ AklimeMod_RaidFrameCenter = {
     Update     = function() lastCount = 0; lastMtOffset = 0; hasModified = false; RepositionContainer() end,
 }
 
--- SetMainTank/ClearMainTank direkt hooken
+-- Hook SetMainTank/ClearMainTank directly
 if SetMainTank then
     hooksecurefunc("SetMainTank", function() RequestReposition() end)
 end

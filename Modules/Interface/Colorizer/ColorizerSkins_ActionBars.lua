@@ -1,4 +1,4 @@
--- ColorizerSkins_ActionBars.lua — 1:1 Port von FrameColor
+-- ColorizerSkins_ActionBars.lua: action bar skin definitions for the colorizer.
 
 local C = AklimeMod_Colorizer
 local function T(tex,r,g,b,a) if tex then tex:SetDesaturation(1); tex:SetVertexColor(r,g,b,a or 1) end end

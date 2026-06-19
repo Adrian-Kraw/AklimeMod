@@ -1,12 +1,12 @@
 -- UI/ColorizerUI.lua
 local L = AklimeModL or {}
--- Sub-Farben-UI für den Colorizer — exakt wie FrameColor:
--- - Swatch-Button: rund, zeigt aktuelle Farbe (wie FrameColor colorPicker.backgroundTexture)
--- - followClassColor-Checkbox: aktiviert Klassenfarbe, Swatch zeigt dann Klassen-Icon
--- - Kein Lock-Button
+-- Sub color UI for the colorizer.
+-- Swatch button is round and shows the current color.
+-- The followClassColor checkbox switches to the class color and the swatch then shows the class icon.
+-- There is no lock button.
 
 -- ============================================================
--- Klassenicon-Atlas (WoW hat 13 Klassen)
+-- Class icon atlas (WoW has 13 classes)
 -- ============================================================
 local classIconAtlas = {
     DEATHKNIGHT = "classicon-deathknight",
@@ -27,14 +27,14 @@ local classIconAtlas = {
 local playerClass = select(2, UnitClass("player"))
 
 -- ============================================================
--- Swatch-Helfer
+-- Swatch helper
 -- ============================================================
 local function SetSwatchFromDB(colorPicker, skinKey, colorKey)
     if not colorPicker or not colorPicker.swatch then return end
     local db = AklimeModDB.colorizer[skinKey]
     local co = db and db.colors and db.colors[colorKey]
     if co and co.followClassColor then
-        -- Zeige Klassenicon statt Farbe
+        -- Show class icon instead of color
         local atlas = classIconAtlas[playerClass]
         if atlas then
             colorPicker.swatch:SetAtlas(atlas)
@@ -42,8 +42,8 @@ local function SetSwatchFromDB(colorPicker, skinKey, colorKey)
             colorPicker.swatch:SetColorTexture(1, 1, 1, 1)
         end
     else
-        -- Zeige die gespeicherte Farbe
-        colorPicker.swatch:SetAtlas(nil)  -- Atlas zurücksetzen
+        -- Show the stored color
+        colorPicker.swatch:SetAtlas(nil)  -- reset atlas
         if co then
             colorPicker.swatch:SetColorTexture(co.r, co.g, co.b, 1)
         else
@@ -53,7 +53,7 @@ local function SetSwatchFromDB(colorPicker, skinKey, colorKey)
 end
 
 -- ============================================================
--- Global-Farb-Zeile Initializer
+-- Global color row initializer
 -- ============================================================
 do
     local C = AklimeMod_Colorizer
@@ -135,7 +135,7 @@ local function globalColorInitializer(button, node)
 end
 
 -- ============================================================
--- Sub-Farb-Zeile Initializer
+-- Sub color row initializer
 -- ============================================================
 local function subColorInitializer(button, node)
     if button.followClassColor then button.followClassColor:Show() end
@@ -149,7 +149,7 @@ local function subColorInitializer(button, node)
         return db and db.colors and db.colors[d.colorKey]
     end
 
-    -- Swatch initial setzen
+    -- Set swatch initially
     SetSwatchFromDB(button.colorPicker, d.skinKey, d.colorKey)
 
     -- followClassColor Checkbox
@@ -169,20 +169,20 @@ local function subColorInitializer(button, node)
             local e = getEntry()
             if not e then return end
             e.followClassColor = self:GetChecked()
-            -- Swatch aktualisieren
+            -- Update swatch
             SetSwatchFromDB(button.colorPicker, d.skinKey, d.colorKey)
-            -- ColorPicker deaktivieren wenn Klassenfarbe aktiv
+            -- Disable ColorPicker when class color is active
             if button.colorPicker then
                 button.colorPicker:SetEnabled(not e.followClassColor)
             end
-            -- Skin neu anwenden
+            -- Reapply skin
             if C:IsEnabled(d.skinKey) then
                 local skin = C.skins[d.skinKey]
                 if skin then pcall(function() skin:apply() end) end
             end
         end)
 
-        -- ColorPicker initial deaktivieren wenn followClassColor aktiv
+        -- Disable ColorPicker initially when followClassColor is active
         if button.colorPicker and entry and entry.followClassColor then
             button.colorPicker:SetEnabled(false)
         elseif button.colorPicker then
@@ -199,7 +199,7 @@ local function subColorInitializer(button, node)
         end)
         button.colorPicker:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        -- ColorPicker Klick → WoW ColorPickerFrame öffnen
+        -- ColorPicker click opens the WoW ColorPickerFrame
         button.colorPicker:SetScript("OnClick", function()
             local e = getEntry()
             if not e or e.followClassColor then return end
@@ -239,8 +239,8 @@ local function subColorInitializer(button, node)
 end
 
 -- ============================================================
--- Alles-faerben-Zeile: setzt alle Farb-Slots EINES Skins auf
--- dieselbe Farbe (analog zur Globalfarbe, aber nur ein Skin)
+-- Color-all row: sets all color slots of ONE skin to
+-- the same color (like the global color, but only one skin)
 -- ============================================================
 local function skinAllColorInitializer(button, node)
     local d = node:GetData()
@@ -294,7 +294,7 @@ local function skinAllColorInitializer(button, node)
         button.colorPicker:SetScript("OnClick", function()
             local colors = getColors()
             if not colors then return end
-            -- Snapshot fuer Abbrechen: stellt die individuellen Farben wieder her
+            -- Snapshot for cancel: restores the individual colors
             local snapshot = {}
             for ck, co in pairs(colors) do
                 snapshot[ck] = { r = co.r, g = co.g, b = co.b, a = co.a, followClassColor = co.followClassColor }
@@ -360,8 +360,8 @@ local function skinHeaderInitializer(button, node)
     end
     updateVisuals()
 
-    -- Fuer AklimeMod_RefreshRightToggles: Checkbox und Optik nachziehen
-    -- wenn ein Master-Toggle (Gruppe / Alle) den Skin-Status aendert.
+    -- For AklimeMod_RefreshRightToggles: update checkbox and visuals
+    -- when a master toggle (group / all) changes the skin status.
     button._refreshCheckbox = function()
         button.enableButton:SetChecked(C:IsEnabled(d.skinKey))
         updateVisuals()
@@ -400,7 +400,7 @@ local function skinHeaderInitializer(button, node)
 end
 
 -- ============================================================
--- Toggle Initializer (Skin-interne Toggles)
+-- Toggle initializer (skin internal toggles)
 -- ============================================================
 local function skinToggleInitializer(button, node)
     local d  = node:GetData()
@@ -408,8 +408,8 @@ local function skinToggleInitializer(button, node)
     if button.name then button.name:SetText(d.toggleLabel or "") end
     local db = AklimeModDB.colorizer[d.skinKey]
     if button.toggle then
-        -- Recycelte Frames koennen ein _refreshCheckbox vom vorherigen
-        -- Bewohner tragen, daher hier immer neu setzen.
+        -- Recycled frames can carry a _refreshCheckbox from the previous
+        -- occupant, so always set it fresh here.
         button._refreshCheckbox = function()
             button.toggle:SetChecked(db and db.toggles and db.toggles[d.toggleKey] or false)
         end
@@ -443,7 +443,7 @@ local function separatorInitializer(frame, node)
         frame.label:SetPoint("LEFT",  frame, "LEFT",  0, 0)
         frame.label:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
     elseif data.sublabel then
-        -- Unter-Ueberschrift: gleiche Position, aber besser lesbar
+        -- Sub heading: same position, but more readable
         frame.label:SetFont(GameFontHighlight:GetFont())
         frame.label:SetTextColor(0.75, 0.75, 0.75, 1)
         frame.label:SetJustifyH("LEFT")
@@ -459,7 +459,7 @@ local function separatorInitializer(frame, node)
 end
 
 -- ============================================================
--- Element-Factory (erweitert — unterstützt auch Module-Header für Elite/Rare)
+-- Element factory (extended, also supports module headers for Elite/Rare)
 -- ============================================================
 function AklimeMod_ColorizerRightFactory(factory, node)
     local d = node:GetData()
@@ -475,7 +475,7 @@ function AklimeMod_ColorizerRightFactory(factory, node)
     elseif t == "AklimeMod_ToggleTemplate" and d.toggleKey then
         factory(t, skinToggleInitializer)
     elseif t == "AklimeMod_ToggleTemplate" then
-        -- Normaler Toggle für Elite/Rare
+        -- Normal toggle for Elite/Rare
         factory(t, function(btn, nd)
             local data = nd:GetData()
             btn._refreshCheckbox = function() btn.toggle:SetChecked(data.getVal()) end

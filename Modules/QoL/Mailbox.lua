@@ -1,16 +1,16 @@
 -- Modules/QoL/Mailbox.lua
--- Adressbuch neben dem Postfach-Schreibfenster.
--- Klick auf Kontakt setzt den Empfänger automatisch.
--- Letzte Empfänger-Option merkt sich den letzten Empfänger pro Session.
+-- Address book next to the mail compose window.
+-- Clicking a contact sets the recipient automatically.
+-- The last recipient option remembers the last recipient per session.
 
 local ROW_H        = 22
 local FRAME_W      = 235
-local ROW_AREA_TOP = -78   -- Pixelabstand (negativ) vom Frame-Top bis Zeilenbeginn
-local ROW_AREA_BOT = 8     -- Abstand vom Frame-Boden bis letzte Zeile
-local MAX_ROWS     = 25    -- obere Grenze; tatsächliche Anzahl wird per Höhe berechnet
+local ROW_AREA_TOP = -78   -- pixel offset (negative) from the frame top to the first row
+local ROW_AREA_BOT = 8     -- offset from the frame bottom to the last row
+local MAX_ROWS     = 25    -- upper limit, actual count is computed from the height
 
 -- ============================================================
--- DB-Zugriff
+-- DB access
 -- ============================================================
 local function GetDB()
     if AklimeModDB and AklimeModDB.mailbox then return AklimeModDB.mailbox end
@@ -18,7 +18,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 local function GetClassColor(class)
     local tbl = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS or {}
@@ -42,7 +42,7 @@ local function BuildRecipient(name, realm)
 end
 
 -- ============================================================
--- Modul
+-- Module
 -- ============================================================
 local M = {}
 AklimeMod_Mailbox = M
@@ -57,7 +57,7 @@ M.frame      = nil
 M.scrollBar  = nil
 
 -- ============================================================
--- Filterung und Sortierung
+-- Filtering and sorting
 -- ============================================================
 local function BuildFiltered()
     local contacts = GetDB().contacts or {}
@@ -70,7 +70,7 @@ local function BuildFiltered()
     for key, rec in pairs(contacts) do
         local name  = rec.name  or key
         local realm = rec.realm or ""
-        -- Eigenen Char nicht anzeigen
+        -- Do not show your own character
         if not (name:lower() == (myName or ""):lower() and NormalizeRealm(realm) == myRealm) then
             local match = needle == ""
                 or name:lower():find(needle, 1, true)
@@ -101,7 +101,7 @@ local function BuildFiltered()
 end
 
 -- ============================================================
--- Zeilen aktualisieren
+-- Update rows
 -- ============================================================
 local function CalcVisibleRows()
     if not M.frame then return 0 end
@@ -140,7 +140,7 @@ local function UpdateRows()
             M.scrollDown:Show()
             M.scrollUp:SetEnabled(M.offset > 0)
             M.scrollDown:SetEnabled(M.offset < maxOff)
-            -- Track und Thumb anzeigen
+            -- Show track and thumb
             if M.scrollTrack and M.scrollThumb then
                 M.scrollTrack:Show()
                 local trackH = M.scrollTrack:GetHeight()
@@ -164,7 +164,7 @@ local function UpdateRows()
 end
 
 -- ============================================================
--- Frame-Aufbau (lazy)
+-- Frame setup (lazy)
 -- ============================================================
 local function EnsureFrame()
     if M.frame then return end
@@ -183,12 +183,12 @@ local function EnsureFrame()
     f:SetBackdropBorderColor(0.55, 0.45, 0.15, 1)
     f:Hide()
 
-    -- Titel
+    -- Title
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     title:SetPoint("TOP", 0, -8)
     title:SetText("Adressbuch")
 
-    -- Suche
+    -- Search
     local sLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sLabel:SetPoint("TOPLEFT", 8, -30)
     sLabel:SetText("Suche:")
@@ -214,7 +214,7 @@ local function EnsureFrame()
     end)
     M.searchBox = sBox
 
-    -- Spaltenheader
+    -- Column header
     local function MakeHeader(label, sortKey, left, width)
         local btn = CreateFrame("Button", nil, f)
         btn:SetPoint("TOPLEFT", left, -52)
@@ -240,21 +240,21 @@ local function EnsureFrame()
     M.nameHeader  = MakeHeader("Name",  "name",  6,   140)
     M.realmHeader = MakeHeader("Realm", "realm", 148, 80)
 
-    -- Trennlinie
+    -- Separator line
     local line = f:CreateTexture(nil, "ARTWORK")
     line:SetHeight(1)
     line:SetPoint("TOPLEFT",  f, "TOPLEFT",  4, -75)
     line:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -75)
     line:SetColorTexture(0.4, 0.4, 0.4, 0.8)
 
-    -- Scroll: Pfeil-Buttons (kein Template, kein SecureScrollBar)
+    -- Scroll: arrow buttons (no template, no SecureScrollBar)
     local function MakeArrowBtn(isUp)
         local btn = CreateFrame("Button", nil, f)
         btn:SetSize(16, 16)
         local tex = btn:CreateTexture(nil, "ARTWORK")
         tex:SetTexture("Interface/Buttons/UI-ScrollBar-ScrollUpButton-Up")
         if not isUp then
-            tex:SetTexCoord(0, 1, 1, 0)  -- vertikal spiegeln fuer unten
+            tex:SetTexCoord(0, 1, 1, 0)  -- flip vertically for the down arrow
         end
         tex:SetAllPoints()
         btn:SetNormalTexture(tex)
@@ -287,7 +287,7 @@ local function EnsureFrame()
     M.scrollUp   = upBtn
     M.scrollDown = downBtn
 
-    -- Scrollbar-Track zwischen den Pfeilen
+    -- Scrollbar track between the arrows
     local track = CreateFrame("Frame", nil, f)
     track:SetWidth(16)
     track:SetPoint("TOP",    upBtn,   "BOTTOM", 0, 0)
@@ -298,7 +298,7 @@ local function EnsureFrame()
     track:Hide()
     M.scrollTrack = track
 
-    -- Thumb (als Frame damit er draggbar ist)
+    -- Thumb (as a frame so it can be dragged)
     local thumb = CreateFrame("Frame", nil, track)
     thumb:SetWidth(10)
     local thumbTex = thumb:CreateTexture(nil, "ARTWORK")
@@ -337,7 +337,7 @@ local function EnsureFrame()
     thumb:Hide()
     M.scrollThumb = thumb
 
-    -- Mausrad
+    -- Mouse wheel
     f:EnableMouseWheel(true)
     f:SetScript("OnMouseWheel", function(_, delta)
         local maxOff = math.max(0, #M.filtered - CalcVisibleRows())
@@ -345,7 +345,7 @@ local function EnsureFrame()
         UpdateRows()
     end)
 
-    -- Zeilen vorerstellen
+    -- Pre-create rows
     for i = 1, MAX_ROWS do
         local row = CreateFrame("Button", nil, f)
         row:SetHeight(ROW_H)
@@ -400,7 +400,7 @@ local function EnsureFrame()
 end
 
 -- ============================================================
--- Sichtbarkeit
+-- Visibility
 -- ============================================================
 function M:UpdateVisibility()
     if not self.frame then return end
@@ -424,7 +424,7 @@ function M:UpdateVisibility()
 end
 
 -- ============================================================
--- Eigene Charakter zu Kontakten hinzufügen
+-- Add own character to contacts
 -- ============================================================
 local function AddSelf()
     local db = GetDB()
@@ -443,7 +443,7 @@ local function AddSelf()
 end
 
 -- ============================================================
--- Empfänger beim Absenden merken und als Kontakt speichern
+-- Remember recipient on send and store as contact
 -- ============================================================
 local lastRecipient = nil
 local sendHooked    = false
@@ -454,7 +454,7 @@ local function CaptureAndSaveRecipient()
     if not text or text == "" then return end
     lastRecipient = text
 
-    -- Als Kontakt ohne Klasse speichern (weiß)
+    -- Store as contact without class (white)
     local db = GetDB()
     if not db.enabled then return end
     db.contacts = db.contacts or {}
@@ -462,7 +462,7 @@ local function CaptureAndSaveRecipient()
     if not name then name = text; realm = "" end
     local key = name .. "-" .. (realm or "")
     if not db.contacts[key] then
-        -- Sicherheitsgrenze: max 500 Kontakte
+        -- Safety limit: max 500 contacts
         local count = 0
         for _ in pairs(db.contacts) do count = count + 1 end
         if count >= 500 then return end

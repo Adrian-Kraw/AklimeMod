@@ -1,5 +1,5 @@
 -- Modules/QoL/Clock24h.lua
--- Setzt die Blizzard-Uhr auf 24-Stunden-Format wenn nicht bereits aktiv.
+-- Sets the Blizzard clock to 24-hour format if not already active.
 -- CVar: timeMgrUseMilitaryTime
 
 local function GetDB()
@@ -15,7 +15,7 @@ local function Apply()
     if not IsEnabled() then return end
     if GetCVar("timeMgrUseMilitaryTime") ~= "1" then
         SetCVar("timeMgrUseMilitaryTime", "1")
-        -- TimeManager UI aktualisieren
+        -- Refresh the TimeManager UI
         if TimeManagerFrame and TimeManagerFrame_OnLoad then
             TimeManagerFrame_OnLoad(TimeManagerFrame)
         end

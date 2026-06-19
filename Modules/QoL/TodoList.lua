@@ -1,6 +1,6 @@
 -- Modules/QoL/TodoList.lua
--- Persistente ToDo-Liste. Aufruf: /akm todo
--- Gespeichert in AklimeModDB.todoList.items = { "Text1", "Text2", ... }
+-- Persistent ToDo list. Invoke with: /akm todo
+-- Stored in AklimeModDB.todoList.items = { "Text1", "Text2", ... }
 
 local L = AklimeModL or {}
 
@@ -40,7 +40,7 @@ local function GetItems()
 end
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 
 local function MakeSeparator(parent, r, g, b, a)
@@ -64,7 +64,7 @@ local function ApplyBackdrop(f, edgeColor)
 end
 
 -- ============================================================
--- Liste
+-- List
 -- ============================================================
 
 local function GetListContentWidth()
@@ -121,7 +121,7 @@ local function RefreshList()
             table.remove(GetItems(), idx)
             RefreshList()
         end)
-        -- Klick auf die ganze Zeile = gleiche Aktion
+        -- Click on the whole row = same action
         row:SetScript("OnMouseUp", function(_, btn)
             if btn == "LeftButton" then
                 table.remove(GetItems(), idx)
@@ -137,7 +137,7 @@ local function RefreshList()
         lbl:SetWordWrap(false)
         lbl:SetText(text)
 
-        -- Trennlinie (ausser nach letztem Element)
+        -- Divider (except after the last item)
         if i < #items then
             local sep = MakeSeparator(row, 0.15, 0.15, 0.15, 1)
             sep:SetPoint("BOTTOMLEFT",  row, "BOTTOMLEFT",  4, 0)
@@ -151,7 +151,7 @@ local function RefreshList()
     if listContent then listContent:SetWidth(math.max(GetListContentWidth(), 80)) end
     if emptyLabel then emptyLabel:SetShown(#items == 0) end
 
-    -- Scrollbar nur anzeigen wenn Inhalt groesser als sichtbarer Bereich
+    -- Show the scrollbar only when content is larger than the visible area
     C_Timer.After(0, function()
         local sb = _G["AklimeModTodoScrollScrollBar"]
         if sb then sb:SetShown(scrollFrame:GetVerticalScrollRange() > 0) end
@@ -190,13 +190,13 @@ local function BuildFrame()
 
     tinsert(UISpecialFrames, "AklimeModTodoFrame")
 
-    -- Gespeicherte Position/Groesse wiederherstellen
+    -- Restore saved position/size
     if db.x and db.y then
         mainFrame:ClearAllPoints()
         mainFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", db.x, db.y)
     end
 
-    -- Titelzeile
+    -- Title row
     local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -13)
     title:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
@@ -206,10 +206,10 @@ local function BuildFrame()
     titleSep:SetPoint("TOPLEFT",  mainFrame, "TOPLEFT",  8, -32)
     titleSep:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -8, -32)
 
-    -- Item-Anzahl (oben rechts, vor Close-Button)
+    -- Item count (top right, before the close button)
     local countLbl = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     countLbl:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -32, -14)
-    -- wird in RefreshList aktualisiert (Optional-Feature, kein Pflichtfeld)
+    -- updated in RefreshList (optional feature, not required)
 
     -- Close-Button
     local closeBtn = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
@@ -231,12 +231,12 @@ local function BuildFrame()
     emptyLabel:SetText(L["todo_empty"] or "No entries")
     emptyLabel:Hide()
 
-    -- Trennlinie ueber Eingabebereich
+    -- Divider above the input area
     local inputSep = MakeSeparator(mainFrame, GOLD_D[1], GOLD_D[2], GOLD_D[3], GOLD_D[4])
     inputSep:SetPoint("BOTTOMLEFT",  mainFrame, "BOTTOMLEFT",   8, 54)
     inputSep:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -8, 54)
 
-    -- EditBox-Hintergrund
+    -- Edit box background
     editBg = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
     editBg:SetHeight(26)
     editBg:SetPoint("BOTTOMLEFT",  mainFrame, "BOTTOMLEFT",   PAD,  26)
@@ -280,7 +280,7 @@ local function BuildFrame()
         self:ClearFocus()
     end)
 
-    -- Hinweistext
+    -- Hint text
     local hint = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("BOTTOM", 0, 8)
     hint:SetText(L["todo_hint"] or "Enter = Add    |    Click = Done")
@@ -302,12 +302,12 @@ local function BuildFrame()
         mainFrame:StopMovingOrSizing()
         local d = GetDB()
         d.w, d.h = mainFrame:GetSize()
-        -- listContent-Breite aktualisieren und Liste neu aufbauen
+        -- Update listContent width and rebuild the list
         listContent:SetWidth(math.max(mainFrame:GetWidth() - PAD * 2 - 20, 80))
         RefreshList()
     end)
 
-    -- listContent-Breite bei Fenstergrösse anpassen (fortlaufend waehrend Resize)
+    -- Adjust listContent width to the window size (continuously during resize)
     mainFrame:SetScript("OnSizeChanged", function(self, w)
         if listContent then
             listContent:SetWidth(math.max(w - PAD * 2 - 20, 80))

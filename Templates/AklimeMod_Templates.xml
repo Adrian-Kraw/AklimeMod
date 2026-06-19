@@ -1,12 +1,12 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/UI.xsd">
 
   <!--
-    Flat-Design im Stil von Mythic Mentor:
-    - Dunkler, leicht violetter Hintergrund
-    - Duenne warme Rahmen (Rost-Orange)
-    - Orange als Akzent- und Auswahlfarbe
-    Boxen entstehen aus zwei Texturen: borderFill (volle Flaeche, Rahmenfarbe)
-    und bg (1px eingerueckt, Fuellfarbe). Ergibt einen 1px-Rahmen ohne Backdrop.
+    Flat design:
+    - Dark, slightly purple background
+    - Thin warm borders (rust orange)
+    - Orange as accent and selection color
+    Boxes are built from two textures: borderFill (full area, border color)
+    and bg (inset by 1px, fill color). Produces a 1px border without Backdrop.
   -->
 
   <Frame name="AklimeModFrame" parent="UIParent" inherits="BackdropTemplate" hidden="true">
@@ -14,8 +14,7 @@
     <Anchors><Anchor point="CENTER"/></Anchors>
   </Frame>
 
-  <!-- Kategorie-Button: abgerundete Box per Backdrop (Fuellung und
-       Rahmen werden in Lua ueber AklimeMod_ApplyRowTheme gefaerbt) -->
+  <!-- Category button: rounded box via Backdrop (fill and border are colored in Lua via AklimeMod_ApplyRowTheme) -->
   <Button name="AklimeMod_CategoryButtonTemplate" inherits="BackdropTemplate" virtual="true">
     <Size y="36"/>
     <Layers>
@@ -27,7 +26,7 @@
     </Layers>
   </Button>
 
-  <!-- Modul-Header: Enable-Checkbox + Name + Aufklapp-Pfeil -->
+  <!-- Module header: enable checkbox + name + expand arrow -->
   <Button name="AklimeMod_ModuleHeaderTemplate" virtual="true">
     <Size y="32"/>
     <HighlightTexture file="Interface\BUTTONS\WHITE8X8" alphaMode="ADD">
@@ -66,7 +65,7 @@
     </Frames>
   </Button>
 
-  <!-- Skin-Header (identisch zu ModuleHeader) -->
+  <!-- Skin header (identical to ModuleHeader) -->
   <Button name="AklimeMod_SkinHeaderTemplate" virtual="true">
     <Size y="32"/>
     <HighlightTexture file="Interface\BUTTONS\WHITE8X8" alphaMode="ADD">
@@ -106,11 +105,11 @@
   </Button>
 
   <!--
-    Sub-Farb-Zeile:
-    - Name links
-    - Klassenfarbe-Checkbox rechts (followClassColor)
-    - Runder Farb-Swatch ganz rechts (colorPicker mit parentKey="swatch" als Texture)
-    Bei followClassColor: swatch zeigt classicon-Atlas statt Farbe
+    Sub color row:
+    - Name on the left
+    - Class color checkbox on the right (followClassColor)
+    - Round color swatch on the far right (colorPicker with parentKey="swatch" as Texture)
+    When followClassColor: swatch shows class icon atlas instead of color
   -->
   <Button name="AklimeMod_SubColorTemplate" virtual="true">
     <Size y="32"/>
@@ -140,25 +139,25 @@
         <HighlightTexture atlas="checkbox-minimal" useAtlasSize="true" alphaMode="ADD"/>
         <CheckedTexture   atlas="checkmark-minimal" useAtlasSize="true"/>
       </CheckButton>
-      <!-- Color Swatch Button: rund, zeigt Farbe oder Klassen-Icon -->
+      <!-- Color swatch button: round, shows color or class icon -->
       <Button parentKey="colorPicker">
         <Size x="24" y="24"/>
         <Anchors><Anchor point="RIGHT" x="-8"/></Anchors>
         <HighlightTexture atlas="ArtifactsFX-YellowRing" setAllPoints="true"/>
         <Layers>
-          <!-- Hintergrund-Farb-Texture (wird per Lua gefärbt) -->
+          <!-- Background color texture (tinted via Lua) -->
           <Layer level="ARTWORK" textureSubLevel="1">
             <Texture parentKey="swatch" setAllPoints="true">
               <Color r="0.28" g="0.28" b="0.28" a="1"/>
             </Texture>
-            <!-- Runde Maske damit der Swatch kreisförmig ist -->
+            <!-- Round mask so the swatch is circular -->
             <MaskTexture atlas="CircleMaskScalable" useAtlasSize="false" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE" setAllPoints="true">
               <MaskedTextures>
                 <MaskedTexture childKey="swatch"/>
               </MaskedTextures>
             </MaskTexture>
           </Layer>
-          <!-- Goldener Ring-Rahmen (wie FrameColor) -->
+          <!-- Gold ring border (like FrameColor) -->
           <Layer level="ARTWORK" textureSubLevel="2">
             <Texture atlas="talents-node-choiceflyout-circle-yellow" useAtlasSize="true" setAllPoints="true"/>
           </Layer>
@@ -167,7 +166,7 @@
     </Frames>
   </Button>
 
-  <!-- Toggle-Zeile -->
+  <!-- Toggle row -->
   <Button name="AklimeMod_ToggleTemplate" virtual="true">
     <Size y="32"/>
     <Layers>
@@ -198,7 +197,7 @@
     </Frames>
   </Button>
 
-  <!-- Info-Text -->
+  <!-- Info text -->
   <Button name="AklimeMod_InfoTextTemplate" virtual="true">
     <Size y="24"/>
     <Layers>
@@ -214,8 +213,7 @@
     </Layers>
   </Button>
 
-  <!-- Aktions-Zeile: zentrierter, abgerundeter Button. Optik und
-       Farben setzt AklimeMod_StyleActionButton in Lua. -->
+  <!-- Action row: centered, rounded button. Appearance and colors are set by AklimeMod_StyleActionButton in Lua. -->
   <Button name="AklimeMod_ActionButtonTemplate" virtual="true">
     <Size y="46"/>
     <Frames>
@@ -233,7 +231,7 @@
     </Frames>
   </Button>
 
-  <!-- Slider-Zeile -->
+  <!-- Slider row -->
   <Frame name="AklimeMod_SliderTemplate" virtual="true">
     <Size y="52"/>
     <Layers>
@@ -281,7 +279,7 @@
     </Frames>
   </Frame>
 
-  <!-- Trennstrich -->
+  <!-- Divider -->
   <Button name="AklimeMod_SeparatorTemplate" virtual="true">
     <Size y="50"/>
     <Layers>

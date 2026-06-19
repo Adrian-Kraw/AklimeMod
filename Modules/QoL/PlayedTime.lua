@@ -1,8 +1,8 @@
 -- Modules/QoL/PlayedTime.lua
--- Spielzeit aller Chars, aggregiert als Klassenbalken-Diagramm.
--- Angelehnt an Account Played (MIT License).
--- Erfassung: beim Login RequestTimePlayed(), Speicherung bei TIME_PLAYED_MSG.
--- Ausgabe:   /akm played
+-- Played time of all characters, aggregated as a class bar chart.
+-- Based on Account Played (MIT License).
+-- Capture: RequestTimePlayed() on login, stored on TIME_PLAYED_MSG.
+-- Output:   /akm played
 
 local L = AklimeModL or {}
 
@@ -14,7 +14,7 @@ local FRAME_H   = 530
 local ROW_H     = 28
 local BAR_H     = 13
 local PAD       = 12
-local BAR_MAX_W = 150   -- maximale Balkenbreite in Pixeln
+local BAR_MAX_W = 150   -- maximum bar width in pixels
 local GOLD      = { 0.80, 0.65, 0.10, 1 }
 local GOLD_D    = { 0.80, 0.65, 0.10, 0.5 }
 local BG        = { 0.07, 0.07, 0.08, 0.96 }
@@ -52,7 +52,7 @@ local CLASS_NAMES = GetLocale() == "deDE" and {
 local mainFrame
 
 -- ============================================================
--- Hilfsfunktionen
+-- Helpers
 -- ============================================================
 
 local function GetDB()
@@ -84,7 +84,7 @@ local function GetClassColor(class)
 end
 
 -- ============================================================
--- Daten: Chars nach Klasse aggregieren
+-- Data: aggregate characters by class
 -- ============================================================
 
 local function AggregateByClass()
@@ -112,7 +112,7 @@ local function AggregateByClass()
 end
 
 -- ============================================================
--- Spielzeit speichern
+-- Save played time
 -- ============================================================
 
 local function SavePlayedTime(total)
@@ -136,7 +136,7 @@ local function SavePlayedTime(total)
 end
 
 -- ============================================================
--- Fenster
+-- Window
 -- ============================================================
 
 local function MakeSep(parent, r, g, b, a)
@@ -180,7 +180,7 @@ local function BuildFrame()
         mainFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", db.x, db.y)
     end
 
-    -- Titel
+    -- Title
     local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -13)
     title:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
@@ -240,7 +240,7 @@ local function RefreshFrame()
         local r, g, b = GetClassColor(rec.class)
         local className = CLASS_NAMES[rec.class] or rec.class
 
-        -- Klassenname links
+        -- Class name on the left
         local nameLbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         nameLbl:SetPoint("LEFT", row, "LEFT", 0, 0)
         nameLbl:SetWidth(90)
@@ -248,27 +248,27 @@ local function RefreshFrame()
         nameLbl:SetTextColor(r, g, b)
         nameLbl:SetText(className)
 
-        -- Balken-Hintergrund
+        -- Bar background
         local barBg = row:CreateTexture(nil, "BACKGROUND")
         barBg:SetPoint("LEFT", row, "LEFT", 94, 0)
         barBg:SetSize(BAR_MAX_W, BAR_H)
         barBg:SetColorTexture(0.15, 0.15, 0.15, 1)
 
-        -- Balken (proportional zur meistgespielten Klasse)
+        -- Bar (proportional to the most played class)
         local barW = math.max(2, math.floor((rec.total / maxTime) * BAR_MAX_W))
         local bar = row:CreateTexture(nil, "ARTWORK")
         bar:SetPoint("LEFT", barBg, "LEFT", 0, 0)
         bar:SetSize(barW, BAR_H)
         bar:SetColorTexture(r * 0.8, g * 0.8, b * 0.8, 0.9)
 
-        -- Zeit
+        -- Time
         local timeLbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         timeLbl:SetPoint("LEFT", barBg, "RIGHT", 6, 0)
         timeLbl:SetWidth(115)
         timeLbl:SetJustifyH("LEFT")
         timeLbl:SetText(FormatTime(rec.total))
 
-        -- Prozent ganz rechts
+        -- Percent on the far right
         local pct = grand > 0 and (rec.total / grand * 100) or 0
         local pctLbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         pctLbl:SetPoint("RIGHT", row, "RIGHT", -2, 0)
@@ -277,7 +277,7 @@ local function RefreshFrame()
         pctLbl:SetTextColor(0.6, 0.6, 0.6)
         pctLbl:SetText(string.format("%.1f%%", pct))
 
-        -- Anzahl Chars (Tooltip)
+        -- Number of characters (tooltip)
         row:EnableMouse(true)
         local charCount = rec.count
         row:SetScript("OnEnter", function(self)
@@ -288,7 +288,7 @@ local function RefreshFrame()
         end)
         row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        -- Trennlinie
+        -- Separator line
         if i < #list then
             local sep = row:CreateTexture(nil, "ARTWORK")
             sep:SetHeight(1)
@@ -299,7 +299,7 @@ local function RefreshFrame()
     end
 
     content:SetHeight(math.max(#list * ROW_H, 1))
-    -- Fenster exakt auf Inhalt zuschneiden (36px Header + 46px Footer)
+    -- Fit the window exactly to the content (36px header + 46px footer)
     mainFrame:SetHeight(#list * ROW_H + 82)
 
     C_Timer.After(0, function()
@@ -346,7 +346,7 @@ function M:GetSavedChars()
         table.insert(list, {
             key       = key,
             display   = display,
-            -- Eintrag komplett in Klassenfarbe
+            -- Whole entry in class color
             colorized = string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, display),
         })
     end

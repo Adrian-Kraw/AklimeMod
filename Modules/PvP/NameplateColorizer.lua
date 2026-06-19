@@ -1,9 +1,9 @@
 -- Modules/PvP/NameplateColorizer.lua  [v7]
--- Färbt die HP-Bar von Namensplaketten im PvP:
---   Eigene Gruppe  → grün
---   Gegner         → rot
--- Namen: werden von Blizzard grün gefärbt für Freunde — wir setzen
--- sie aktiv auf weiß zurück, ohne sie selbst einzufärben.
+-- Colors the HP bar of nameplates in PvP:
+--   Own group  -> green
+--   Enemies    -> red
+-- Names: Blizzard colors them green for friends, so we actively
+-- reset them to white without coloring them ourselves.
 
 -- ============================================================
 -- DB / State
@@ -44,7 +44,7 @@ local function IsNameplateCompatibleUnit(unit)
 end
 
 -- ============================================================
--- Färbe-Logik
+-- Coloring logic
 -- ============================================================
 local COLOR_ALLY  = { r = 0.0, g = 1.0, b = 0.0 }
 local COLOR_ENEMY = { r = 1.0, g = 0.2, b = 0.2 }
@@ -74,12 +74,12 @@ local function ApplyColor(nameplate)
     local unit = nameplate.UnitFrame.unit
     if not unit or not UnitExists(unit) then return end
 
-    -- HP-Bar einfärben
+    -- Color the HP bar
     local col = IsAlly(unit) and COLOR_ALLY or COLOR_ENEMY
     local hpBar = GetHealthBar(nameplate)
     if hpBar then hpBar:SetStatusBarColor(col.r, col.g, col.b) end
 
-    -- Namen immer weiß lassen — Blizzard färbt Freunde sonst grün
+    -- Always keep names white, otherwise Blizzard colors friends green
     local nameText = GetNameText(nameplate)
     if nameText then nameText:SetTextColor(1, 1, 1) end
 end
@@ -87,7 +87,7 @@ end
 local function ResetNameplate(nameplate)
     if not nameplate or not nameplate.UnitFrame then return end
     local uf = nameplate.UnitFrame
-    -- Blizzards eigene Funktionen aufrufen → setzt korrekte Originalfarben
+    -- Call Blizzard's own functions to set the correct original colors
     if CompactUnitFrame_UpdateHealthColor then
         pcall(CompactUnitFrame_UpdateHealthColor, uf)
     end
@@ -113,7 +113,7 @@ local function UpdateAll()
 end
 
 -- ============================================================
--- Hook gegen Blizzard-interne HP-Bar-Farb-Resets
+-- Hook against Blizzard's internal HP bar color resets
 -- ============================================================
 local hooked = false
 
@@ -141,8 +141,8 @@ local function SetupHook()
     end
 end
 
--- Hook für Namenstext: Blizzard färbt in UpdateNameColor den Namen
--- nach Reaktion ein. Wir hängen uns dahinter und setzen ihn auf weiß.
+-- Hook for the name text: Blizzard colors the name by reaction in
+-- UpdateNameColor. We hook behind it and set it to white.
 local nameHooked = false
 
 local function SetupNameHook()
@@ -240,8 +240,8 @@ function AklimeMod_PvPNameplateColor.SetEnabled(v)
     else
         UnregisterEvents()
         inPvP = false
-        -- Sofort + nach kurzem Delay resetten: Blizzard braucht
-        -- einen Frame um seine eigenen Updates abzuschließen
+        -- Reset immediately and after a short delay: Blizzard needs
+        -- one frame to finish its own updates
         ResetAll()
         C_Timer.After(0.1, ResetAll)
     end

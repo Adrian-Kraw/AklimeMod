@@ -1,7 +1,7 @@
 -- Modules/QoL/ExtendedIgnore.lua
--- Erweiterte Ignore-Liste über WoWs 50er-Limit hinaus.
--- Blendet Chat-Nachrichten ignorierter Spieler aus.
--- Verwaltung: /akm ignore  oder  Rechtsklick auf Spieler
+-- Extended ignore list beyond WoW's 50-entry limit.
+-- Hides chat messages from ignored players.
+-- Management: /akm ignore  or  right-click on a player
 
 local M = {}
 AklimeMod_ExtendedIgnore = M
@@ -31,7 +31,7 @@ local function GetDB()
 end
 
 -- ============================================================
--- Lookup-Cache (Name und Name-Realm)
+-- Lookup cache (name and name-realm)
 -- ============================================================
 
 local cache = {}
@@ -50,7 +50,7 @@ local function IsIgnoredLocal(name)
 end
 
 -- ============================================================
--- Chat-Filter
+-- Chat filter
 -- ============================================================
 
 local filtersHooked = false
@@ -93,7 +93,7 @@ function M:Remove(name)
         RebuildCache()
         return
     end
-    -- Fallback: Kurzname-Vergleich
+    -- Fallback: short-name comparison
     local short = name:match("^(.-)%-") or name
     for k in pairs(db.players) do
         if (k:match("^(.-)%-") or k) == short then
@@ -125,7 +125,7 @@ function M:ClearAll()
 end
 
 -- ============================================================
--- Kontextmenu
+-- Context menu
 -- ============================================================
 
 local menuHooked = false
@@ -133,7 +133,7 @@ local menuHooked = false
 local function GetUnitFromCtx(ctx)
     local unit = ctx and ctx.unit
     if unit and UnitExists(unit) then return unit end
-    -- Fallback fuer Unit-Menus ohne expliziten Context
+    -- Fallback for unit menus without an explicit context
     for _, u in ipairs({ "target", "mouseover" }) do
         if UnitExists(u) then return u end
     end
@@ -149,7 +149,7 @@ local function AddContextEntry(owner, root, ctx)
     if not name then return end
     realm = (realm and realm ~= "") and realm or nil
     local key   = realm and (name .. "-" .. realm) or name
-    local label = name   -- Anzeige ohne Realm
+    local label = name   -- display without realm
 
     root:CreateDivider()
     root:CreateTitle("Aklime Mod Tools")
@@ -182,7 +182,7 @@ local function HookContextMenus()
 end
 
 -- ============================================================
--- Verwaltungsfenster
+-- Management window
 -- ============================================================
 
 local winFrame, winContent, winScroll, winEditBg, winEditBox, winEmptyLbl
@@ -204,7 +204,7 @@ local function RefreshWin()
         hl:SetAllPoints()
         hl:SetColorTexture(1, 1, 1, 0)
 
-        -- Entfernen-Button
+        -- Remove button
         local removeBtn = CreateFrame("Button", nil, row)
         removeBtn:SetSize(16, 16)
         removeBtn:SetPoint("RIGHT", -4, 0)
@@ -275,7 +275,7 @@ local function BuildWin()
 
     tinsert(UISpecialFrames, "AklimeModIgnoreFrame")
 
-    -- Titel
+    -- Title
     local title = winFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -13)
     title:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
@@ -306,14 +306,14 @@ local function BuildWin()
     winEmptyLbl:SetText("Keine Spieler ignoriert")
     winEmptyLbl:Hide()
 
-    -- Trennlinie
+    -- Divider
     local inputSep = winFrame:CreateTexture(nil, "ARTWORK")
     inputSep:SetHeight(1)
     inputSep:SetColorTexture(GOLD_D[1], GOLD_D[2], GOLD_D[3], GOLD_D[4])
     inputSep:SetPoint("BOTTOMLEFT",  winFrame, "BOTTOMLEFT",   8, 54)
     inputSep:SetPoint("BOTTOMRIGHT", winFrame, "BOTTOMRIGHT", -8, 54)
 
-    -- Eingabefeld
+    -- Input field
     winEditBg = CreateFrame("Frame", nil, winFrame, "BackdropTemplate")
     winEditBg:SetHeight(26)
     winEditBg:SetPoint("BOTTOMLEFT",  winFrame, "BOTTOMLEFT",   PAD, 26)

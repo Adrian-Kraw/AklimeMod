@@ -1,6 +1,6 @@
 -- Modules/QoL/DrinkReminder.lua
--- Erinnert periodisch ans Trinken/Strecken.
--- Eigenes Frame oben mittig, optisch wie Blizzard AlertFrame.
+-- Periodically reminds you to drink/stretch.
+-- Own frame at the top center, styled like the Blizzard AlertFrame.
 
 local L = AklimeModL or {}
 
@@ -19,13 +19,13 @@ end
 local function IsInInstanceNow()
     local inInst, instanceType = IsInInstance()
     if not inInst then return false end
-    -- Housing gilt nicht als Instanz: Reminder soll dort ebenfalls erscheinen.
+    -- Housing does not count as an instance: the reminder should appear there too.
     if instanceType == "interior" or instanceType == "neighborhood" then return false end
     return true
 end
 
 -- ============================================================
--- Custom Frame — optisch wie Blizzard AlertFrame, oben mittig
+-- Custom frame, styled like the Blizzard AlertFrame, top center
 -- ============================================================
 local alertFrame = nil
 
@@ -46,21 +46,21 @@ local function CreateAlertFrame()
     f:SetBackdropBorderColor(0.85, 0.65, 0.10, 1)
     f:Hide()
 
-    -- Schwarzer Hintergrund fuer den Icon-Bereich
+    -- Black background for the icon area
     local iconBg = f:CreateTexture(nil, "BACKGROUND")
     iconBg:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     iconBg:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1, 1)
     iconBg:SetWidth(72)
     iconBg:SetColorTexture(0, 0, 0, 1)
 
-    -- Goldene Trennlinie
+    -- Golden divider
     local divider = f:CreateTexture(nil, "ARTWORK")
     divider:SetPoint("TOPLEFT", f, "TOPLEFT", 73, -4)
     divider:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 73, 4)
     divider:SetWidth(2)
     divider:SetColorTexture(0.85, 0.65, 0.10, 1)
 
-    -- Icon — rund mit Portrait-Maske
+    -- Icon, round with a portrait mask
     local iconFrame = CreateFrame("Frame", nil, f)
     iconFrame:SetSize(60, 60)
     iconFrame:SetPoint("LEFT", f, "LEFT", 6, 0)
@@ -70,20 +70,20 @@ local function CreateAlertFrame()
     icon:SetTexture(132797)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    -- Runde Maske
+    -- Round mask
     local mask = iconFrame:CreateMaskTexture()
     mask:SetAllPoints(iconFrame)
     mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
     icon:AddMaskTexture(mask)
 
-    -- Icon-Rahmen (quadratisch-golden wie AlertFrame)
+    -- Icon border (square gold like AlertFrame)
     local iconBorder = iconFrame:CreateTexture(nil, "OVERLAY")
     iconBorder:SetSize(70, 70)
     iconBorder:SetPoint("CENTER", iconFrame, "CENTER", 0, 0)
     iconBorder:SetTexture("Interface\\Common\\WhiteIconFrame")
     iconBorder:SetVertexColor(0.9, 0.75, 0.35, 1)
 
-    -- Titel
+    -- Title
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", 10, -8)
     title:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -8)
@@ -91,7 +91,7 @@ local function CreateAlertFrame()
     title:SetTextColor(1, 0.82, 0, 1)
     title:SetJustifyH("LEFT")
 
-    -- Beschreibung
+    -- Description
     local desc = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
     desc:SetPoint("TOPRIGHT", title, "BOTTOMRIGHT", 0, -4)
@@ -99,7 +99,7 @@ local function CreateAlertFrame()
     desc:SetTextColor(0.9, 0.9, 0.9, 1)
     desc:SetJustifyH("LEFT")
 
-    -- "Alles klar!" Button direkt unter dem Frame
+    -- "Got it!" button directly below the frame
     local btn = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
     btn:SetSize(110, 24)
     btn:SetPoint("TOP", f, "BOTTOM", 0, -4)
@@ -129,7 +129,7 @@ local function CreateAlertFrame()
 end
 
 -- ============================================================
--- Ticker + Instanz-Logik
+-- Ticker + instance logic
 -- ============================================================
 local ticker       = nil
 local alertPending = false
@@ -201,8 +201,8 @@ AklimeMod_DrinkReminder = {
     SetInterval          = function(m)
         local db = GetDB(); if db then db.intervalMinutes = m end
         UpdateTicker()
-        -- Checkbox-Sync uebernimmt der Aufrufer in Categories.lua.
-        -- Kein Neuaufbau der Kategorie: der wuerde alle Sektionen zuklappen.
+        -- The caller in Categories.lua handles the checkbox sync.
+        -- No category rebuild: that would collapse all sections.
     end,
     GetDisableInInstance = function()
         local db = GetDB(); return db and db.disableInInstance

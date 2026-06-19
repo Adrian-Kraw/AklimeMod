@@ -4,8 +4,8 @@ local Hider = {}
 local hooked = {}
 local managedFrames = {}
 
--- Minimap-Position fuer Housing-Workaround.
--- Blizzard verschiebt die Minimap im Housing periodisch (Karten-Update, Bearbeitungsmodus).
+-- Minimap position for the housing workaround.
+-- Blizzard periodically moves the minimap in housing (map update, edit mode).
 local savedMinimapPoint = nil
 local wasHousing = false
 local housingTicker = nil
@@ -52,13 +52,13 @@ end
 local function StartPositionGuard()
     if housingTicker then return end
     housingTicker = C_Timer.NewTicker(6.0, function()
-        -- savedMinimapPoint wird beim Verlassen des Housings auf nil gesetzt.
-        -- Ist es nil, wurde Housing verlassen und der Ticker beendet sich.
+        -- savedMinimapPoint is set to nil when leaving housing.
+        -- If it is nil, housing was left and the ticker stops itself.
         if not savedMinimapPoint then
             StopPositionGuard()
             return
         end
-        -- Im Bearbeitungsmodus Blizzard gewaehren lassen.
+        -- In edit mode, let Blizzard handle it.
         if not IsHousingEditMode() then
             RestoreMinimapPoint()
         end
@@ -114,13 +114,13 @@ end
 local function IsHousing()
     local inInst, instType = IsInInstance()
 
-    -- Bekannte Housing-Instanztypen je nach WoW-Build
+    -- Known housing instance types depending on the WoW build
     if inInst and (instType == "neighborhood" or instType == "interior" or instType == "home") then
         return true
     end
 
-    -- TWW Housing kann Instanztypen verwenden, die kein regulaerer Content sind.
-    -- Bekannte Content-Typen ausschliessen, alles andere als Housing behandeln.
+    -- housing can use instance types that are not regular content.
+    -- Exclude known content types, treat everything else as housing.
     if inInst then
         local contentTypes = { party = true, raid = true, pvp = true, arena = true, scenario = true }
         if not contentTypes[instType] then
@@ -128,7 +128,7 @@ local function IsHousing()
         end
     end
 
-    -- TWW Housing-Innenbereich: oft als Micro-Karte dargestellt (kein IsInInstance).
+    -- housing interior: often shown as a micro map (no IsInInstance).
     if C_Map and C_Map.GetBestMapForUnit then
         local mapID = C_Map.GetBestMapForUnit("player")
         if mapID then
@@ -167,8 +167,8 @@ local function HookFrame(frame)
     if not frame.HookScript then return end
     hooked[frame] = true
     frame:HookScript("OnShow", function(self)
-        -- Housing-Bearbeitungsmodus: Blizzard positioniert Minimap-Elemente neu.
-        -- Hier nichts ausblenden, sonst verschiebt sich die Minimap.
+        -- Housing edit mode: Blizzard repositions minimap elements.
+        -- Do not hide anything here, otherwise the minimap shifts.
         if IsHousing() then return end
         for elementKey, names in pairs(ELEMENTS) do
             for _, frameName in ipairs(names) do
@@ -231,15 +231,15 @@ end
 
 function Hider.Apply()
     if IsHousing() then
-        -- Elemente einblenden damit ObjectiveTracker korrekt positioniert bleibt.
+        -- Show elements so the ObjectiveTracker stays positioned correctly.
         for key in pairs(ELEMENTS) do
             for _, name in ipairs(ELEMENTS[key] or {}) do
                 ApplyFrame(ResolveFrame(name), false)
             end
             ApplyManagedFrames(key, false)
         end
-        -- Minimap-Position im naechsten Tick wiederherstellen (nach MinimapCluster-Layout).
-        -- Im Bearbeitungsmodus Blizzard gewaehren lassen.
+        -- Restore minimap position on the next tick (after MinimapCluster layout).
+        -- In edit mode, let Blizzard handle it.
         if not IsHousingEditMode() then
             C_Timer.After(0, RestoreMinimapPoint)
         end
@@ -281,27 +281,27 @@ frame:SetScript("OnEvent", function(_, event, addonName)
 
     if event == "PLAYER_ENTERING_WORLD" then
         if housing and not wasHousing then
-            -- Overworld -> Housing: Position fruehzeitig speichern (vor Blizzard-Layout).
+            -- Overworld -> housing: save position early (before Blizzard layout).
             C_Timer.After(0.1, function()
                 if not IsHousing() then return end
                 SaveMinimapPoint()
             end)
-            -- Watchdog erst starten nachdem das Housing-Layout gesetzt ist.
+            -- Start the watchdog only after the housing layout is set.
             C_Timer.After(2.0, function()
                 if not IsHousing() then return end
                 StartPositionGuard()
             end)
         elseif not housing then
-            -- Housing verlassen: Watchdog stoppen.
+            -- Leaving housing: stop the watchdog.
             StopPositionGuard()
             savedMinimapPoint = nil
         end
         wasHousing = housing
     end
 
-    -- Im Housing MINIMAP_UPDATE_TRACKING und SPELLS_CHANGED ignorieren.
-    -- Diese feuern haeufig und wuerden Hider.Apply() wiederholt aufrufen,
-    -- was MinimapCluster neu ausrichtet und die Minimap verschiebt.
+    -- In housing, ignore MINIMAP_UPDATE_TRACKING and SPELLS_CHANGED.
+    -- These fire often and would call Hider.Apply() repeatedly,
+    -- which re-aligns MinimapCluster and shifts the minimap.
     if housing and (event == "MINIMAP_UPDATE_TRACKING" or event == "SPELLS_CHANGED") then
         return
     end

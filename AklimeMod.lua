@@ -42,7 +42,7 @@ local function UpdateMinimapPos()
         math.sin(angle) * RADIUS)
 end
 
--- Spread-Tabelle einmalig definiert, von beiden Stellen genutzt
+-- Spread table defined once, used by both call sites
 local SPREADS   = { -37, -22, -7, 7, 22, 39 }
 local OUTER_R   = 135
 
@@ -74,10 +74,10 @@ minimapBtn:SetScript("OnDragStop", function(self)
 end)
 
 -- ============================================================
--- Radialmenü
+-- Radial menu
 -- ============================================================
 local MENU_ITEMS = {
-    {   -- oben: PvP Chat Block
+    {   -- top: PvP Chat Block
         icon    = "Interface\\Icons\\achievement_pvp_a_14",
         tooltip = L["menu_pvp_block"] or "Block PvP Chat",
         onClick = function()
@@ -90,39 +90,39 @@ local MENU_ITEMS = {
             end
         end,
     },
-    {   -- oben-mitte: Vault
+    {   -- top-center: Vault
         icon    = "Interface\\Icons\\inv_cape_special_treasure_c_01",
         tooltip = L["menu_vault"] or "Weekly Vault",
         onClick = function()
             C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
             if WeeklyRewardsFrame:IsShown() then WeeklyRewardsFrame:Hide()
             else WeeklyRewardsFrame:Show() end
-            -- ESC soll das Fenster schließen
+            -- ESC should close the window
             if not tContains(UISpecialFrames, "WeeklyRewardsFrame") then
                 tinsert(UISpecialFrames, "WeeklyRewardsFrame")
             end
         end,
     },
-    {   -- mitte: Todo
+    {   -- center: ToDo
         icon    = C_Item.GetItemIconByID(32620) or "Interface\\Icons\\INV_Misc_Note_01",
         tooltip = L["menu_todo"] or "ToDo List",
         onClick = function()
             if AklimeMod_TodoList then AklimeMod_TodoList:Toggle() end
         end,
     },
-    {   -- unten-mitte: Charakter-Tracker
+    {   -- bottom-center: Character Tracker
         icon    = C_Item.GetItemIconByID(272339) or "Interface\\GossipFrame\\DailyActiveQuestIcon",
         tooltip = L["menu_char_tracker"] or "Character Tracker",
         onClick = function() AklimeMod_CT_Toggle() end,
     },
-    {   -- unten-mitte: Playtime
+    {   -- bottom-center: Played Time
         icon    = C_Item.GetItemIconByID(162690) or "Interface\\Icons\\Achievement_BG_returnxflags_def_WSG",
         tooltip = L["menu_played_time"] or "Played Time",
         onClick = function()
             if AklimeMod_PlayedTime then AklimeMod_PlayedTime:Toggle() end
         end,
     },
-    {   -- unten: Settings
+    {   -- bottom: Settings
         icon    = "Interface\\Icons\\trade_engineering",
         tooltip = L["menu_settings"] or "AklimeMod Settings",
         onClick = function() AklimeMod_OpenSettings() end,
@@ -226,8 +226,8 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         UpdateMinimapPos()
         AklimeMod_BuildLeftPanel()
         AklimeMod_InitSearch()
-        -- Immer registrieren, Funktion prueft den DB-Status selbst.
-        -- WoW deregistriert Slash-Befehle nicht zuverlässig per nil.
+        -- Always register. The function checks the DB status itself.
+        -- WoW does not reliably unregister slash commands via nil.
         SLASH_AKM_RL1, SLASH_AKM_RL2 = "/rl", "/nl"
         SlashCmdList["AKM_RL"] = function()
             if AklimeModDB and AklimeModDB.reloadUI and AklimeModDB.reloadUI.enabled then
@@ -239,7 +239,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         end
 
     elseif event == "PLAYER_LOGIN" then
-        -- SavedVariables sind jetzt garantiert geladen
+        -- SavedVariables are guaranteed to be loaded now
         if AklimeMod_PreyPercent then AklimeMod_PreyPercent.Init() end
         if AklimeMod_PvPChatBlock then AklimeMod_PvPChatBlock.Init() end
         if AklimeMod_PvPNameplateColor then AklimeMod_PvPNameplateColor.Init() end

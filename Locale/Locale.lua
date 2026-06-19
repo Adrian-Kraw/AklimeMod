@@ -686,25 +686,25 @@ if GetLocale() == "deDE" then
     L["ct_btn_deselect_all"] = "Alle abwählen"
     L["ct_btn_apply"]        = "Übernehmen"
 
-    -- Vault / Große Schatzkammer
+    -- Vault / Great Vault
     L["vault_header"]   = "Große Schatzkammer"
     L["vault_raids"]    = "Schlachtzüge"
     L["vault_world"]    = "Weltaktivitäten"
     L["vault_reward"]   = "Belohnung"
     L["vault_open"]     = "Offen"
 
-    -- Played Time Fenster
+    -- Played Time window
     L["played_title"]        = "Gespielte Zeit"
     L["played_total"]        = "Gesamt: %s"
     L["played_no_chars"]     = "Noch keine Daten — einmal pro Char einloggen."
     L["played_data_deleted"] = "Spielzeit-Daten gelöscht."
 
-    -- Zeitformat-Kürzel
+    -- Time format abbreviations
     L["time_days"]  = "%dT %dSt %dMin"
     L["time_hours"] = "%dSt %dMin"
     L["time_mins"]  = "%dMin"
 
-    -- Trinkerinnerung Popup
+    -- Drink Reminder popup
     L["drink_title"] = "Trink was! Streck dich!"
     L["drink_desc"]  = "Zeit für eine kurze Pause."
     L["drink_btn"]   = "Alles klar!"
@@ -713,7 +713,7 @@ if GetLocale() == "deDE" then
     L["gc_enchanted"]     = "Verzaubert"
     L["gc_not_enchanted"] = "Nicht verzaubert"
 
-    -- Todo-Liste
+    -- Todo list
     L["todo_empty"] = "Keine Einträge"
     L["todo_hint"]  = "Enter = Hinzufügen    |    Klick = Erledigt"
 

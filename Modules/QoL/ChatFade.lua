@@ -24,7 +24,7 @@ local function EnsureHook()
     if hookInstalled then return end
     hookInstalled = true
 
-    -- neue Chat-Fenster (temporaere Fenster, z.B. Fluesterfenster) auch erfassen
+    -- Also capture new chat windows (temporary windows, e.g. whisper windows)
     hooksecurefunc("FCF_OpenTemporaryWindow", function()
         if GetDB().enabled then ApplyToAllFrames() end
     end)

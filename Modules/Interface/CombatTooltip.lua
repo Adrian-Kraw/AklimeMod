@@ -1,6 +1,6 @@
 -- Modules/Interface/CombatTooltip.lua
--- Blendet den HUD-Tooltip waehrend des Kampfes aus.
--- Taucht nach dem Kampf wieder auf wenn die Maus erneut ueber etwas faehrt.
+-- Hides the HUD tooltip during combat.
+-- Reappears after combat when the mouse hovers over something again.
 
 local M = {}
 AklimeMod_CombatTooltip = M
@@ -13,11 +13,11 @@ local function GetDB()
 end
 
 -- ============================================================
--- Aura-Erkennung
+-- Aura detection
 -- ============================================================
 
 local function IsAuraTooltip(tooltip)
-    -- Methode 1: TooltipData-API (Dragonflight/TWW) — prueft den Inhalt-Typ direkt
+    -- Method 1: TooltipData API (Dragonflight/TWW). Checks the content type directly
     if tooltip.GetTooltipData then
         local data = tooltip:GetTooltipData()
         if data then
@@ -25,7 +25,7 @@ local function IsAuraTooltip(tooltip)
             if auraType and data.type == auraType then return true end
         end
     end
-    -- Methode 2: Owner-Frame-Hierarchie — greift wenn TooltipData-API nicht verfuegbar ist
+    -- Method 2: owner frame hierarchy. Used when the TooltipData API is not available
     local owner = tooltip:GetOwner()
     if owner and owner.IsDescendantOf then
         if BuffFrame and owner:IsDescendantOf(BuffFrame) then return true end
