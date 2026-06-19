@@ -65,6 +65,7 @@ Modules\QoL\Mailbox.lua
 Modules\QoL\TodoList.lua
 Modules\QoL\PlayedTime.lua
 Modules\QoL\ExtendedIgnore.lua
+Modules\QoL\HideMicroNotifications.lua
 
 Modules\Mouse\MouseEffects.lua
 

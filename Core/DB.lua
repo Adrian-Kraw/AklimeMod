@@ -83,6 +83,9 @@ function AklimeMod_InitDB()
     db.hideMacroNames = db.hideMacroNames or {}
     def(db.hideMacroNames, "enabled", false)
 
+    db.hideMicroNotifications = db.hideMicroNotifications or {}
+    def(db.hideMicroNotifications, "enabled", false)
+
     db.damageMeterCollapseDown = db.damageMeterCollapseDown or {}
     def(db.damageMeterCollapseDown, "enabled", false)
     db.damageMeterCollapseDown.windows = db.damageMeterCollapseDown.windows or {}

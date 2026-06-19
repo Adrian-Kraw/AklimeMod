@@ -1489,6 +1489,12 @@ local function addQoLNodes(dp)
     )
     addInfo(mapCoordsNode, L["info_map_coords"])
 
+    local microNotifNode = addModule(dp, L["mod_hide_micro_notify"],
+        function() return AklimeMod_HideMicroNotifications.IsEnabled() end,
+        function(v) AklimeMod_HideMicroNotifications.SetEnabled(v) end
+    )
+    addInfo(microNotifNode, L["info_hide_micro_notify"])
+
     if AklimeMod_ChatLearnFilter then
         local learnNode = addModule(dp, L["mod_learn_filter"],
             function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
