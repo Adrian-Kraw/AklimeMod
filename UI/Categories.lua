@@ -1500,6 +1500,10 @@ local function addQoLNodes(dp)
             function() return AklimeMod_ChatLearnFilter:IsEnabled() end,
             function(v) AklimeMod_ChatLearnFilter:SetEnabled(v) end
         )
+        addToggle(learnNode, L["toggle_hide_talent_bubble"],
+            function() return AklimeMod_ChatLearnFilter:IsBubbleEnabled() end,
+            function(v) AklimeMod_ChatLearnFilter:SetBubbleEnabled(v) end
+        )
         addInfo(learnNode, L["info_learn_filter"])
     end
 

@@ -1,5 +1,6 @@
 -- Modules/QoL/ChatLearnFilter.lua
 -- Hides learn/unlearn messages in the chat.
+-- Optional sub-feature: hide the "unspent talent points" alert popup.
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.chatLearnFilter then return AklimeModDB.chatLearnFilter end
@@ -58,6 +59,98 @@ local function LearnFilter(_, _, msg)
     return false
 end
 
+-- ============================================================
+-- Talent alert bubble suppression
+-- ============================================================
+
+local bubbleHooked = {}
+
+local function IsBubbleEnabled()
+    local db = GetDB()
+    return db.hideTalentBubble == true
+end
+
+local function SuppressBubble(f)
+    if not f or bubbleHooked[f] then return end
+    bubbleHooked[f] = true
+    f:HookScript("OnShow", function(self)
+        if IsBubbleEnabled() then self:Hide() end
+    end)
+    if IsBubbleEnabled() and f.IsShown and f:IsShown() then f:Hide() end
+end
+
+-- The talent alert is an anonymous UIParent child with a FontString region
+-- containing the "unspent talent points" text. We find it once by text and cache it.
+local talentBubble = nil
+
+local BUBBLE_PATTERNS = {
+    "unverteilte Talentpunkt", -- deDE
+    "unspent talent point",    -- enUS
+}
+
+local function FindTalentBubble()
+    if talentBubble then return talentBubble end
+    for i = 1, UIParent:GetNumChildren() do
+        local f = select(i, UIParent:GetChildren())
+        local ok, nr = pcall(function() return f:GetNumRegions() end)
+        if ok and nr then
+            for j = 1, nr do
+                local r = select(j, f:GetRegions())
+                if r.GetText then
+                    local ok2, t = pcall(function() return r:GetText() end)
+                    if ok2 and t then
+                        for _, pat in ipairs(BUBBLE_PATTERNS) do
+                            if t:find(pat, 1, true) then
+                                talentBubble = f
+                                return f
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function ApplyBubbleHide()
+    if not IsBubbleEnabled() then return end
+    local f = FindTalentBubble()
+    if f then SuppressBubble(f) end
+end
+
+local function HookShowAlert()
+    -- Keep as secondary strategy: hook ShowAlert on the talent button if available
+    local btn = _G["PlayerSpellsMicroButton"]
+    if not btn or btn._talentAlertHooked then return end
+    btn._talentAlertHooked = true
+    if btn.ShowAlert then
+        hooksecurefunc(btn, "ShowAlert", function()
+            if IsBubbleEnabled() then C_Timer.After(0, ApplyBubbleHide) end
+        end)
+    end
+end
+
+local bubbleFrame = CreateFrame("Frame")
+
+local function SetupBubbleEvents(on)
+    if on then
+        bubbleFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+        bubbleFrame:RegisterEvent("PLAYER_LEVEL_UP")
+        bubbleFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    else
+        bubbleFrame:UnregisterAllEvents()
+    end
+end
+
+bubbleFrame:SetScript("OnEvent", function()
+    C_Timer.After(0, ApplyBubbleHide)
+end)
+
+-- ============================================================
+-- Public API
+-- ============================================================
+
 local M = {}
 AklimeMod_ChatLearnFilter = M
 
@@ -79,8 +172,31 @@ function M:SetEnabled(v)
     end
 end
 
+function M:IsBubbleEnabled()
+    return IsBubbleEnabled()
+end
+
+function M:SetBubbleEnabled(v)
+    local db = GetDB()
+    db.hideTalentBubble = v and true or false
+    SetupBubbleEvents(v)
+    if v then
+        C_Timer.After(0.5, function()
+            HookShowAlert()
+            ApplyBubbleHide()
+        end)
+    end
+end
+
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function()
     if GetDB().enabled then M:SetEnabled(true) end
+    if GetDB().hideTalentBubble then
+        SetupBubbleEvents(true)
+        C_Timer.After(2, function()
+            HookShowAlert()
+            ApplyBubbleHide()
+        end)
+    end
 end)

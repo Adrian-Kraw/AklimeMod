@@ -124,7 +124,8 @@ function AklimeMod_InitDB()
     def(db.merchant, "enabled", false)
 
     db.chatLearnFilter = db.chatLearnFilter or {}
-    def(db.chatLearnFilter, "enabled", false)
+    def(db.chatLearnFilter, "enabled",          false)
+    def(db.chatLearnFilter, "hideTalentBubble", false)
 
     db.chatIcons = db.chatIcons or {}
     def(db.chatIcons, "enabled",    false)
