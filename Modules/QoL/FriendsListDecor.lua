@@ -475,6 +475,28 @@ decorRunner:SetScript("OnUpdate", function()
     end
 end)
 
+-- BNet friends may update their location without Blizzard calling
+-- FriendsFrame_UpdateFriendButton (DataProvider model in Midnight).
+-- A targeted timer refresh only touches BNet buttons — WoW buttons are
+-- handled exclusively via the hook to avoid stale button.id reads.
+local bnetRefreshPending = false
+local function ScheduleBNetRefresh()
+    if bnetRefreshPending or not GetDB().enabled then return end
+    bnetRefreshPending = true
+    C_Timer.After(0.2, function()
+        bnetRefreshPending = false
+        if not GetDB().enabled then return end
+        local scrollBox = (FriendsListFrame and FriendsListFrame.ScrollBox)
+            or (FriendsFrame and FriendsFrame.ScrollBox)
+        if not scrollBox or not scrollBox.ForEachFrame then return end
+        scrollBox:ForEachFrame(function(button)
+            if button.buttonType == FRIENDS_BUTTON_TYPE_BNET then
+                pendingButtons[button] = true
+            end
+        end)
+    end)
+end
+
 local hookInstalled = false
 local function EnsureHook()
     if hookInstalled then return true end
@@ -535,7 +557,12 @@ end
 
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function()
-    EnsureHook()
-    if GetDB().enabled then M:Refresh() end
+initFrame:RegisterEvent("BN_FRIEND_INFO_CHANGED")
+initFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LOGIN" then
+        EnsureHook()
+        if GetDB().enabled then M:Refresh() end
+    elseif event == "BN_FRIEND_INFO_CHANGED" then
+        ScheduleBNetRefresh()
+    end
 end)

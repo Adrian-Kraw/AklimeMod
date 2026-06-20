@@ -70,23 +70,49 @@ local function IsBubbleEnabled()
     return db.hideTalentBubble == true
 end
 
-local function SuppressBubble(f)
-    if not f or bubbleHooked[f] then return end
-    bubbleHooked[f] = true
-    f:HookScript("OnShow", function(self)
-        if IsBubbleEnabled() then self:Hide() end
-    end)
-    if IsBubbleEnabled() and f.IsShown and f:IsShown() then f:Hide() end
-end
-
 -- Talent alert bubbles are anonymous UIParent children identified by their text.
--- bubbleHooked (defined above) acts as the cache — once hooked, skip on next scan.
+-- The frame is reused for other popups (e.g. mission tables), so we always
+-- re-check the text before hiding to avoid suppressing unrelated popups.
 local BUBBLE_PATTERNS = {
     "unverteilte Talentpunkt", -- deDE regular
     "PvP-Talentplatz",         -- deDE PvP
     "unspent talent point",    -- enUS regular
     "PvP talent",              -- enUS PvP
 }
+
+local function FrameMatchesBubble(f)
+    local ok, nr = pcall(function() return f:GetNumRegions() end)
+    if not ok or not nr then return false end
+    for j = 1, nr do
+        local r = select(j, f:GetRegions())
+        if r.GetText then
+            local ok2, t = pcall(function() return r:GetText() end)
+            if ok2 and t and not (issecretvalue and issecretvalue(t)) then
+                for _, pat in ipairs(BUBBLE_PATTERNS) do
+                    if t:find(pat, 1, true) then return true end
+                end
+            end
+        end
+    end
+    return false
+end
+
+local function SuppressBubble(f)
+    if not f or bubbleHooked[f] then return end
+    bubbleHooked[f] = true
+    -- Re-check text on every show: the frame is reused for other popups
+    f:HookScript("OnShow", function(self)
+        if not IsBubbleEnabled() then return end
+        C_Timer.After(0, function()
+            if self:IsShown() and FrameMatchesBubble(self) then
+                self:Hide()
+            end
+        end)
+    end)
+    if IsBubbleEnabled() and f.IsShown and f:IsShown() and FrameMatchesBubble(f) then
+        f:Hide()
+    end
+end
 
 local function ApplyBubbleHide()
     if not IsBubbleEnabled() then return end
@@ -99,7 +125,7 @@ local function ApplyBubbleHide()
                     local r = select(j, f:GetRegions())
                     if r.GetText then
                         local ok2, t = pcall(function() return r:GetText() end)
-                        if ok2 and t then
+                        if ok2 and t and not (issecretvalue and issecretvalue(t)) then
                             for _, pat in ipairs(BUBBLE_PATTERNS) do
                                 if t:find(pat, 1, true) then
                                     SuppressBubble(f)
