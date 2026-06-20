@@ -96,11 +96,16 @@ local function Setup()
         -- Position is already set correctly by OnUpdate
     end)
 
-    -- Intercept Blizzard's SetPoint and correct it
+    -- Intercept Blizzard's SetPoint and correct it.
+    -- Debounced: in Midnight the eye animation runs via rapid SetPoint calls.
+    -- We only snap after 0.5s of silence so the animation can play uninterrupted.
+    local snapTimer = nil
     hooksecurefunc(btn, "SetPoint", function(self)
         if self[FLAG] then return end
         if not GetDB().enabled then return end
-        C_Timer.After(0.05, function()
+        if snapTimer then snapTimer:Cancel() end
+        snapTimer = C_Timer.NewTimer(0.5, function()
+            snapTimer = nil
             if btn and not btn[FLAG] and GetDB().enabled then Snap() end
         end)
     end)
