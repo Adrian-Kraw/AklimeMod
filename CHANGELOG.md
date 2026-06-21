@@ -1,3 +1,38 @@
+## 1.1.0
+
+Bug fixes for the Enhanced Friends List and Dungeon Eye, plus a new sub-toggle to hide talent point alert popups. / Bugfixes für die verbesserte Freundesliste und das Dungeon Eye, plus neuer Unter-Schalter zum Ausblenden der Talentpunkt-Popups.
+
+**EN**
+
+Hide Learn/Unlearn Messages
+
+* New: Sub-toggle to hide the "You have unspent talent points" and "PvP talent slot available" alert popups
+
+Enhanced Friends List
+
+* Fix attempt: BNet contacts could still show an outdated zone location after the contact changed zones
+* Fixed: WoW friends could remain shown as online after going offline
+
+Dungeon Eye
+
+* Fixed: The eye's looking animation was frozen while the Dungeon Eye feature was active
+
+**DE**
+
+Lernen-/Vergessen-Meldungen ausblenden
+
+* Neu: Unter-Schalter zum Ausblenden der Popups "Ihr habt noch unverteilte Talentpunkte" und "Ihr habt einen verfügbaren PvP-Talentplatz"
+
+Verbesserte Freundesliste
+
+* Behebungsversuch: BNet-Kontakte konnten noch den alten Ort anzeigen, nachdem der Kontakt die Zone gewechselt hatte
+* Behoben: Ingame-Freunde konnten nach dem Ausloggen noch als online angezeigt werden
+
+Dungeon Eye
+
+* Behoben: Die Augen-Animation (Schauen) war eingefroren solange das Dungeon-Eye-Feature aktiv war
+
+
 ## 1.0.0
 
 First stable release / Erste stabile Release-Version.
