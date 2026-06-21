@@ -1,3 +1,20 @@
+## 1.1.1
+
+Translation fixes. / Übersetzungskorrekturen.
+
+**EN**
+
+Chat Interaction
+
+* Fixed: "Select All" and "Close" buttons in the chat copy window were not translatet.
+
+**DE**
+
+Chat Interaktion
+
+* Behoben: "Alles auswählen" und "Schließen" Buttons im Chat-Kopierfenster waren für Englischsprachige Nuter noch auf Deutsch
+
+
 ## 1.1.0
 
 **EN**

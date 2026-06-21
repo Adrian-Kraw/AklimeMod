@@ -1,3 +1,20 @@
+## 1.1.1
+
+Translation fixes. / Übersetzungskorrekturen.
+
+**EN**
+
+Chat Interaction
+
+* Fixed: "Select All" and "Close" buttons in the chat copy window were hardcoded in German
+
+**DE**
+
+Chat Interaktion
+
+* Behoben: "Alles auswählen" und "Schließen" Buttons im Chat-Kopierfenster waren auf Deutsch hardcodiert
+
+
 ## 1.1.0
 
 Bug fixes for the Enhanced Friends List and Dungeon Eye, plus a new sub-toggle to hide talent point alert popups. / Bugfixes für die verbesserte Freundesliste und das Dungeon Eye, plus neuer Unter-Schalter zum Ausblenden der Talentpunkt-Popups.
