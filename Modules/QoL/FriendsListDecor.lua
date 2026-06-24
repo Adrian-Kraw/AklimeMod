@@ -230,22 +230,19 @@ end
 local M = {}
 AklimeMod_FriendsListDecor = M
 
-local function FindFavoriteStar(button)
-    -- Atlas name is known: "friendslist-favorite"
-    for _, region in ipairs({ button:GetRegions() }) do
-        local ok, atlas = pcall(function() return region:GetAtlas() end)
-        if ok and atlas == "friendslist-favorite" then return region end
-    end
-    return nil
-end
-
 local starReplacements = {}
 
-local function MoveStarRight(button, nameFont)
-    local star = FindFavoriteStar(button)
+-- isFavorite must come from data (hook-cached state or API), not from button.Favorite:IsShown(),
+-- because we hide button.Favorite ourselves -- re-reading IsShown() would always see false.
+local function MoveStarRight(button, nameFont, isFavorite)
+    local repl = starReplacements[button]
+    if not isFavorite then
+        if repl then repl:Hide() end
+        return
+    end
 
-    if not star or not star:IsShown() then
-        local repl = starReplacements[button]
+    local star = button.Favorite
+    if not star then
         if repl then repl:Hide() end
         return
     end
@@ -253,8 +250,6 @@ local function MoveStarRight(button, nameFont)
     -- Hide the original, it would land outside the clip region
     star:Hide()
 
-    -- Create the replacement texture once per button
-    local repl = starReplacements[button]
     if not repl then
         repl = button:CreateTexture(nil, "ARTWORK", nil, 7)
         repl:SetAtlas("friendslist-favorite")
@@ -262,7 +257,6 @@ local function MoveStarRight(button, nameFont)
         starReplacements[button] = repl
     end
 
-    -- Position right after the end of the text
     repl:ClearAllPoints()
     if nameFont then
         repl:SetPoint("LEFT", nameFont, "LEFT", nameFont:GetStringWidth() + 2, 0)
@@ -318,7 +312,7 @@ local function DecorateWoWFriend(button)
 
     SetFactionIcon(button, nil)
     if button.gameIcon then button.gameIcon:SetTexCoord(0, 1, 0, 1) end
-    MoveStarRight(button, nameFont)
+    MoveStarRight(button, nameFont, button._aklimeFavState == true)
 end
 
 local function DecorateBNetFriend(button)
@@ -411,7 +405,7 @@ local function DecorateBNetFriend(button)
         end
     end
 
-    MoveStarRight(button, nameFont)
+    MoveStarRight(button, nameFont, accountInfo.isFavorite == true)
 end
 
 -- Checks whether a button belongs to the housing system.
@@ -508,6 +502,9 @@ local function EnsureHook()
         if not FriendsFrame or not FriendsFrame:IsShown() then return end
         if debugstack():find("HouseList", 1, true) then return end
         if IsHousingButton(button) then return end
+        -- Cache button.Favorite visibility now, while Blizzard's state is fresh.
+        -- We must not re-read IsShown() later because we will have hidden it ourselves.
+        button._aklimeFavState = button.Favorite and button.Favorite:IsShown() or false
         pendingButtons[button] = true
     end)
     hookInstalled = true
