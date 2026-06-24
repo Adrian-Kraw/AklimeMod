@@ -103,6 +103,7 @@ local STATUS_TEXTURES = {
     Offline = FRIENDS_TEXTURE_OFFLINE,
     AFK     = FRIENDS_TEXTURE_AFK,
     DND     = FRIENDS_TEXTURE_DND,
+    Mobile  = FRIENDS_TEXTURE_MOBILE or FRIENDS_TEXTURE_ONLINE,
 }
 
 local CLIENT_COLORS = {
@@ -328,9 +329,15 @@ local function DecorateBNetFriend(button)
     if not accountInfo then return end
 
     local gameInfo = accountInfo.gameAccountInfo
-    local isOnline = gameInfo and gameInfo.isOnline == true
+    local isInGame = gameInfo and gameInfo.isOnline == true
+    local isMobile = isInGame and gameInfo.clientProgram == (BNET_CLIENT_MOBILE or "BSAp")
+    local isOnline = isInGame
     local status
-    if isOnline then
+    if isMobile then
+        if accountInfo.isDND then status = "DND"
+        elseif accountInfo.isAFK then status = "AFK"
+        else status = "Mobile" end
+    elseif isInGame then
         if accountInfo.isDND or (gameInfo.isGameBusy == true) then status = "DND"
         elseif accountInfo.isAFK or (gameInfo.isGameAFK == true) then status = "AFK"
         else status = "Online" end
@@ -382,6 +389,9 @@ local function DecorateBNetFriend(button)
             if displayName == "" then displayName = realID or "" end
         end
         infoText = (gameInfo and gameInfo.richPresence) or accountInfo.note or ""
+        if isMobile and (not infoText or infoText == "") then
+            infoText = AklimeModL["friends_mobile"] or "Mobile"
+        end
     end
 
     nameFont:SetText(displayName)

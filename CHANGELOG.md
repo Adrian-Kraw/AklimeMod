@@ -1,3 +1,20 @@
+## 1.1.3
+
+Fix for the Enhanced Friends List: mobile BNet contacts are now recognized. / Fix für die verbesserte Freundesliste: Mobile BNet-Kontakte werden jetzt erkannt.
+
+**EN**
+
+Enhanced Friends List
+
+* Fixed: BNet contacts on the Battle.net mobile app were shown as offline with no status indicator. They now appear as online and show "Mobile" in the info line.
+
+**DE**
+
+Verbesserte Freundesliste
+
+* Behoben: BNet-Kontakte über die Battle.net Mobile-App wurden als offline angezeigt und hatten keinen Status-Indikator. Sie erscheinen jetzt als online und zeigen "Mobilgerät" in der Info-Zeile.
+
+
 ## 1.1.2
 
 Fix for the Enhanced Friends List after Blizzard's API hotfix. / Fix für die verbesserte Freundesliste nach Blizzards API-Hotfix.
