@@ -1,3 +1,20 @@
+## 1.1.2
+
+Fix for the Enhanced Friends List after Blizzard's API hotfix. / Fix für die verbesserte Freundesliste nach Blizzards API-Hotfix.
+
+**EN**
+
+Enhanced Friends List
+
+* Fixed: Favorite stars flickered on and off after Blizzard's patch restored the favorites API
+
+**DE**
+
+Verbesserte Freundesliste
+
+* Behoben: Favoriten-Sterne blinkten nach Blizzards Patch, der die Favoriten-API wiederhergestellt hat
+
+
 ## 1.1.1
 
 Translation fixes. / Übersetzungskorrekturen.
