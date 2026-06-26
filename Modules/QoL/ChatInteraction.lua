@@ -97,13 +97,13 @@ local function GetOrCreateCopyFrame()
     local btnAll = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
     btnAll:SetSize(140, 26)
     btnAll:SetPoint("BOTTOM", f, "BOTTOM", -76, 12)
-    btnAll:SetText("Select All")
+    btnAll:SetText(AklimeModL["chat_copy_select_all"] or "Select All")
     btnAll:SetScript("OnClick", function() eb:SetFocus(); eb:HighlightText() end)
 
     local btnClose = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
     btnClose:SetSize(110, 26)
     btnClose:SetPoint("BOTTOM", f, "BOTTOM", 76, 12)
-    btnClose:SetText("Close")
+    btnClose:SetText(AklimeModL["chat_copy_close"] or "Close")
     btnClose:SetScript("OnClick", function() f:Hide() end)
 
     copyFrame = f
