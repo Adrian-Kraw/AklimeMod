@@ -79,15 +79,31 @@ local function BypassEditBox(self)
     end)
 end
 
--- Extract the required confirmation word from the dialog's visible text.
--- Blizzard embeds it in quotes, e.g. "Gebt 'ZERSTÖREN' ein" -> "ZERSTÖREN".
--- This is locale-independent and survives string changes across patches.
+-- Match a confirmation word wrapped in quotes inside a piece of dialog text.
+-- Handles straight quotes and the typographic quotes localized clients use
+-- (German „WORT", English "WORD"), so the word is found in any locale.
+local function MatchQuotedWord(t)
+    if not t then return nil end
+    return t:match("'([^']+)'")
+        or t:match('"([^"]+)"')
+        or t:match("\226\128\158([^\226]+)\226\128\156")
+        or t:match("\226\128\156([^\226]+)\226\128\157")
+end
+
+-- Extract the required confirmation word from the dialog.
+-- Blizzard embeds it in quotes, e.g. „VERLERNEN" or "DESTROY".
+-- Scans the main text first, then every other FontString of the popup, so it
+-- still works when the hint sits in a separate region.
 local function GetRequiredTextFromDialog(popup)
     local textEl = popup.text
     if textEl and textEl.GetText then
-        local t = textEl:GetText()
-        if t then
-            return t:match("'([^']+)'") or t:match('"([^"]+)"')
+        local word = MatchQuotedWord(textEl:GetText())
+        if word then return word end
+    end
+    for _, region in ipairs({ popup:GetRegions() }) do
+        if region:GetObjectType() == "FontString" then
+            local word = MatchQuotedWord(region:GetText())
+            if word then return word end
         end
     end
     return nil
