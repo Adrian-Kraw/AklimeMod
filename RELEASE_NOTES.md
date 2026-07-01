@@ -2,7 +2,7 @@
 
 **EN**
 
-Fixes for the Enhanced Friends List, unlearn confirmation, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet.
+Fixes for the Enhanced Friends List, unlearn confirmation, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, and a Minimap Button Collector fix for TomTom waypoints.
 
 Enhanced Friends List
 
@@ -20,9 +20,17 @@ Character Tracker
 
 * New: The Great Vault "Reward" row now shows "Open" for characters that have not logged in since the weekly reset, if their last known progress guarantees a reward is waiting
 
+Heroism Tracker
+
+* Fixed: The tracker was unlocked by default, blocking clicks on frames behind it. It is now locked by default, so it is click-through unless you unlock it to move it.
+
+Minimap Button Collector
+
+* Fixed: TomTom's minimap waypoint arrows could get swept into the collector and show up there as invisible icons. They are now excluded.
+
 **DE**
 
-Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere.
+Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker und ein Fix im Minimap Button Sammler für TomTom-Wegpunkte.
 
 Verbesserte Freundesliste
 
@@ -39,3 +47,11 @@ Einfaches Bestätigen und Löschen
 Charakter-Tracker
 
 * Neu: Die "Belohnung"-Zeile der Großen Schatzkammer zeigt jetzt "Offen" für Charaktere, die seit dem wöchentlichen Reset nicht eingeloggt waren, sofern der zuletzt bekannte Fortschritt eine Belohnung garantiert
+
+Heldentum-Tracker
+
+* Behoben: Der Tracker war standardmäßig entsperrt und blockierte dadurch Klicks auf Frames dahinter. Er ist jetzt standardmäßig gesperrt und damit click-through, außer man entsperrt ihn zum Verschieben.
+
+Minimap Button Sammler
+
+* Behoben: TomTom-Wegpunkt-Pfeile auf der Minimap konnten in den Sammler aufgenommen werden und erschienen dort als unsichtbare Icons. Sie werden jetzt ausgeschlossen.

@@ -109,6 +109,7 @@ local function IsAddonButton(frame)
     local lname = name:lower()
     if lname:find("handynotes", 1, true) then return false end
     if lname:find("tomtom",     1, true) then return false end
+    if lname:find("ttminimapbutton", 1, true) then return false end
     if lname:find("arrow",      1, true) then return false end
     if lname:find("waypoint",   1, true) then return false end
     if lname:find("marker",     1, true) then return false end

@@ -186,7 +186,7 @@ function AklimeMod_InitDB()
 
     db.heroismTracker = db.heroismTracker or {}
     def(db.heroismTracker, "enabled",  false)
-    def(db.heroismTracker, "locked",   false)
+    def(db.heroismTracker, "locked",   true)
     def(db.heroismTracker, "fontSizeSlider", 20)
 
     db.deathSound = db.deathSound or {}
