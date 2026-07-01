@@ -2,7 +2,7 @@
 
 **EN**
 
-Fixes for the Enhanced Friends List, unlearn confirmation, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, and a Minimap Button Collector fix for TomTom waypoints.
+Fixes for the Enhanced Friends List, unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, and a Minimap Button Collector fix for TomTom waypoints.
 
 Enhanced Friends List
 
@@ -15,6 +15,7 @@ Chat Interaction
 Easy Confirm and Delete
 
 * Fixed: When unlearning, the confirmation field was auto-filled with the wrong word, leaving the Unlearn button disabled. The correct confirmation word is now detected and filled in.
+* Fixed: Confirming the destroy prompt for a whole item stack left the confirmation field empty because that dialog type was not recognized. Delete/destroy confirmations are now matched more broadly.
 
 Character Tracker
 
@@ -30,7 +31,7 @@ Minimap Button Collector
 
 **DE**
 
-Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker und ein Fix im Minimap Button Sammler für TomTom-Wegpunkte.
+Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker und ein Fix im Minimap Button Sammler für TomTom-Wegpunkte.
 
 Verbesserte Freundesliste
 
@@ -43,6 +44,7 @@ Chat Interaktion
 Einfaches Bestätigen und Löschen
 
 * Behoben: Beim Verlernen wurde im Bestätigungsfeld das falsche Wort eingetragen ("LÖSCHEN" statt "VERLERNEN"), wodurch der Verlernen-Knopf deaktiviert blieb. Das richtige Wort wird jetzt erkannt und eingetragen.
+* Behoben: Einfaches Löschen Eingabeanpassungen, der Zerstören-Dialog für einen ganzen Item-Stapel wurde nicht erkannt, das Bestätigungsfeld blieb leer. Lösch-/Zerstören-Dialoge werden jetzt zuverlässiger erkannt.
 
 Charakter-Tracker
 

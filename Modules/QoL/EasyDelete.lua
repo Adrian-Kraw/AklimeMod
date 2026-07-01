@@ -45,13 +45,15 @@ local function HandleDeleteConfirm()
     end
 end
 
--- Confirmation text for valuable item deletions.
+-- Confirmation text for valuable item deletions/destructions.
+-- Matched by substring on the (English, locale-independent) StaticPopup key
+-- instead of an exact whitelist, so new Blizzard dialog variants (e.g. for
+-- destroying a whole item stack) are covered without having to enumerate
+-- every possible key by hand.
 local function GetConfirmText(which)
-    if which == "DELETE_GOOD_ITEM"
-    or which == "DELETE_GOOD_QUEST_ITEM"
-    or which == "DESTROY_ITEM"
-    or which == "CONFIRM_DESTROY_ITEM"
-    then
+    if not which then return nil end
+    local w = which:upper()
+    if w:find("DELETE") or w:find("DESTROY") then
         return DELETE_ITEM_CONFIRM_STRING
     end
     return nil
