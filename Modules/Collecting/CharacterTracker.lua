@@ -244,6 +244,16 @@ local function GetDataDB()
     return { Toons = toons, Instances = GetInstanceDB() or {} }
 end
 
+-- Timestamp of the last weekly reset, derived from the client's countdown
+-- to the next reset. Lets us detect vault data collected before the reset,
+-- which is stale once a new week has started.
+local function GetLastWeeklyReset()
+    if not C_DateAndTime or not C_DateAndTime.GetSecondsUntilWeeklyReset then return nil end
+    local ok, secs = pcall(C_DateAndTime.GetSecondsUntilWeeklyReset)
+    if not ok or not secs or secs <= 0 then return nil end
+    return time() + secs - 604800
+end
+
 -- ============================================================
 -- Helpers
 -- ============================================================
@@ -907,15 +917,30 @@ function AklimeMod_CT_Refresh()
             y = y + ROW_H
         end
 
-        -- Fourth row: open = reward available but not yet collected
+        -- Fourth row: open = reward available but not yet collected.
+        -- If the character has not logged in since the last reset, the stored
+        -- hasRewards flag is stale (it reflects the state before the reset).
+        -- In that case, fall back to the last known per-category completion:
+        -- completing at least one activity guarantees a vault reward for the
+        -- new week, so this can be deduced without the character logging in.
+        local lastReset = GetLastWeeklyReset()
         local rewardRow = MkRow(contentFrame, y, false)
         MkTxt(rewardRow, NORMAL_FONT_COLOR_CODE .. (L["vault_reward"] or "Reward") .. FONT_COLOR_CODE_CLOSE,
             8, LAB_W - 4, "GameFontNormalSmall", "LEFT")
         for ci, ch in ipairs(sel) do
             local toon = trackerDB.Toons[ch]
             local vault = toon and toon.weeklyVault
+            local staleSinceReset = vault and lastReset and (not toon.LastSeen or toon.LastSeen < lastReset)
+            local hasOpenReward
+            if staleSinceReset then
+                hasOpenReward = (vault.raid and vault.raid > 0)
+                    or (vault.dungeon and vault.dungeon > 0)
+                    or (vault.world and vault.world > 0)
+            else
+                hasOpenReward = vault and vault.hasRewards
+            end
             local txt
-            if vault and vault.hasRewards then
+            if hasOpenReward then
                 txt = GREEN_FONT_COLOR_CODE .. (L["vault_open"] or "Open") .. FONT_COLOR_CODE_CLOSE
             else
                 txt = GRAY_FONT_COLOR_CODE .. "-" .. FONT_COLOR_CODE_CLOSE

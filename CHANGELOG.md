@@ -1,6 +1,6 @@
 ## 1.1.3
 
-Fixes for the Enhanced Friends List, the profession unlearn confirmation, and a translation fix for the chat copy window. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen und einen Übersetzungsfix für das Chat-Kopierfenster.
+Fixes for the Enhanced Friends List, the profession unlearn confirmation, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere.
 
 **EN**
 
@@ -16,6 +16,10 @@ Easy Confirm and Delete
 
 * Fixed: When unlearning a profession, the confirmation field was auto-filled with the wrong word, leaving the Unlearn button disabled. The correct confirmation word is now detected and filled in.
 
+Character Tracker
+
+* New: The Great Vault "Reward" row now shows "Open" for characters that have not logged in since the weekly reset, if their last known progress guarantees a reward is waiting
+
 **DE**
 
 Verbesserte Freundesliste
@@ -29,6 +33,10 @@ Chat Interaktion
 Einfaches Bestätigen und Löschen
 
 * Behoben: Beim Verlernen eines Berufs wurde im Bestätigungsfeld das falsche Wort eingetragen ("LÖSCHEN" statt "VERLERNEN"), wodurch der Verlernen-Knopf deaktiviert blieb. Das richtige Wort wird jetzt erkannt und eingetragen.
+
+Charakter-Tracker
+
+* Neu: Die "Belohnung"-Zeile der Großen Schatzkammer zeigt jetzt "Offen" für Charaktere, die seit dem wöchentlichen Reset nicht eingeloggt waren, sofern der zuletzt bekannte Fortschritt eine Belohnung garantiert
 
 
 ## 1.1.2
