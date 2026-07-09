@@ -138,6 +138,10 @@ local function UpdateDisplay()
         frame:Hide()
         return
     end
+    -- Re-apply on every update: the frame's actual mouse state can drift
+    -- from the DB flag (observed in combat), so enforce it continuously
+    -- instead of trusting a single EnableMouse call from BuildFrame/SetLocked.
+    frame:EnableMouse(db.locked == false)
     local now = GetTime()
     local active, expires = CheckAuras()
     if active then
@@ -366,10 +370,12 @@ SlashCmdList["AKM_HT"] = function(input)
 
     local db = GetDB()
     print(string.format(
-        "|cFFFFD100Aklime Mod Tools HT:|r Modul: %s | Frame: %s | Kampf: %s",
+        "|cFFFFD100Aklime Mod Tools HT:|r Modul: %s | Frame: %s | Kampf: %s | Gesperrt (DB): %s | Maus aktiv (Frame): %s",
         db.enabled and "|cFF00FF00aktiv|r" or "|cFFFF4444inaktiv|r",
         (frame and frame:IsShown()) and "|cFF00FF00sichtbar|r" or "versteckt",
-        UnitAffectingCombat("player") and "ja" or "nein"
+        UnitAffectingCombat("player") and "ja" or "nein",
+        M:IsLocked() and "ja" or "nein",
+        (frame and frame:IsMouseEnabled()) and "|cFFFF4444JA|r" or "nein"
     ))
 
     local foundBuff, buffSecret = nil, false
