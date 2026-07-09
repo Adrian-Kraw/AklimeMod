@@ -2,8 +2,6 @@
 
 **EN**
 
-Fixes for the Enhanced Friends List, unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, a Minimap Button Collector fix for TomTom waypoints, and a Lua error fix for the Leave Trade Channel feature.
-
 Enhanced Friends List
 
 * Fixed: BNet contacts on the Battle.net mobile app were shown as offline with no status indicator. They now appear as online and show "Mobile" in the info line.
@@ -33,9 +31,17 @@ Leave Trade Channel
 
 * Fixed: Rejoining the channel could throw a Lua error, because the addon tried to auto-show it in the chat window using a Blizzard API function that no longer exists. The channel is now shown correctly and without errors.
 
-**DE**
+Auto Accept Summons
 
-Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker, ein Fix im Minimap Button Sammler für TomTom-Wegpunkte und ein Lua-Fehler-Fix beim Dienste-Channel verlassen.
+* Fixed: Accepting a summon no longer worked, it only closed the popup without teleporting. 
+
+Gear Check
+
+* New: The Inspect window now shows the average item level ("GS") on the model when viewing another player.
+* New: Item level is now also shown on gear in bags, bank, Warband Bank and guild bank, not just on equipped slots.
+* Fixed: Legacy items like the Heart of Azeroth and Legion artifact weapons showed a wrong, outdated item level. 
+
+**DE**
 
 Verbesserte Freundesliste
 
@@ -65,3 +71,13 @@ Minimap Button Sammler
 Dienste-Channel verlassen
 
 * Behoben: Beim erneuten Beitreten zum Channel konnte ein Lua-Fehler auftreten, weil das Addon versuchte, ihn per einer nicht mehr existierenden Blizzard-API-Funktion automatisch im Chatfenster anzuzeigen. Der Channel wird jetzt korrekt und ohne Fehler angezeigt.
+
+Beschwörungen automatisch annehmen
+
+* Behoben: Das Annehmen einer Beschwörung funktionierte nicht mehr, es schloss nur das Fenster ohne zu teleportieren.
+
+Ausrüstungs-Prüfung
+
+* Neu: Im Betrachten-Fenster wird jetzt oben am Modell das durchschnittliche Itemlevel des angesehenen Spielers angezeigt.
+* Neu: Itemlevel wird jetzt auch bei Ausrüstung in Taschen, Bank, Warband-Bank und Gildenbank angezeigt, nicht mehr nur an angelegten Slots.
+* Behoben: Legacy-Items wie das Herz von Azeroth und Legion-Artefaktwaffen zeigten ein falsches, veraltetes Itemlevel. 

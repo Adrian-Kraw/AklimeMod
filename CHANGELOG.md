@@ -1,6 +1,6 @@
 ## 1.1.3
 
-Fixes for the Enhanced Friends List, the profession unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, a Minimap Button Collector fix for TomTom waypoints, and a Lua error fix for the Leave Trade Channel feature. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker, ein Fix im Minimap Button Sammler für TomTom-Wegpunkte und ein Lua-Fehler-Fix beim Dienste-Channel verlassen.
+Fixes for the Enhanced Friends List, the profession unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, a Minimap Button Collector fix for TomTom waypoints, a Lua error fix for the Leave Trade Channel feature, and a fix for Auto Accept Summons, plus a new average item level display and item level on bags/bank/guild bank for Gear Check. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker, ein Fix im Minimap Button Sammler für TomTom-Wegpunkte, ein Lua-Fehler-Fix beim Dienste-Channel verlassen und ein Fix für Beschwörungen automatisch annehmen, außerdem eine neue Durchschnitts-Itemlevel-Anzeige und Itemlevel bei Taschen/Bank/Gildenbank für die Ausrüstungs-Prüfung.
 
 **EN**
 
@@ -33,6 +33,16 @@ Leave Trade Channel
 
 * Fixed: Rejoining the channel could throw a Lua error, because the addon tried to auto-show it in the chat window using a Blizzard API function that no longer exists. The channel is now shown correctly and without errors.
 
+Auto Accept Summons
+
+* Fixed: Accepting a summon no longer worked, it only closed the popup without teleporting. ConfirmSummon() was moved to C_SummonInfo.ConfirmSummon() back in patch 8.1.0 and the old function no longer exists. Summons are accepted correctly again.
+
+Gear Check
+
+* New: The Inspect window now shows the average item level ("GS") on the model when viewing another player, based on all equipped gear except shirt and tabard.
+* New: Item level is now also shown on gear in bags, bank, Warband Bank and guild bank, not just on equipped slots.
+* Fixed: Legacy items like the Heart of Azeroth and Legion artifact weapons showed a wrong, outdated item level. Their real, current level is now read from the tooltip instead.
+
 **DE**
 
 Verbesserte Freundesliste
@@ -63,6 +73,16 @@ Minimap Button Sammler
 Dienste-Channel verlassen
 
 * Behoben: Beim erneuten Beitreten zum Channel konnte ein Lua-Fehler auftreten, weil das Addon versuchte, ihn per einer nicht mehr existierenden Blizzard-API-Funktion automatisch im Chatfenster anzuzeigen. Der Channel wird jetzt korrekt und ohne Fehler angezeigt.
+
+Beschwörungen automatisch annehmen
+
+* Behoben: Das Annehmen einer Beschwörung funktionierte nicht mehr, es schloss nur das Fenster ohne zu teleportieren. ConfirmSummon() wurde schon in Patch 8.1.0 zu C_SummonInfo.ConfirmSummon() verschoben, die alte Funktion existiert nicht mehr. Beschwörungen werden jetzt wieder korrekt angenommen.
+
+Ausrüstungs-Prüfung
+
+* Neu: Im Betrachten-Fenster wird jetzt oben am Modell das durchschnittliche Itemlevel ("GS") des angesehenen Spielers angezeigt, basierend auf der kompletten Ausrüstung außer Hemd und Wappenrock.
+* Neu: Itemlevel wird jetzt auch bei Ausrüstung in Taschen, Bank, Warband-Bank und Gildenbank angezeigt, nicht mehr nur an angelegten Slots.
+* Behoben: Legacy-Items wie das Herz von Azeroth und Legion-Artefaktwaffen zeigten ein falsches, veraltetes Itemlevel. Ihr echtes, aktuelles Level wird jetzt aus dem Tooltip gelesen.
 
 
 ## 1.1.2
