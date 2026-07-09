@@ -40,8 +40,12 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
                   or (GetSummonConfirmAreaName and GetSummonConfirmAreaName())
                   or "?"
 
-    -- ConfirmSummon() was replaced by C_SummonRequest.Accept().
-    if C_SummonRequest and C_SummonRequest.Accept then
+    -- ConfirmSummon() was moved to C_SummonInfo.ConfirmSummon() in patch 8.1.0
+    -- and the old global no longer exists. C_SummonRequest.Accept is kept as
+    -- a fallback in case a future patch renames it again.
+    if C_SummonInfo and C_SummonInfo.ConfirmSummon then
+        C_SummonInfo.ConfirmSummon()
+    elseif C_SummonRequest and C_SummonRequest.Accept then
         C_SummonRequest.Accept()
     elseif ConfirmSummon then
         ConfirmSummon()

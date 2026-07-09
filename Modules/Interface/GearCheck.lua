@@ -11,7 +11,8 @@ local GetDetailedItemLvl = (C_Item and C_Item.GetDetailedItemLevelInfo) and C_It
 local GetInvItemQuality  = (C_Item and C_Item.GetInventoryItemQuality)  and C_Item.GetInventoryItemQuality  or GetInventoryItemQuality
 local GetItemQualCol     = (C_Item and C_Item.GetItemQualityColor)      and C_Item.GetItemQualityColor      or GetItemQualityColor
 
-local ENCHANT_PATTERN = ENCHANTED_TOOLTIP_LINE and ENCHANTED_TOOLTIP_LINE:gsub("%%s", "(.+)") or "(.+)"
+local ENCHANT_PATTERN    = ENCHANTED_TOOLTIP_LINE and ENCHANTED_TOOLTIP_LINE:gsub("%%s", "(.+)") or "(.+)"
+local ITEM_LEVEL_PATTERN = ITEM_LEVEL and ITEM_LEVEL:gsub("%%d", "(%%d+)")
 
 -- Enchantable slots by expansion number.
 -- New DLC: add a new block [N] = { [INVSLOT_...]=true, ... }.
@@ -99,6 +100,58 @@ local GS_SLOT_IDS = {
     INVSLOT_TRINKET1, INVSLOT_TRINKET2, INVSLOT_BACK,
     INVSLOT_MAINHAND, INVSLOT_OFFHAND,
 }
+
+-- Equip locations counted as "gear" for the bag item level badge: armor and
+-- weapon slots only. Everything else (materials, consumables, quest items,
+-- bags, shirt, tabard, profession tools, ...) is excluded by not being listed.
+local GEAR_EQUIP_LOCS = {
+    INVTYPE_HEAD = true, INVTYPE_NECK = true, INVTYPE_SHOULDER = true,
+    INVTYPE_CHEST = true, INVTYPE_ROBE = true, INVTYPE_WAIST = true,
+    INVTYPE_LEGS = true, INVTYPE_FEET = true, INVTYPE_WRIST = true,
+    INVTYPE_HAND = true, INVTYPE_FINGER = true, INVTYPE_TRINKET = true,
+    INVTYPE_CLOAK = true,
+    INVTYPE_WEAPON = true, INVTYPE_2HWEAPON = true,
+    INVTYPE_WEAPONMAINHAND = true, INVTYPE_WEAPONOFFHAND = true,
+    INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true,
+    INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true, INVTYPE_THROWN = true,
+    INVTYPE_RELIC = true,
+}
+
+-- Legacy power-system items (Legion artifact weapons, Heart of Azeroth)
+-- track their real level through their own expansion-specific system
+-- instead of the item link, so C_Item.GetDetailedItemLevelInfo returns a
+-- stale/wrong base value for them. Modern items that reuse the "Artifact"
+-- quality label (e.g. Reshii Wraps in The War Within) are not affected, so
+-- the check is quality AND expansion, not quality alone.
+local function IsLegacyPowerItem(itemLink)
+    local quality = select(3, GetItemInfo(itemLink))
+    local expacID  = select(15, GetItemInfo(itemLink))
+    return quality == Enum.ItemQuality.Artifact
+       and (expacID == LE_EXPANSION_LEGION or expacID == LE_EXPANSION_BATTLE_FOR_AZEROTH)
+end
+
+-- Reads the "Item Level" tooltip line, locale-independent via ITEM_LEVEL.
+-- Used as a fallback for legacy power-system items: the tooltip computes
+-- their real, current level live, unlike C_Item.GetDetailedItemLevelInfo.
+local function GetTooltipItemLevel(tooltipData)
+    if not (tooltipData and ITEM_LEVEL_PATTERN) then return nil end
+    for _, line in ipairs(tooltipData.lines) do
+        local ilvl = line.leftText and line.leftText:match(ITEM_LEVEL_PATTERN)
+        if ilvl then return tonumber(ilvl) end
+    end
+    return nil
+end
+
+-- Item level lookup used everywhere ilvl badges/averages are computed from
+-- an itemLink. tooltipData (C_TooltipInfo.*) is optional and only used as
+-- the legacy-power-item fallback described above.
+local function GetGearItemLevel(itemLink, tooltipData)
+    if not itemLink or not GetDetailedItemLvl then return nil end
+    if IsLegacyPowerItem(itemLink) then
+        return GetTooltipItemLevel(tooltipData)
+    end
+    return GetDetailedItemLvl(itemLink)
+end
 
 local itemLoadQueue = {} -- itemId -> array of pending update descriptors
 
@@ -195,7 +248,8 @@ local function ComputeAverageItemLevel(unit)
     for _, slotID in ipairs(GS_SLOT_IDS) do
         local itemLink = GetInventoryItemLink(unit, slotID)
         if itemLink then
-            local ilvl = GetDetailedItemLvl and GetDetailedItemLvl(itemLink)
+            local tooltipData = C_TooltipInfo and C_TooltipInfo.GetInventoryItem and C_TooltipInfo.GetInventoryItem(unit, slotID)
+            local ilvl = GetGearItemLevel(itemLink, tooltipData)
             if ilvl and ilvl > 0 then
                 sum = sum + ilvl
                 count = count + 1
@@ -230,8 +284,12 @@ local function UpdateSlotForReal(unit, slotID, button)
 
     local isLeft = LEFT_COLUMN[slotID]
 
+    -- Tooltip data fetched once: used both as the item level fallback for
+    -- legacy power-system items and for the socket scan below.
+    local tooltipData = C_TooltipInfo and C_TooltipInfo.GetInventoryItem and C_TooltipInfo.GetInventoryItem(unit, slotID)
+
     -- Item level in quality color
-    local ilvl = GetDetailedItemLvl and GetDetailedItemLvl(itemLink)
+    local ilvl = GetGearItemLevel(itemLink, tooltipData)
     if ilvl and ilvl > 0 then
         local quality = GetInvItemQuality(unit, slotID)
         local hex = quality and select(4, GetItemQualCol(quality))
@@ -244,15 +302,12 @@ local function UpdateSlotForReal(unit, slotID, button)
 
     -- Read sockets from tooltip data (line.type == 3, locale-independent)
     local socketIcons = {}
-    if C_TooltipInfo and C_TooltipInfo.GetInventoryItem then
-        local data = C_TooltipInfo.GetInventoryItem(unit, slotID)
-        if data then
-            for _, line in ipairs(data.lines) do
-                if line.type == 3 then
-                    -- Gem inserted: gemIcon. Empty: leftIcon from tooltip data (native WoW socket-hole icon).
-                    local icon = line.gemIcon or line.leftIcon or EMPTY_SOCK_TEX
-                    socketIcons[#socketIcons + 1] = icon
-                end
+    if tooltipData then
+        for _, line in ipairs(tooltipData.lines) do
+            if line.type == 3 then
+                -- Gem inserted: gemIcon. Empty: leftIcon from tooltip data (native WoW socket-hole icon).
+                local icon = line.gemIcon or line.leftIcon or EMPTY_SOCK_TEX
+                socketIcons[#socketIcons + 1] = icon
             end
         end
     end
@@ -334,19 +389,31 @@ local function EnsureBagOverlay(button)
     button._gearBagILvl = ilvl
 end
 
+-- Equipment only: true for armor/weapon equip locations, false for
+-- everything else (materials, consumables, quest items, bags, ...).
+-- Legacy power-system items are handled separately in GetGearItemLevel.
+local function IsGearItem(itemLink)
+    local equipLoc = select(4, GetItemInfoInstant(itemLink))
+    return equipLoc ~= nil and GEAR_EQUIP_LOCS[equipLoc] == true
+end
+
 local function UpdateContainerButtonForReal(bag, slot, button)
     if not AklimeMod_GearCheck.IsEnabled() then return end
     EnsureBagOverlay(button)
 
     local info = C_Container.GetContainerItemInfo(bag, slot)
     local itemLink = info and info.hyperlink
-    if not itemLink then
+    if not itemLink or not IsGearItem(itemLink) then
         button._gearBagILvl:Hide()
         return
     end
 
-    local ilvl = GetDetailedItemLvl and GetDetailedItemLvl(itemLink)
+    local tooltipData = C_TooltipInfo and C_TooltipInfo.GetBagItem and C_TooltipInfo.GetBagItem(bag, slot)
+    local ilvl = GetGearItemLevel(itemLink, tooltipData)
     if ilvl and ilvl > 0 then
+        if AklimeMod_GearCheckDebug then
+            print("|cFFFFD100[GearCheck DEBUG]|r", itemLink, "equipLoc=" .. tostring(select(4, GetItemInfoInstant(itemLink))), "ilvl=" .. ilvl)
+        end
         local hex = info.quality and select(4, GetItemQualCol(info.quality))
         button._gearBagILvl:SetText(hex and ("|c" .. hex .. ilvl .. "|r") or tostring(ilvl))
         button._gearBagILvl:Show()
@@ -362,13 +429,55 @@ local function UpdateContainerButton(button, bag, slot)
     bagButtons[button] = true
 
     local info = C_Container.GetContainerItemInfo(bag, slot)
-    if not (info and info.hyperlink) then
+    if not (info and info.hyperlink) or not IsGearItem(info.hyperlink) then
         button._gearBagILvl:Hide()
         return
     end
 
     if info.itemID then
         QueueItemLoad(info.itemID, { kind = "bag", bag = bag, slot = slot, button = button })
+    end
+end
+
+-- ============================================================
+-- Guild Bank: item level badge (own itemLink API, not C_Container)
+-- ============================================================
+local function UpdateGuildBankButtonForReal(tab, slot, button)
+    if not AklimeMod_GearCheck.IsEnabled() then return end
+    EnsureBagOverlay(button)
+
+    local itemLink = GetGuildBankItemLink(tab, slot)
+    if not itemLink or not IsGearItem(itemLink) then
+        button._gearBagILvl:Hide()
+        return
+    end
+
+    local ilvl = GetGearItemLevel(itemLink)
+    if ilvl and ilvl > 0 then
+        local quality = select(3, GetItemInfo(itemLink))
+        local hex = quality and select(4, GetItemQualCol(quality))
+        button._gearBagILvl:SetText(hex and ("|c" .. hex .. ilvl .. "|r") or tostring(ilvl))
+        button._gearBagILvl:Show()
+    else
+        button._gearBagILvl:Hide()
+    end
+end
+
+local function UpdateGuildBankButton(button, tab, slot)
+    if not button then return end
+    if not AklimeMod_GearCheck.IsEnabled() then return end
+    EnsureBagOverlay(button)
+    bagButtons[button] = true
+
+    local itemLink = GetGuildBankItemLink(tab, slot)
+    if not itemLink or not IsGearItem(itemLink) then
+        button._gearBagILvl:Hide()
+        return
+    end
+
+    local itemId = GetItemInfoInstant(itemLink)
+    if itemId then
+        QueueItemLoad(itemId, { kind = "guildbank", tab = tab, slot = slot, button = button })
     end
 end
 
@@ -424,10 +533,39 @@ f:SetScript("OnEvent", function(_, event, arg1, arg2)
                     hooksecurefunc(bagFrame, "UpdateItems", UpdateAllContainerButtons)
                 end
             end
+
+            -- Personal bank and Warband (account) bank: tab-based item grid.
+            local function HookBankPanel(panel)
+                if not panel then return end
+                local function UpdateBankItems(frame)
+                    local canUseBank = not (C_Bank and C_Bank.CanUseBank) or C_Bank.CanUseBank(frame:GetActiveBankType())
+                    for itemButton in frame:EnumerateValidItems() do
+                        if canUseBank then
+                            UpdateContainerButton(itemButton, itemButton:GetBankTabID(), itemButton:GetContainerSlotID())
+                        elseif itemButton._gearBagILvl then
+                            itemButton._gearBagILvl:Hide()
+                        end
+                    end
+                end
+                hooksecurefunc(panel, "GenerateItemSlotsForSelectedTab", UpdateBankItems)
+                hooksecurefunc(panel, "RefreshAllItemsForSelectedTab", UpdateBankItems)
+            end
+            HookBankPanel(BankPanel)
+            HookBankPanel(AccountBankPanel)
         elseif arg1 == "Blizzard_InspectUI" then
             hooksecurefunc("InspectPaperDollItemSlotButton_Update", function(button)
                 if AklimeMod_GearCheck.IsEnabled() and InspectFrame then
                     UpdateSlot(InspectFrame.unit or "target", button:GetID(), button)
+                end
+            end)
+        elseif arg1 == "Blizzard_GuildBankUI" then
+            hooksecurefunc(GuildBankFrame, "Update", function(self)
+                if self.mode ~= "bank" then return end
+                local tab = GetCurrentGuildBankTab()
+                for _, column in ipairs(self.Columns) do
+                    for _, button in ipairs(column.Buttons) do
+                        UpdateGuildBankButton(button, tab, button:GetID())
+                    end
                 end
             end)
         end
@@ -438,6 +576,8 @@ f:SetScript("OnEvent", function(_, event, arg1, arg2)
             for _, entry in ipairs(queued) do
                 if entry.kind == "bag" then
                     UpdateContainerButtonForReal(entry.bag, entry.slot, entry.button)
+                elseif entry.kind == "guildbank" then
+                    UpdateGuildBankButtonForReal(entry.tab, entry.slot, entry.button)
                 else
                     UpdateSlotForReal(entry.unit, entry.slotID, entry.button)
                 end
@@ -463,3 +603,12 @@ f:SetScript("OnEvent", function(_, event, arg1, arg2)
         end
     end
 end)
+
+-- ============================================================
+-- Debug
+-- ============================================================
+SLASH_AKM_GEARCHECK1 = "/akgc"
+SlashCmdList["AKM_GEARCHECK"] = function()
+    AklimeMod_GearCheckDebug = not AklimeMod_GearCheckDebug
+    print("|cFFFFD100Aklime Mod Tools GearCheck:|r Bag-Debug " .. (AklimeMod_GearCheckDebug and "|cFF00FF00an|r" or "|cFFFF4444aus|r"))
+end
