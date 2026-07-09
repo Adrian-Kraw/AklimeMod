@@ -95,9 +95,36 @@ local function UnregisterEvents()
 end
 
 -- ============================================================
+-- Hide Chat Only (right-click on the radial menu button)
+-- Hides all chat frames and their tabs by redirecting Show to Hide.
+-- Not tied to the PvP block above, not saved, resets on /reload.
+-- ============================================================
+local chatHidden = false
+
+local function ToggleChatHide()
+    chatHidden = not chatHidden
+    for i = 1, NUM_CHAT_WINDOWS do
+        for _, suffix in ipairs({ "", "Tab" }) do
+            local f = _G["ChatFrame" .. i .. suffix]
+            if f then
+                if chatHidden then f.akmWasVisible = f:IsVisible() end
+                f.akmOrigShow = f.akmOrigShow or f.Show
+                f.Show = chatHidden and f.Hide or f.akmOrigShow
+                if f.akmWasVisible then f:Show() end
+            end
+        end
+    end
+    return chatHidden
+end
+
+-- ============================================================
 -- Public API
 -- ============================================================
 AklimeMod_PvPChatBlock = {}
+
+function AklimeMod_PvPChatBlock.ToggleChatHide()
+    return ToggleChatHide()
+end
 
 function AklimeMod_PvPChatBlock.IsEnabled()
     return IsEnabled()

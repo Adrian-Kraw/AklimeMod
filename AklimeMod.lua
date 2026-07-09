@@ -80,6 +80,8 @@ local MENU_ITEMS = {
     {   -- top: PvP Chat Block
         icon    = "Interface\\Icons\\achievement_pvp_a_14",
         tooltip = L["menu_pvp_block"] or "Block PvP Chat",
+        tooltipLeft  = L["menu_pvp_block_left"]  or "Left-click: Disable Chat in PvP",
+        tooltipRight = L["menu_pvp_block_right"] or "Right-click: Hide Chat Only",
         onClick = function()
             if not AklimeMod_PvPChatBlock then return end
             local now = AklimeMod_PvPChatBlock.Toggle()
@@ -87,6 +89,15 @@ local MENU_ITEMS = {
                 print("|cFFFFD100Aklime Mod Tools:|r |cFF00FF00" .. (L["menu_pvp_on"]  or "Chat block activated")   .. "|r")
             else
                 print("|cFFFFD100Aklime Mod Tools:|r |cFFFF4444" .. (L["menu_pvp_off"] or "Chat block deactivated") .. "|r")
+            end
+        end,
+        onRightClick = function()
+            if not AklimeMod_PvPChatBlock then return end
+            local hidden = AklimeMod_PvPChatBlock.ToggleChatHide()
+            if hidden then
+                print("|cFFFFD100Aklime Mod Tools:|r |cFF00FF00" .. (L["menu_pvp_chathide_on"]  or "Hide Chat Only activated")   .. "|r")
+            else
+                print("|cFFFFD100Aklime Mod Tools:|r |cFFFF4444" .. (L["menu_pvp_chathide_off"] or "Hide Chat Only deactivated") .. "|r")
             end
         end,
     },
@@ -134,6 +145,7 @@ local function CreateMenuButton(item)
     btn:SetSize(30, 30)
     btn:SetFrameStrata("MEDIUM")
     btn:SetFrameLevel(9)
+    btn:RegisterForClicks("AnyUp")
     btn:Hide()
 
     btn:SetBackdrop({
@@ -162,16 +174,26 @@ local function CreateMenuButton(item)
         self:SetBackdropBorderColor(1, 0.82, 0, 1)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:SetText(item.tooltip, 1, 0.82, 0, 1)
+        if item.tooltipLeft then
+            GameTooltip:AddLine(item.tooltipLeft, 0.7, 0.7, 0.7)
+        end
+        if item.tooltipRight then
+            GameTooltip:AddLine(item.tooltipRight, 0.7, 0.7, 0.7)
+        end
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
         self:SetBackdropBorderColor(0.8, 0.65, 0.1, 1)
         GameTooltip:Hide()
     end)
-    btn:SetScript("OnClick", function()
+    btn:SetScript("OnClick", function(self, button)
         for _, mb in ipairs(menuButtons) do mb:Hide() end
         menuOpen = false
-        item.onClick()
+        if button == "RightButton" and item.onRightClick then
+            item.onRightClick()
+        else
+            item.onClick()
+        end
     end)
 
     return btn

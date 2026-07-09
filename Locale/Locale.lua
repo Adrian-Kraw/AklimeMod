@@ -31,6 +31,10 @@ L["mmc_click_expand"]   = "Click: Expand %d Button(s)"
 L["menu_pvp_block"]  = "Block PvP Chat"
 L["menu_pvp_on"]     = "Chat block activated"
 L["menu_pvp_off"]    = "Chat block deactivated"
+L["menu_pvp_block_left"]   = "Left-click: Disable Chat in PvP"
+L["menu_pvp_block_right"]  = "Right-click: Hide Chat Only"
+L["menu_pvp_chathide_on"]  = "Hide Chat Only activated"
+L["menu_pvp_chathide_off"] = "Hide Chat Only deactivated"
 L["menu_vault"]      = "Weekly Vault"
 L["menu_todo"]       = "ToDo List"
 L["menu_char_tracker"] = "Character Tracker"
@@ -409,6 +413,10 @@ if GetLocale() == "deDE" then
     L["menu_pvp_block"] = "PvP Chat blockieren"
     L["menu_pvp_on"]    = "Chatblockade aktiviert"
     L["menu_pvp_off"]   = "Chatblockade deaktiviert"
+    L["menu_pvp_block_left"]   = "Linksklick: Chat im PvP deaktivieren"
+    L["menu_pvp_block_right"]  = "Rechtsklick: Nur Chatausblenden"
+    L["menu_pvp_chathide_on"]  = "Nur Chatausblenden aktiviert"
+    L["menu_pvp_chathide_off"] = "Nur Chatausblenden deaktiviert"
     L["menu_vault"]     = "Wöchentliche Schatzkammer"
     L["menu_todo"]      = "ToDo-Liste"
     L["menu_char_tracker"] = "Charakter-Tracker"
@@ -713,8 +721,8 @@ if GetLocale() == "deDE" then
     L["played_data_deleted"] = "Spielzeit-Daten gelöscht."
 
     -- Time format abbreviations
-    L["time_days"]  = "%dT %dSt %dMin"
-    L["time_hours"] = "%dSt %dMin"
+    L["time_days"]  = "%dT %dh %dMin"
+    L["time_hours"] = "%dh %dMin"
     L["time_mins"]  = "%dMin"
 
     -- Drink Reminder popup

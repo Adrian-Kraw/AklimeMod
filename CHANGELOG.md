@@ -43,6 +43,14 @@ Gear Check
 * New: Item level is now also shown on gear in bags, bank, Warband Bank and guild bank, not just on equipped slots.
 * Fixed: Legacy items like the Heart of Azeroth and Legion artifact weapons showed a wrong, outdated item level. Their real, current level is now read from the tooltip instead.
 
+PvP Chat Block
+
+* New: Right-clicking the button now also hides all chat windows completely, separate from the normal PvP chat block.
+
+Played Time
+
+* Changed: Hours are now shown as "h" for German clients.
+
 **DE**
 
 Verbesserte Freundesliste
@@ -83,6 +91,14 @@ Ausrüstungs-Prüfung
 * Neu: Im Betrachten-Fenster wird jetzt oben am Modell das durchschnittliche Itemlevel ("GS") des angesehenen Spielers angezeigt, basierend auf der kompletten Ausrüstung außer Hemd und Wappenrock.
 * Neu: Itemlevel wird jetzt auch bei Ausrüstung in Taschen, Bank, Warband-Bank und Gildenbank angezeigt, nicht mehr nur an angelegten Slots.
 * Behoben: Legacy-Items wie das Herz von Azeroth und Legion-Artefaktwaffen zeigten ein falsches, veraltetes Itemlevel. Ihr echtes, aktuelles Level wird jetzt aus dem Tooltip gelesen.
+
+Chat im PvP blockieren
+
+* Neu: Rechtsklick auf den Button blendet jetzt zusätzlich alle Chatfenster komplett aus, unabhängig von der normalen PvP-Chat-Blockade.
+
+Gespielte Zeit
+
+* Geändert: Stunden werden jetzt als "h" angezeigt.
 
 
 ## 1.1.2
