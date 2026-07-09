@@ -319,6 +319,7 @@ L["drink_btn"]   = "Got it!"
 -- Gear Check
 L["gc_enchanted"]     = "Enchanted"
 L["gc_not_enchanted"] = "Not enchanted"
+L["gc_avg_gs"]         = "GS"
 
 -- Todo list
 L["todo_empty"] = "No entries"
@@ -339,7 +340,7 @@ L["info_hide_macro"]       = "Hides macro names on all action buttons.\nNewly cr
 L["info_dm_collapse"]      = "Changes the collapse direction of the Blizzard damage meter.\nWith this toggle it collapses downward instead of upward."
 L["info_mm_collector"]     = "Hides all addon minimap buttons in one button.\nClick: expand. Drag: move position, saved."
 L["info_mouse_effects"]    = "Ring and trail around the cursor."
-L["info_gear_check"]       = "Shows on every equipment slot:\n  - Socket icons next to the slot (gem or empty socket)\n  - Item level bottom right, in quality color\n  - Enchant status as text next to the slot\nApplies to Character and Inspect windows."
+L["info_gear_check"]       = "Shows on every equipment slot:\n  - Socket icons next to the slot (gem or empty socket)\n  - Item level bottom right, in quality color\n  - Enchant status as text next to the slot\nApplies to Character and Inspect windows.\nAlso shows item level on bag items.\nInspect window: average item level (shirt/tabard excluded) top right on the model."
 L["info_combat_tooltip"]   = "Hides the HUD tooltip during combat.\nOnce combat ends it reappears automatically\non the next mouseover."
 L["info_chat_interaction"] = "C-Button: freely movable by drag.\nLinks in chat open a copy window."
 L["chat_copy_select_all"]  = "Select All"
@@ -622,7 +623,7 @@ if GetLocale() == "deDE" then
     L["info_dm_collapse"]      = "Ändert die Klapp-Richtung der Blizzard-Schadensanzeige.\nMit diesem Toggle klappt sie nach unten statt nach oben."
     L["info_mm_collector"]     = "Versteckt alle Addon-Minimap-Buttons in einem eigenen Button.\nKlick: aufklappen. Drag: Position verschieben, wird gespeichert."
     L["info_mouse_effects"]    = "Ring und Spur um den Mauszeiger."
-    L["info_gear_check"]       = "Zeigt an jedem Equipment-Slot:\n  - Sockel-Icons neben dem Slot (Edelstein oder leere Fassung)\n  - Itemlevel unten rechts am Slot, in Qualitätsfarbe\n  - Verzauberungsstatus als Text neben dem Slot\nGilt für Charakter-Fenster und Betrachten-Fenster."
+    L["info_gear_check"]       = "Zeigt an jedem Equipment-Slot:\n  - Sockel-Icons neben dem Slot (Edelstein oder leere Fassung)\n  - Itemlevel unten rechts am Slot, in Qualitätsfarbe\n  - Verzauberungsstatus als Text neben dem Slot\nGilt für Charakter-Fenster und Betrachten-Fenster.\nZeigt außerdem das Itemlevel bei Taschen-Items.\nBetrachten-Fenster: durchschnittliches Itemlevel (ohne Hemd/Wappenrock) oben rechts am Modell."
     L["info_combat_tooltip"]   = "Versteckt den HUD-Tooltip während des Kampfes.\nSobald der Kampf endet erscheint er beim nächsten\nDrüberbewegen automatisch wieder."
     L["info_chat_interaction"] = "C-Button: frei verschiebbar per Drag.\nLinks im Chat öffnen ein Kopierfenster."
     L["chat_copy_select_all"]  = "Alles auswählen"
@@ -724,6 +725,7 @@ if GetLocale() == "deDE" then
     -- Gear Check
     L["gc_enchanted"]     = "Verzaubert"
     L["gc_not_enchanted"] = "Nicht verzaubert"
+    L["gc_avg_gs"]         = "GS"
 
     -- Todo list
     L["todo_empty"] = "Keine Einträge"

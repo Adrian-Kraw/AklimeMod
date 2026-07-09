@@ -61,6 +61,13 @@ local SIDE_OFFSET    = 3
 local EMPTY_SOCK_TEX = "Interface\\ItemSocketingFrame\\UI-EmptySocket-Meta"
 local BADGE_FONT     = "Fonts\\FRIZQT__.TTF"
 
+-- Average item level text on the Inspect window: font size and offset from
+-- the frame's top right corner (title row, clear of close button and the
+-- model viewer's hover controls further down).
+local AVG_GS_FONT_SIZE = 14
+local AVG_GS_OFFSET_X  = -14
+local AVG_GS_OFFSET_Y  = -34
+
 local CHAR_FRAMES = {
     "CharacterHeadSlot",      "CharacterNeckSlot",
     "CharacterShoulderSlot",  "CharacterChestSlot",
@@ -82,7 +89,24 @@ local INSPECT_FRAMES = {
     "InspectMainHandSlot",    "InspectSecondaryHandSlot",
 }
 
-local itemLoadQueue = {}
+-- Slots counted for the average item level (shirt and tabard excluded).
+-- Weapon count varies (one two-hander or one/two one-handers): both weapon
+-- slots are listed, an empty one is simply skipped when averaging.
+local GS_SLOT_IDS = {
+    INVSLOT_HEAD, INVSLOT_NECK, INVSLOT_SHOULDER, INVSLOT_CHEST,
+    INVSLOT_WAIST, INVSLOT_LEGS, INVSLOT_FEET, INVSLOT_WRIST,
+    INVSLOT_HAND, INVSLOT_FINGER1, INVSLOT_FINGER2,
+    INVSLOT_TRINKET1, INVSLOT_TRINKET2, INVSLOT_BACK,
+    INVSLOT_MAINHAND, INVSLOT_OFFHAND,
+}
+
+local itemLoadQueue = {} -- itemId -> array of pending update descriptors
+
+local function QueueItemLoad(itemId, descriptor)
+    itemLoadQueue[itemId] = itemLoadQueue[itemId] or {}
+    table.insert(itemLoadQueue[itemId], descriptor)
+    C_Item.RequestLoadItemDataByID(itemId)
+end
 
 -- ============================================================
 -- Check function: enchant
@@ -149,6 +173,49 @@ local function HideOverlays(button)
     end
     if button._gearEnchant then button._gearEnchant:Hide() end
     if button._gearILvl    then button._gearILvl:Hide()    end
+end
+
+-- ============================================================
+-- Average item level (Inspect window)
+-- ============================================================
+local inspectAvgText = nil
+
+local function EnsureInspectAvgText()
+    if inspectAvgText then return inspectAvgText end
+    if not InspectFrame then return nil end
+    local fs = InspectFrame:CreateFontString(nil, "OVERLAY")
+    fs:SetFont(BADGE_FONT, AVG_GS_FONT_SIZE, "OUTLINE")
+    fs:SetPoint("TOPRIGHT", InspectFrame, "TOPRIGHT", AVG_GS_OFFSET_X, AVG_GS_OFFSET_Y)
+    inspectAvgText = fs
+    return fs
+end
+
+local function ComputeAverageItemLevel(unit)
+    local sum, count = 0, 0
+    for _, slotID in ipairs(GS_SLOT_IDS) do
+        local itemLink = GetInventoryItemLink(unit, slotID)
+        if itemLink then
+            local ilvl = GetDetailedItemLvl and GetDetailedItemLvl(itemLink)
+            if ilvl and ilvl > 0 then
+                sum = sum + ilvl
+                count = count + 1
+            end
+        end
+    end
+    if count == 0 then return nil end
+    return sum / count
+end
+
+local function UpdateInspectAverageDisplay(unit)
+    local fs = EnsureInspectAvgText()
+    if not fs then return end
+    local avg = ComputeAverageItemLevel(unit)
+    if avg then
+        fs:SetText(string.format("%s: %.0f", L["gc_avg_gs"] or "GS", avg))
+        fs:Show()
+    else
+        fs:Hide()
+    end
 end
 
 local function UpdateSlotForReal(unit, slotID, button)
@@ -228,6 +295,10 @@ local function UpdateSlotForReal(unit, slotID, button)
     else
         button._gearEnchant:Hide()
     end
+
+    if unit ~= "player" then
+        UpdateInspectAverageDisplay(unit)
+    end
 end
 
 local function UpdateSlot(unit, slotID, button)
@@ -237,12 +308,67 @@ local function UpdateSlot(unit, slotID, button)
     if itemLink then
         local itemId = GetItemInfoInstant(itemLink)
         if itemId then
-            itemLoadQueue[itemId] = { unit=unit, slotID=slotID, button=button }
-            C_Item.RequestLoadItemDataByID(itemId)
+            QueueItemLoad(itemId, { kind = "equip", unit = unit, slotID = slotID, button = button })
         end
     else
         EnsureOverlays(button)
         HideOverlays(button)
+        if unit ~= "player" then UpdateInspectAverageDisplay(unit) end
+    end
+end
+
+-- ============================================================
+-- Bags: item level badge on container item buttons
+-- ============================================================
+local bagButtons = {}
+
+local function EnsureBagOverlay(button)
+    if button._gearBagReady then return end
+    button._gearBagReady = true
+
+    local ilvl = button:CreateFontString(nil, "OVERLAY")
+    ilvl:SetFont(BADGE_FONT, 11, "OUTLINE")
+    ilvl:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
+    ilvl:SetJustifyH("RIGHT")
+    ilvl:Hide()
+    button._gearBagILvl = ilvl
+end
+
+local function UpdateContainerButtonForReal(bag, slot, button)
+    if not AklimeMod_GearCheck.IsEnabled() then return end
+    EnsureBagOverlay(button)
+
+    local info = C_Container.GetContainerItemInfo(bag, slot)
+    local itemLink = info and info.hyperlink
+    if not itemLink then
+        button._gearBagILvl:Hide()
+        return
+    end
+
+    local ilvl = GetDetailedItemLvl and GetDetailedItemLvl(itemLink)
+    if ilvl and ilvl > 0 then
+        local hex = info.quality and select(4, GetItemQualCol(info.quality))
+        button._gearBagILvl:SetText(hex and ("|c" .. hex .. ilvl .. "|r") or tostring(ilvl))
+        button._gearBagILvl:Show()
+    else
+        button._gearBagILvl:Hide()
+    end
+end
+
+local function UpdateContainerButton(button, bag, slot)
+    if not button then return end
+    if not AklimeMod_GearCheck.IsEnabled() then return end
+    EnsureBagOverlay(button)
+    bagButtons[button] = true
+
+    local info = C_Container.GetContainerItemInfo(bag, slot)
+    if not (info and info.hyperlink) then
+        button._gearBagILvl:Hide()
+        return
+    end
+
+    if info.itemID then
+        QueueItemLoad(info.itemID, { kind = "bag", bag = bag, slot = slot, button = button })
     end
 end
 
@@ -262,6 +388,10 @@ function AklimeMod_GearCheck.SetEnabled(v)
     if not v then
         for _, name in ipairs(CHAR_FRAMES)    do HideOverlays(_G[name] or {}) end
         for _, name in ipairs(INSPECT_FRAMES) do HideOverlays(_G[name] or {}) end
+        for button in pairs(bagButtons) do
+            if button._gearBagILvl then button._gearBagILvl:Hide() end
+        end
+        if inspectAvgText then inspectAvgText:Hide() end
     end
 end
 
@@ -282,6 +412,18 @@ f:SetScript("OnEvent", function(_, event, arg1, arg2)
                     UpdateSlot("player", button:GetID(), button)
                 end
             end)
+
+            if ContainerFrameCombinedBags then
+                local function UpdateAllContainerButtons(containerFrame)
+                    for _, itemButton in containerFrame:EnumerateValidItems() do
+                        UpdateContainerButton(itemButton, itemButton:GetBagID(), itemButton:GetID())
+                    end
+                end
+                hooksecurefunc(ContainerFrameCombinedBags, "UpdateItems", UpdateAllContainerButtons)
+                for _, bagFrame in ipairs((ContainerFrameContainer or UIParent).ContainerFrames) do
+                    hooksecurefunc(bagFrame, "UpdateItems", UpdateAllContainerButtons)
+                end
+            end
         elseif arg1 == "Blizzard_InspectUI" then
             hooksecurefunc("InspectPaperDollItemSlotButton_Update", function(button)
                 if AklimeMod_GearCheck.IsEnabled() and InspectFrame then
@@ -293,7 +435,13 @@ f:SetScript("OnEvent", function(_, event, arg1, arg2)
     elseif event == "ITEM_DATA_LOAD_RESULT" then
         local queued = itemLoadQueue[arg1]
         if queued then
-            UpdateSlotForReal(queued.unit, queued.slotID, queued.button)
+            for _, entry in ipairs(queued) do
+                if entry.kind == "bag" then
+                    UpdateContainerButtonForReal(entry.bag, entry.slot, entry.button)
+                else
+                    UpdateSlotForReal(entry.unit, entry.slotID, entry.button)
+                end
+            end
             itemLoadQueue[arg1] = nil
         end
 
