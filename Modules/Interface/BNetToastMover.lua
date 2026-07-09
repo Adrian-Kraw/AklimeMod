@@ -8,8 +8,10 @@
 -- Until a custom position exists, we passively record where Blizzard puts
 -- it natively, so the preview always starts exactly there.
 
-local PROXY_WIDTH  = 300
-local PROXY_HEIGHT = 64
+-- Fallback size if BNToastFrame's real size isn't available yet when the
+-- proxy is first built (BuildProxy reads the real size when it can).
+local PROXY_WIDTH  = 230
+local PROXY_HEIGHT = 56
 
 local function GetDB()
     if AklimeModDB and AklimeModDB.bnetToastMover then return AklimeModDB.bnetToastMover end
@@ -63,13 +65,13 @@ local function SavePosition()
     db.y = y * scale
 end
 
--- Preview always starts at Blizzard's own natural position (if known),
--- not at a previously saved custom position, so it can be dragged from
--- the real starting point every time.
+-- Prefers the last custom position once one has been saved. Only before
+-- that first save does it fall back to Blizzard's own natural position, so
+-- the very first preview starts at the real starting point.
 local function ApplyProxyPosition()
     local db = GetDB()
     proxy:ClearAllPoints()
-    local x, y = db.naturalX or db.x, db.naturalY or db.y
+    local x, y = db.x or db.naturalX, db.y or db.naturalY
     if x and y then
         local scale = proxy:GetEffectiveScale()
         proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
@@ -81,8 +83,12 @@ end
 local function BuildProxy()
     if proxy then return end
 
+    local toast = _G.BNToastFrame
+    local w = toast and toast:GetWidth()
+    local h = toast and toast:GetHeight()
+
     proxy = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    proxy:SetSize(PROXY_WIDTH, PROXY_HEIGHT)
+    proxy:SetSize((w and w > 0) and w or PROXY_WIDTH, (h and h > 0) and h or PROXY_HEIGHT)
     proxy:SetFrameStrata("DIALOG")
     proxy:SetMovable(true)
     proxy:SetClampedToScreen(true)
