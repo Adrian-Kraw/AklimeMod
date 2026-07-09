@@ -580,6 +580,27 @@ local function addInterfaceNodes(dp)
         )
     end
 
+    if AklimeMod_BNetToastMover then
+        local toastNode = addModule(dp, L["mod_bnet_toast_mover"],
+            function() return AklimeMod_BNetToastMover:IsEnabled() end,
+            function(v) AklimeMod_BNetToastMover:SetEnabled(v) end
+        )
+        addToggle(toastNode, L["toggle_lock_position"],
+            function() return AklimeMod_BNetToastMover:IsLocked() end,
+            function(v) AklimeMod_BNetToastMover:SetLocked(v) end
+        )
+        addAction(toastNode, L["action_preview"], function()
+            if AklimeMod_BNetToastMover.previewing then
+                AklimeMod_BNetToastMover.previewing = false
+                AklimeMod_BNetToastMover:HidePreview()
+            else
+                AklimeMod_BNetToastMover.previewing = true
+                AklimeMod_BNetToastMover:ShowPreview()
+            end
+        end)
+        addInfo(toastNode, L["info_bnet_toast_mover"])
+    end
+
     if currentSearchFilter == "" then
         dp:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_hud_fading"], centered = true })
     end
@@ -886,6 +907,29 @@ local function BuildInterfaceContent(filter)
             function() return AklimeMod_CombatTooltip:AllowsAuras() end,
             function(v) AklimeMod_CombatTooltip:SetAllowAuras(v) end
         )
+    end
+
+    dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_move_ui"], centered = true })
+
+    if AklimeMod_BNetToastMover then
+        local toastNode = addModule(dp3, L["mod_bnet_toast_mover"],
+            function() return AklimeMod_BNetToastMover:IsEnabled() end,
+            function(v) AklimeMod_BNetToastMover:SetEnabled(v) end
+        )
+        addToggle(toastNode, L["toggle_lock_position"],
+            function() return AklimeMod_BNetToastMover:IsLocked() end,
+            function(v) AklimeMod_BNetToastMover:SetLocked(v) end
+        )
+        addAction(toastNode, L["action_preview"], function()
+            if AklimeMod_BNetToastMover.previewing then
+                AklimeMod_BNetToastMover.previewing = false
+                AklimeMod_BNetToastMover:HidePreview()
+            else
+                AklimeMod_BNetToastMover.previewing = true
+                AklimeMod_BNetToastMover:ShowPreview()
+            end
+        end)
+        addInfo(toastNode, L["info_bnet_toast_mover"])
     end
 
     dp3:Insert({ Template = "AklimeMod_SeparatorTemplate", label = L["sec_hud_fading"], centered = true })

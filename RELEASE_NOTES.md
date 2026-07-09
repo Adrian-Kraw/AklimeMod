@@ -53,6 +53,10 @@ Set Chat Size for All Characters
 
 * New: You can now pick a chat font size (12-27pt, same options as in-game) that gets applied automatically to characters that haven't had it set yet.
 
+Move UI Elements
+
+* New: You can now freely move the popup that appears when a Battle.net friend comes online. Drag it into position and lock it in place.
+
 **DE**
 
 Verbesserte Freundesliste
@@ -105,3 +109,7 @@ Gespielte Zeit
 Chatgröße für alle Chars setzen
 
 * Neu: Es lässt sich jetzt eine Chatgröße (12-27pt, gleiche Auswahl wie im Spiel) festlegen, die automatisch bei Charakteren übernommen wird, für die sie noch nicht gesetzt wurde.
+
+UI Elemente verschieben
+
+* Neu: Die Meldung, die beim Online-Gehen eines Battle.net-Kontakts erscheint, lässt sich jetzt frei verschieben. An die gewünschte Stelle ziehen und einrasten.

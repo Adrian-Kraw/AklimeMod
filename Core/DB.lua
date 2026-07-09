@@ -235,6 +235,10 @@ function AklimeMod_InitDB()
     def(db.combatTooltip, "enabled",    false)
     def(db.combatTooltip, "allowAuras", false)
 
+    db.bnetToastMover = db.bnetToastMover or {}
+    def(db.bnetToastMover, "enabled", false)
+    def(db.bnetToastMover, "locked",  true)
+
     db.interfaceFade = db.interfaceFade or {}
     for i = 1, 3 do
         local k = "mode" .. i
