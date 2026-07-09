@@ -1,4 +1,4 @@
-## 1.1.3
+## 1.1.3 + 1.2.0
 
 Fixes for the Enhanced Friends List, the profession unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, a Minimap Button Collector fix for TomTom waypoints, a Lua error fix for the Leave Trade Channel feature, and a fix for Auto Accept Summons, plus a new average item level display and item level on bags/bank/guild bank for Gear Check. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker, ein Fix im Minimap Button Sammler für TomTom-Wegpunkte, ein Lua-Fehler-Fix beim Dienste-Channel verlassen und ein Fix für Beschwörungen automatisch annehmen, außerdem eine neue Durchschnitts-Itemlevel-Anzeige und Itemlevel bei Taschen/Bank/Gildenbank für die Ausrüstungs-Prüfung.
 
