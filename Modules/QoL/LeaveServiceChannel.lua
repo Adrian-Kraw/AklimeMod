@@ -69,7 +69,7 @@ local function DoJoin()
             for i = 1, NUM_CHAT_WINDOWS do
                 local cf = _G["ChatFrame" .. i]
                 if cf and cf:IsShown() then
-                    ChatFrame_AddChannel(cf, CHANNEL_NAME)
+                    cf:AddChannel(CHANNEL_NAME)
                 end
             end
         end

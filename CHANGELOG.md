@@ -1,6 +1,6 @@
 ## 1.1.3
 
-Fixes for the Enhanced Friends List, the profession unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, and a Minimap Button Collector fix for TomTom waypoints. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker und ein Fix im Minimap Button Sammler für TomTom-Wegpunkte.
+Fixes for the Enhanced Friends List, the profession unlearn confirmation, Easy Delete input handling, and a translation fix for the chat copy window, plus a smarter Great Vault status for characters that have not logged in yet, a Heroism Tracker click-through fix, a Minimap Button Collector fix for TomTom waypoints, and a Lua error fix for the Leave Trade Channel feature. / Fixes für die verbesserte Freundesliste, die Verlernen-Bestätigung bei Berufen, Einfaches Löschen Eingabeanpassungen und einen Übersetzungsfix für das Chat-Kopierfenster, außerdem eine schlauere Schatzkammer-Anzeige für noch nicht eingeloggte Charaktere, ein Klick-durch-Fix für den Heldentum-Tracker, ein Fix im Minimap Button Sammler für TomTom-Wegpunkte und ein Lua-Fehler-Fix beim Dienste-Channel verlassen.
 
 **EN**
 
@@ -29,6 +29,10 @@ Minimap Button Collector
 
 * Fixed: TomTom's minimap waypoint arrows (named "TTMinimapButton") could get swept into the collector and show up there as invisible icons. They are now excluded.
 
+Leave Trade Channel
+
+* Fixed: Rejoining the channel could throw a Lua error, because the addon tried to auto-show it in the chat window using a Blizzard API function that no longer exists. The channel is now shown correctly and without errors.
+
 **DE**
 
 Verbesserte Freundesliste
@@ -55,6 +59,10 @@ Heldentum-Tracker
 Minimap Button Sammler
 
 * Behoben: TomTom-Wegpunkt-Pfeile auf der Minimap (benannt "TTMinimapButton") konnten in den Sammler aufgenommen werden und erschienen dort als unsichtbare Icons. Sie werden jetzt ausgeschlossen.
+
+Dienste-Channel verlassen
+
+* Behoben: Beim erneuten Beitreten zum Channel konnte ein Lua-Fehler auftreten, weil das Addon versuchte, ihn per einer nicht mehr existierenden Blizzard-API-Funktion automatisch im Chatfenster anzuzeigen. Der Channel wird jetzt korrekt und ohne Fehler angezeigt.
 
 
 ## 1.1.2

@@ -250,7 +250,9 @@ end
 
 function M:SetLocked(v)
     GetDB().locked = v ~= false  -- false stays false, nil/true becomes true
-    if frame and not InCombatLockdown() then
+    -- EnableMouse is not a protected call on this plain, non-secure frame,
+    -- so it can be applied immediately even during combat.
+    if frame then
         frame:EnableMouse(GetDB().locked == false)
     end
 end
