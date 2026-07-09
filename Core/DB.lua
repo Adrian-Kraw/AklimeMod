@@ -142,6 +142,11 @@ function AklimeMod_InitDB()
     def(db.friendsListDecor, "showLocation", true)
     def(db.friendsListDecor, "hideOwnRealm", true)
 
+    db.chatFontSize = db.chatFontSize or {}
+    def(db.chatFontSize, "enabled", false)
+    def(db.chatFontSize, "size", 16)
+    db.chatFontSize.appliedChars = db.chatFontSize.appliedChars or {}
+
     db.pvpChatBlock = db.pvpChatBlock or {}
     def(db.pvpChatBlock, "enabled", false)
 

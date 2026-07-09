@@ -49,6 +49,10 @@ Played Time
 
 * Changed: Hours are now shown as "h" for German clients.
 
+Set Chat Size for All Characters
+
+* New: You can now pick a chat font size (12-27pt, same options as in-game) that gets applied automatically to characters that haven't had it set yet.
+
 **DE**
 
 Verbesserte Freundesliste
@@ -97,3 +101,7 @@ Chat im PvP blockieren
 Gespielte Zeit
 
 * Geändert: Stunden werden jetzt als "h" angezeigt.
+
+Chatgröße für alle Chars setzen
+
+* Neu: Es lässt sich jetzt eine Chatgröße (12-27pt, gleiche Auswahl wie im Spiel) festlegen, die automatisch bei Charakteren übernommen wird, für die sie noch nicht gesetzt wurde.

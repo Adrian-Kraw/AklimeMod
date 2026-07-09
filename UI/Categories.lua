@@ -1336,6 +1336,20 @@ local function addQoLNodes(dp)
         addInfo(friendsNode, L["info_friends_decor"])
     end
 
+    if AklimeMod_ChatFontSize then
+        local chatSizeNode = addModule(dp, L["mod_chat_font_size"],
+            function() return AklimeMod_ChatFontSize.IsEnabled() end,
+            function(v) AklimeMod_ChatFontSize.SetEnabled(v) end
+        )
+        for _, size in ipairs(AklimeMod_ChatFontSize.GetSizes()) do
+            addToggle(chatSizeNode, size .. "pt",
+                function() return AklimeMod_ChatFontSize.GetSize() == size end,
+                function(on) if on then AklimeMod_ChatFontSize.SetSize(size); AklimeMod_RefreshRightToggles() end end
+            )
+        end
+        addInfo(chatSizeNode, L["info_chat_font_size"])
+    end
+
     -- ============================================================
     -- General
     -- ============================================================
