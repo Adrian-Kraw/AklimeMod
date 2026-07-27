@@ -30,55 +30,35 @@ local CURRENCY_IDS = {
 -- ============================================================
 -- EJ cache: name (normalized) + EJ ID maps to expansion (0-11)
 -- Global so it can be debugged via /dump AklimeMod_InstExpCache.
--- Determine the tier name via EJ_GetTierInfo (more reliable than arithmetic).
+-- The expansion comes from the tier index, not from the tier name. The name
+-- is localized and Blizzard drops leading articles, so any name table goes
+-- stale on the next rename.
 -- ============================================================
+local MAX_EXPANSION = 11
 
--- Mapping tier name (lowercase) to expansion index
--- As a first line of defense when EJ_GetTierInfo returns a known name.
-local TIER_TO_EXP = {
-    ["classic"] = 0, ["klassisch"] = 0,
-    ["the burning crusade"] = 1, ["der brennende kreuzzug"] = 1,
-    ["wrath of the lich king"] = 2, ["zorn des lich-königs"] = 2,
-    ["cataclysm"] = 3,
-    ["mists of pandaria"] = 4, ["nebel von pandaria"] = 4,
-    ["warlords of draenor"] = 5,
-    ["legion"] = 6,
-    ["battle for azeroth"] = 7, ["kampf um azeroth"] = 7,
-    ["shadowlands"] = 8,
-    ["dragonflight"] = 9,
-    ["the war within"] = 10,
-    ["midnight"] = 11, ["mitternacht"] = 11,
-}
-
+-- WoW returns typographic apostrophes (U+2019) in some names and ASCII ones
+-- in others. Both sides of the lookup have to be normalized the same way,
+-- otherwise names like Ahn'Qiraj or Nerub'ar never match.
 local function NormName(name)
     if not name then return "" end
     name = name:lower()
+    name = name:gsub("\226\128\153", "'")
     name = name:gsub("^die ", ""):gsub("^der ", ""):gsub("^das ", "")
+    name = name:gsub("^%s+", ""):gsub("%s+$", "")
     return name
 end
 
 local function BuildInstanceExpCache()
     AklimeMod_InstExpCache = {}  -- global, debuggable via /dump
-    local numTiers  = EJ_GetNumTiers and EJ_GetNumTiers() or 0
-    -- EJ tiers are newest first (tier 1 = current expansion).
-    -- GetExpansionLevel() returns the current expansion ID (e.g. 11 for Midnight).
-    -- Formula: exp = GetExpansionLevel() - (tier - 1)
-    local curExp    = GetExpansionLevel and GetExpansionLevel() or 11
+    local numTiers = EJ_GetNumTiers and EJ_GetNumTiers() or 0
+    -- EJ tiers run oldest first, so the index maps straight to the expansion:
+    -- tier 1 = Classic = 0, tier 12 = Midnight = 11.
+    -- Trailing tiers without an expansion of their own, such as the current
+    -- season, exceed MAX_EXPANSION and are skipped. Their instances already
+    -- carry an entry from their real expansion tier.
     for tier = 1, numTiers do
-        -- Tier name table as the first option
-        local exp
-        if EJ_GetTierInfo then
-            local tierName = EJ_GetTierInfo(tier)
-            if tierName then exp = TIER_TO_EXP[tierName:lower()] end
-        end
-        -- Fallback: GetExpansionLevel() - (tier - 1) (correct for newest first)
-        if exp == nil then
-            exp = curExp - (tier - 1)
-        end
-        -- Expansion outside the valid range: skip
-        if exp < 0 or exp > 11 then
-            -- continue (no goto in Lua 5.1, empty if clause)
-        else
+        local exp = tier - 1
+        if exp <= MAX_EXPANSION then
             EJ_SelectTier(tier)
             for i = 1, 500 do
                 local instID, name = EJ_GetInstanceByIndex(i, true)
@@ -96,6 +76,20 @@ local function BuildInstanceExpCache()
     end
 end
 
+local function HasInstanceExpCache()
+    return AklimeMod_InstExpCache ~= nil and next(AklimeMod_InstExpCache) ~= nil
+end
+
+-- Returns the expansion for an instance name, or nil when the cache cannot
+-- answer. nil must never be written as 0, that would pin the instance to
+-- Classic in the saved variables even after the cache is available.
+local function ResolveExpansion(name)
+    if not name or not HasInstanceExpCache() then return nil end
+    local exp = AklimeMod_InstExpCache[NormName(name)]
+    if type(exp) == "number" then return exp end
+    return nil
+end
+
 -- ============================================================
 -- DB access
 -- ============================================================
@@ -105,6 +99,21 @@ local function GetTrackerDB()
     AklimeModDB.tracker.Toons     = AklimeModDB.tracker.Toons     or {}
     AklimeModDB.tracker.Instances = AklimeModDB.tracker.Instances or {}
     return AklimeModDB.tracker
+end
+
+-- ============================================================
+-- Re-resolve the expansion of every stored instance.
+-- An instance entry is only touched while the logged in character holds a
+-- lockout on it, so a value written before the cache existed would survive
+-- forever. This runs once per login, right after the cache is built.
+-- ============================================================
+local function RefreshInstanceExpansions()
+    local db = GetTrackerDB()
+    if not db or not db.Instances then return end
+    for name, inst in pairs(db.Instances) do
+        local exp = ResolveExpansion(name)
+        if exp then inst.Expansion = exp end
+    end
 end
 
 -- ============================================================
@@ -150,6 +159,10 @@ local function CollectInstances(db, toonKey)
     local numSaved = GetNumSavedInstances()
     if not numSaved or numSaved == 0 then return end
 
+    -- UPDATE_INSTANCE_INFO fires on login before the delayed cache build, so
+    -- the cache has to be available here too.
+    if not HasInstanceExpCache() then BuildInstanceExpCache() end
+
     for i = 1, numSaved do
         local name, id, expires, diff, locked, extended, mostsig, isRaid, players, diffName, numBosses, bossesKilled =
             GetSavedInstanceInfo(i)
@@ -171,10 +184,11 @@ local function CollectInstances(db, toonKey)
                 inst.LFDID = tonumber(lid)
             end
 
-            -- Expansion: name lookup, then ID fallback, then 0
-            local cachedExp = (name and AklimeMod_InstExpCache and AklimeMod_InstExpCache[NormName(name)])
-                or (inst.LFDID and AklimeMod_InstExpCache and AklimeMod_InstExpCache[inst.LFDID])
-            inst.Expansion = type(cachedExp) == "number" and cachedExp or 0
+            -- Expansion by name only. LFDID comes from the instancelock link
+            -- and is a map ID, while the cache is keyed by journal instance ID,
+            -- so that fallback could only ever hit an unrelated instance.
+            local exp = ResolveExpansion(name)
+            if exp then inst.Expansion = exp end
 
             -- Character entry
             inst[toonKey]       = inst[toonKey] or {}
@@ -494,6 +508,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
             -- EJ cache + toon data after a longer delay
             C_Timer.After(3, function()
                 BuildInstanceExpCache()
+                RefreshInstanceExpansions()
                 CollectToonData()
             end)
         else

@@ -98,109 +98,6 @@ local EXP_NAMES = {
     [15] = L["curr_cat_season"] or "Season",
 }
 
-local RAID_NAME_EN = {
-    -- Classic
-    ["Der Geschmolzener Kern"]                 = "Molten Core",
-    ["Pechschwingenhort"]                      = "Blackwing Lair",
-    ["Ruinen von Ahn'Qiraj"]                   = "Ruins of Ahn'Qiraj",
-    ["Tempel von Ahn'Qiraj"]                   = "Temple of Ahn'Qiraj",
-    ["Schwarzfelstiefen"]                       = "Blackrock Depths",
-
-    -- The Burning Crusade
-    ["Karazhan"]                               = "Karazhan",
-    ["Gruuls Unterschlupf"]                    = "Gruul's Lair",
-    ["Magtheridons Kammer"]                    = "Magtheridon's Lair",
-    ["H\195\182hle des Schlangenschreins"]     = "Serpentshrine Cavern",
-    ["Das Auge"]                               = "The Eye",
-    ["Die Schlachten um den Hyjal"]            = "The Battle for Mount Hyjal",
-    ["Der Schwarze Tempel"]                    = "Black Temple",
-    ["Sonnenbrunnenplateau"]                   = "Sunwell Plateau",
-
-    -- Wrath of the Lich King
-    ["Das Auge der Ewigkeit"]                  = "The Eye of Eternity",
-    ["Das Obsidiansanktum"]                    = "The Obsidian Sanctum",
-    ["Pr\195\188fung des Kreuzfahrers"]        = "Trial of the Crusader",
-    ["Das Rubinsanktum"]                       = "The Ruby Sanctum",
-    ["Archavons Kammer"]                       = "Vault of Archavon",
-    ["Ulduar"]                                 = "Ulduar",
-    ["Naxxramas"]                              = "Naxxramas",
-    ["Onyxias Hort"]                           = "Onyxia's Lair",
-    ["Die Eiskronenzitadelle"]                 = "Icecrown Citadel",
-
-    -- Cataclysm
-    ["Baradinfestung"]                         = "Baradin Hold",
-    ["Pechschwingenabstieg"]                   = "Blackwing Descent",
-    ["Die Bastion der D\195\164mmerung"]       = "The Bastion of Twilight",
-    ["Thron der Vier Winde"]                   = "Throne of the Four Winds",
-    ["Feuerlande"]                             = "Firelands",
-    ["Drachenseele"]                           = "Dragon Soul",
-
-    -- Mists of Pandaria
-    ["Mogu'shan-Gew\195\182lbe"]               = "Mogu'shan Vaults",
-    ["Das Herz der Angst"]                     = "Heart of Fear",
-    ["Terrasse des endlosen Fr\195\188hlings"] = "Terrace of Endless Spring",
-    ["Thron des Donners"]                      = "Throne of Thunder",
-    ["Belagerung von Orgrimmar"]               = "Siege of Orgrimmar",
-
-    -- Warlords of Draenor
-    ["Hochfels"]                               = "Highmaul",
-    ["Schwarzfelsgießerei"]                    = "Blackrock Foundry",
-    ["H\195\182llenfeuerzitadelle"]            = "Hellfire Citadel",
-
-    -- Legion
-    ["Der Smaragdgrüne Alptraum"]              = "The Emerald Nightmare",
-    ["Die Pr\195\188fung der Tapferkeit"]      = "Trial of Valor",
-    ["Die Nachtfestung"]                       = "The Nighthold",
-    ["Das Grab des Sargeras"]                  = "Tomb of Sargeras",
-    ["Antorus, der Brennende Thron"]           = "Antorus, the Burning Throne",
-
-    -- Battle for Azeroth
-    ["Uldir"]                                  = "Uldir",
-    ["Schlacht von Dazar'alor"]                = "Battle of Dazar'alor",
-    ["Tiegel der St\195\188rme"]               = "Crucible of Storms",
-    ["Der Ewige Palast"]                       = "The Eternal Palace",
-    ["Ny'alotha, die Erwachte Stadt"]          = "Ny'alotha, the Waking City",
-
-    -- Shadowlands
-    ["Schloss Nathria"]                        = "Castle Nathria",
-    ["Sanktum der Herrschaft"]                 = "Sanctum of Domination",
-    ["Mausoleum der Ersten"]                   = "Sepulcher of the First Ones",
-
-    -- Dragonflight
-    ["Gew\195\182lbe der Inkarnationen"]       = "Vault of the Incarnates",
-    ["Aberrus, Schmelztiegel der Schatten"]    = "Aberrus, the Shadowed Crucible",
-    ["Amirdrassil, Hoffnung des Traums"]       = "Amirdrassil, the Dream's Hope",
-
-    -- The War Within
-    ["Palast der Nerub'ar"]                    = "Nerub-ar Palace",
-    ["Befreiung von Lorenhall"]                = "Liberation of Undermine",
-    ["Manaschmiede Omega"]                     = "Manaforge Omega",
-
-    -- Midnight
-    ["Die Leerenspitze"]                           = "The Voidspire",
-    ["Der Traumriss"]                              = "The Dreamrift",
-    ["Marsch auf Quel'Danas"]                  = "March on Quel'Danas",
-}
-
-local function TranslateRaidName(name)
-    if not name then return name end
-    -- Direct match
-    local t = RAID_NAME_EN[name]
-    if t then return t end
-    -- Normalize typographic apostrophe U+2019 (0xE2 0x80 0x99) to ASCII apostrophe.
-    -- WoW returns typographic apostrophes in some instance names on deDE clients.
-    local norm = name:gsub("\226\128\153", "'")
-    t = RAID_NAME_EN[norm]
-    if t then return t end
-    -- Try without leading article (Die/Der/Das) as some instances omit it via the API.
-    local stripped = norm:match("^D[aei][ers]? (.+)$")
-    if stripped then
-        t = RAID_NAME_EN[stripped]
-        if t then return t end
-    end
-    return name
-end
-
 -- expansionLevel is stored directly as 0 to 11, so no mapping is needed.
 -- This only guards against old or invalid stored values.
 local function NormalizeExpansion(exp)
@@ -440,7 +337,7 @@ local function BuildRaids(sel)
             if hasSave then
                 if not byExp[exp] then byExp[exp] = {} end
                 byExp[exp][#byExp[exp]+1] = {
-                    name      = TranslateRaidName(instName),
+                    name      = instName,
                     lfdid     = inst.LFDID,
                     recLevel  = inst.RecLevel or 0,
                     diffs     = diffs,
