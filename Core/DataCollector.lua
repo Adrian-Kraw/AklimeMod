@@ -30,22 +30,47 @@ local CURRENCY_IDS = {
 -- ============================================================
 -- EJ cache: name (normalized) + EJ ID maps to expansion (0-11)
 -- Global so it can be debugged via /dump AklimeMod_InstExpCache.
--- The expansion comes from the tier index, not from the tier name. The name
--- is localized and Blizzard drops leading articles, so any name table goes
--- stale on the next rename.
+-- The expansion comes from the tier index, not from the tier name. Tier names
+-- are localized and inconsistently spelled, so any name table goes stale on
+-- the next rename.
 -- ============================================================
 local MAX_EXPANSION = 11
 
--- WoW returns typographic apostrophes (U+2019) in some names and ASCII ones
--- in others. Both sides of the lookup have to be normalized the same way,
--- otherwise names like Ahn'Qiraj or Nerub'ar never match.
+-- The journal abbreviates articles that the lockout API spells out. EJ has
+-- "Terrasse d. endlosen Fruehlings" where GetSavedInstanceInfo returns
+-- "Terrasse des Endlosen Fruehlings", so comparing the spelling fails.
+-- Both sides are reduced to their significant words instead. Articles drop
+-- out, and so does every byte that is not an ASCII letter or digit. That
+-- covers typographic apostrophes as well as umlauts, which fall out on both
+-- sides alike and therefore do not affect the comparison.
+local NAME_ARTICLES = {
+    ["d"]   = true, ["die"] = true, ["der"] = true, ["das"] = true,
+    ["des"] = true, ["dem"] = true, ["den"] = true,
+}
+
 local function NormName(name)
     if not name then return "" end
-    name = name:lower()
-    name = name:gsub("\226\128\153", "'")
-    name = name:gsub("^die ", ""):gsub("^der ", ""):gsub("^das ", "")
-    name = name:gsub("^%s+", ""):gsub("%s+$", "")
-    return name
+    local key = ""
+    for word in string.gmatch(string.lower(name), "%S+") do
+        local clean = string.gsub(word, "[^%w]", "")
+        if clean ~= "" and not NAME_ARTICLES[clean] then
+            key = key .. clean
+        end
+    end
+    return key
+end
+
+-- An instance can sit in more than one tier. Terrasse der Magister is listed
+-- under The Burning Crusade and again under Midnight. Tiers run oldest first
+-- and the first one wins, so the instance keeps its original expansion.
+local function CacheInstance(instID, name, exp)
+    local key = name and NormName(name) or ""
+    if key ~= "" and AklimeMod_InstExpCache[key] == nil then
+        AklimeMod_InstExpCache[key] = exp
+    end
+    if AklimeMod_InstExpCache[instID] == nil then
+        AklimeMod_InstExpCache[instID] = exp
+    end
 end
 
 local function BuildInstanceExpCache()
@@ -63,14 +88,12 @@ local function BuildInstanceExpCache()
             for i = 1, 500 do
                 local instID, name = EJ_GetInstanceByIndex(i, true)
                 if not instID then break end
-                if name then AklimeMod_InstExpCache[NormName(name)] = exp end
-                AklimeMod_InstExpCache[instID] = exp
+                CacheInstance(instID, name, exp)
             end
             for i = 1, 500 do
                 local instID, name = EJ_GetInstanceByIndex(i, false)
                 if not instID then break end
-                if name then AklimeMod_InstExpCache[NormName(name)] = exp end
-                AklimeMod_InstExpCache[instID] = exp
+                CacheInstance(instID, name, exp)
             end
         end
     end
