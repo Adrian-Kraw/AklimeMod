@@ -1,6 +1,6 @@
 -- Modules/QoL/LeaveServiceChannel.lua
 -- Addon toggle on  -> LeaveChannelByName("Dienste")  (toggle off, entry stays)
--- Addon toggle off -> JoinChannelByName("Dienste")   (toggle on)
+-- Addon toggle off -> JoinPermanentChannel("Dienste") (toggle on)
 -- If the player manually does /join Dienste -> automatically disable the addon toggle
 
 local CHANNEL_NAME = "Dienste"
@@ -59,22 +59,30 @@ local function DoLeave()
     end
 end
 
+-- Register the channel with the chat window, same as Blizzard's /join handler
+local function AddToChatFrame(chatFrame, name, zoneChannel)
+    local i = 1
+    while chatFrame.channelList[i] do
+        if chatFrame.channelList[i] == name then return end
+        i = i + 1
+    end
+    chatFrame.channelList[i] = name
+    chatFrame.zoneChannelList[i] = zoneChannel
+end
+
 local function DoJoin()
     suppress = true
-    JoinChannelByName(CHANNEL_NAME)
-    -- Enable the display toggle in the chat UI (show channel messages)
-    C_Timer.After(0.5, function()
-        local idx = GetChannelName(CHANNEL_NAME)
-        if idx and idx > 0 then
-            for i = 1, NUM_CHAT_WINDOWS do
-                local cf = _G["ChatFrame" .. i]
-                if cf and cf:IsShown() then
-                    cf:AddChannel(CHANNEL_NAME)
-                end
-            end
-        end
-        suppress = false
-    end)
+
+    -- JoinPermanentChannel stores the channel in the client config, so it is
+    -- rejoined after a relog. JoinChannelByName only joins for this session,
+    -- the channel would be gone again on the next login.
+    local chatFrame = DEFAULT_CHAT_FRAME
+    local zoneChannel, channelName = JoinPermanentChannel(CHANNEL_NAME, nil, chatFrame:GetID(), 1)
+    if zoneChannel then
+        AddToChatFrame(chatFrame, channelName or CHANNEL_NAME, zoneChannel)
+    end
+
+    C_Timer.After(1.0, function() suppress = false end)
 end
 
 -- ============================================================
