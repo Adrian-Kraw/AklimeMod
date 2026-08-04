@@ -78,7 +78,31 @@ local BUBBLE_PATTERNS = {
     "PvP-Talentplatz",         -- deDE PvP
     "unspent talent point",    -- enUS regular
     "PvP talent",              -- enUS PvP
+    "eine neue Spezialisierung", -- deDE profession specialization
 }
+
+-- Profession specialization alerts pop up over the same micro menu row.
+-- Their text comes from Blizzard global strings, taking the patterns from
+-- there keeps the match working in every client language.
+local BUBBLE_GLOBALS = {
+    "PROFESSIONS_SPECS_CAN_UNLOCK_SPEC",
+    "PROFESSIONS_SPECS_PENDING_POINTS",
+    "PROFESSIONS_UNSPENT_SPEC_POINTS_REMINDER",
+}
+
+-- Part before the first placeholder, the profession name behind it varies
+local function StaticPrefix(text)
+    if type(text) ~= "string" then return nil end
+    local cut = text:find("%%")
+    local prefix = (cut and text:sub(1, cut - 1) or text):gsub("%s+$", "")
+    if #prefix < 12 then return nil end
+    return prefix
+end
+
+for _, name in ipairs(BUBBLE_GLOBALS) do
+    local prefix = StaticPrefix(_G[name])
+    if prefix then table.insert(BUBBLE_PATTERNS, prefix) end
+end
 
 local function FrameMatchesBubble(f)
     local ok, nr = pcall(function() return f:GetNumRegions() end)
@@ -138,6 +162,19 @@ local function ApplyBubbleHide()
             end
         end
     end
+end
+
+-- Both the talent and the profession alert run through HelpTip:Show, that is
+-- the reliable moment to check, independent of any event
+local helpTipHooked = false
+
+local function HookHelpTip()
+    if helpTipHooked then return end
+    if not HelpTip or type(HelpTip.Show) ~= "function" then return end
+    helpTipHooked = true
+    hooksecurefunc(HelpTip, "Show", function()
+        if IsBubbleEnabled() then ApplyBubbleHide() end
+    end)
 end
 
 local function HookShowAlert()
@@ -203,6 +240,7 @@ function M:SetBubbleEnabled(v)
     SetupBubbleEvents(v)
     if v then
         C_Timer.After(0.5, function()
+            HookHelpTip()
             HookShowAlert()
             ApplyBubbleHide()
         end)
@@ -216,6 +254,7 @@ initFrame:SetScript("OnEvent", function()
     if GetDB().hideTalentBubble then
         SetupBubbleEvents(true)
         C_Timer.After(2, function()
+            HookHelpTip()
             HookShowAlert()
             ApplyBubbleHide()
         end)

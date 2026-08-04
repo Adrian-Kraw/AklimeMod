@@ -1,6 +1,8 @@
 -- Modules/QoL/Mailbox.lua
 -- Address book next to the mail compose window.
+-- Contains your own characters only, one entry is added on each character login.
 -- Clicking a contact sets the recipient automatically.
+-- The character you sent mail to last is pinned to the top of the list.
 -- The last recipient option remembers the last recipient per session.
 
 local ROW_H        = 22
@@ -41,6 +43,17 @@ local function BuildRecipient(name, realm)
     return name .. "-" .. realm
 end
 
+-- Recipient of the last sent mail, split into name and normalized realm
+local function GetLastSent()
+    local text = GetDB().lastSent
+    if type(text) ~= "string" or text == "" then return nil, nil end
+    local name, realm = text:match("^([^%-]+)%-(.+)$")
+    if not name then
+        name, realm = text, GetRealmName() or ""
+    end
+    return name:lower(), NormalizeRealm(realm)
+end
+
 -- ============================================================
 -- Module
 -- ============================================================
@@ -66,6 +79,8 @@ local function BuildFiltered()
     local myName, myRealm = UnitFullName("player")
     myRealm = NormalizeRealm(myRealm or GetRealmName() or "")
 
+    local lastName, lastRealm = GetLastSent()
+
     wipe(M.filtered)
     for key, rec in pairs(contacts) do
         local name  = rec.name  or key
@@ -82,12 +97,18 @@ local function BuildFiltered()
                     name        = name,
                     realm       = realm,
                     nameColored = ("|cff%02x%02x%02x%s|r"):format(r*255, g*255, b*255, name),
+                    isLast      = lastName ~= nil
+                                  and name:lower() == lastName
+                                  and NormalizeRealm(realm) == lastRealm,
                 })
             end
         end
     end
 
     table.sort(M.filtered, function(a, b)
+        -- Last recipient stays on top, no matter which column is sorted
+        if a.isLast ~= b.isLast then return a.isLast end
+
         local av, bv
         if M.sortKey == "realm" then
             av, bv = a.realm:lower(), b.realm:lower()
@@ -426,6 +447,16 @@ end
 -- ============================================================
 -- Add own character to contacts
 -- ============================================================
+-- Only AddSelf writes a class, so entries without one are former mail
+-- recipients from earlier versions and get dropped
+local function PruneForeignContacts()
+    local db = GetDB()
+    if not db.contacts then return end
+    for key, rec in pairs(db.contacts) do
+        if not rec.class then db.contacts[key] = nil end
+    end
+end
+
 local function AddSelf()
     local db = GetDB()
     db.contacts = db.contacts or {}
@@ -443,31 +474,17 @@ local function AddSelf()
 end
 
 -- ============================================================
--- Remember recipient on send and store as contact
+-- Remember recipient on send
 -- ============================================================
 local lastRecipient = nil
 local sendHooked    = false
 
-local function CaptureAndSaveRecipient()
+local function CaptureRecipient()
     if not SendMailNameEditBox then return end
     local text = SendMailNameEditBox:GetText()
     if not text or text == "" then return end
     lastRecipient = text
-
-    -- Store as contact without class (white)
-    local db = GetDB()
-    if not db.enabled then return end
-    db.contacts = db.contacts or {}
-    local name, realm = text:match("^([^%-]+)%-(.+)$")
-    if not name then name = text; realm = "" end
-    local key = name .. "-" .. (realm or "")
-    if not db.contacts[key] then
-        -- Safety limit: max 500 contacts
-        local count = 0
-        for _ in pairs(db.contacts) do count = count + 1 end
-        if count >= 500 then return end
-        db.contacts[key] = { name = name, realm = realm or "", class = nil }
-    end
+    GetDB().lastSent = text
 end
 
 local function RestoreRecipient()
@@ -484,7 +501,7 @@ local function HookSendMail()
     if sendHooked then return end
     if type(SendMailFrame_SendMail) ~= "function" then return end
     if type(SendMailFrame_Reset)    ~= "function" then return end
-    hooksecurefunc("SendMailFrame_SendMail", CaptureAndSaveRecipient)
+    hooksecurefunc("SendMailFrame_SendMail", CaptureRecipient)
     hooksecurefunc("SendMailFrame_Reset",    RestoreRecipient)
     sendHooked = true
 end
@@ -527,6 +544,7 @@ end
 function M:SetEnabled(v)
     GetDB().enabled = v and true or false
     if v then
+        PruneForeignContacts()
         AddSelf()
         EnsureFrame()
         HookMailTabs()
@@ -586,6 +604,7 @@ initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function(self)
     local db = GetDB()
     if db.enabled then
+        PruneForeignContacts()
         AddSelf()
         EnsureFrame()
         HookMailTabs()

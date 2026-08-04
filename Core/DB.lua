@@ -223,6 +223,7 @@ function AklimeMod_InitDB()
     db.mailbox = db.mailbox or {}
     def(db.mailbox, "enabled",                false)
     def(db.mailbox, "rememberLastRecipient",  false)
+    def(db.mailbox, "lastSent",               "")
     db.mailbox.contacts = db.mailbox.contacts or {}
 
     db.todoList = db.todoList or {}
