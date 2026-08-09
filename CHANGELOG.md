@@ -1,3 +1,21 @@
+## 1.3.1
+
+A fix for the mana warning in instances where the game hides mana values. / Ein Fix für die Mana-Warnung in Instanzen, in denen das Spiel die Manawerte verbirgt.
+
+**EN**
+
+Mana Warning
+
+* Fixed: In instances where the game hides mana values, the "out of mana" warning never reached the group. The game blocked it because it went out from inside one of its own routines. It is sent correctly again.
+* Changed: The warnings now use the game's current chat function. The old one is only kept as a fallback, Blizzard is phasing it out.
+
+**DE**
+
+Mana-Warnung
+
+* Behoben: In Instanzen, in denen das Spiel die Manawerte verbirgt, kam die "kein Mana mehr"-Warnung nie in der Gruppe an. Das Spiel hat sie blockiert, weil sie aus einer seiner eigenen Routinen heraus verschickt wurde. Sie geht jetzt wieder korrekt raus.
+* Geändert: Die Warnungen nutzen jetzt die aktuelle Chat-Funktion des Spiels. Die alte bleibt nur noch als Rückfallebene, Blizzard schafft sie ab.
+
 ## 1.3.0
 
 A rebuilt gold overview with Warband Bank support, a tidied up mail address book, the Services channel is now hidden instead of left, raid frames stay centered during combat, and a fix for raids landing in the wrong expansion. / Eine neu gebaute Gold-Übersicht mit Kriegsmeutenbank, ein aufgeräumtes Adressbuch für Post, der Dienste-Channel wird jetzt ausgeblendet statt verlassen, Gruppenrahmen bleiben auch im Kampf zentriert und ein Fix für Raids, die in der falschen Erweiterung einsortiert wurden.

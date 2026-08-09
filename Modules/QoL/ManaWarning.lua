@@ -50,12 +50,28 @@ local function GetChatChannel()
     return nil
 end
 
+-- The global SendChatMessage only exists as a deprecation fallback and is
+-- tied to the loadDeprecationFallbacks CVar. C_ChatInfo is the current API.
+local function SendChat(msg, ch)
+    if C_ChatInfo and C_ChatInfo.SendChatMessage then
+        C_ChatInfo.SendChatMessage(msg, ch)
+    else
+        SendChatMessage(msg, ch)
+    end
+end
+
 -- Returns true if a message was actually sent (solo: false).
 local function Send(msg)
     local ch = GetChatChannel()
     if not ch then return false end
-    SendChatMessage(msg, ch)
+    SendChat(msg, ch)
     return true
+end
+
+-- For the UIErrorsFrame hook: sending from inside Blizzard's own call gets
+-- the message blocked. One frame later the call stack is ours again.
+local function SendSoon(msg)
+    C_Timer.After(0, function() Send(msg) end)
 end
 
 -- ============================================================
@@ -157,7 +173,7 @@ local function HookUIErrors()
                 lastFallbackLow = now
                 firedOOM = true
                 firedLow = true
-                Send(MSG_OOM)
+                SendSoon(MSG_OOM)
             end
         end
     end)
@@ -233,8 +249,8 @@ SlashCmdList["AKM_MANA"] = function(input)
             print("|cFFFF4444Aklime Mod Tools:|r Solo - kein Kanal verfuegbar.")
             return
         end
-        SendChatMessage(MSG_LOW, ch)
-        SendChatMessage(MSG_OOM, ch)
+        SendChat(MSG_LOW, ch)
+        SendChat(MSG_OOM, ch)
     else
         local ch = GetChatChannel() or "nil (Solo)"
         local pct = GetManaPercent()
