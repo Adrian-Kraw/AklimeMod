@@ -1,6 +1,11 @@
 -- Modules/Interface/RaidFrameCenter.lua
 -- Centers raid frames horizontally. The Y position is kept.
 -- The MT frame sticks out to the left and is ignored when centering.
+--
+-- Works during combat as well. Only the CompactUnitFrame buttons inside the
+-- container are protected, the container itself is not, so moving it is not
+-- blocked. Group frames appearing or disappearing mid fight would otherwise
+-- leave the raid off center until combat ends.
 
 AklimeMod_Defaults = AklimeMod_Defaults or {}
 AklimeMod_Defaults.raidFrameCenter = { enabled = true, offsetX = 0 }
@@ -31,11 +36,14 @@ end
 
 local function RepositionContainer()
     if IsInEditMode() then return end
-    if InCombatLockdown() then return end
     if not GetDB().enabled then return end
 
     local c = CompactRaidFrameContainer
     if not c or not c:IsShown() then return end
+
+    -- Safety net: should the container ever become protected, skip in combat
+    -- instead of running into blocked actions
+    if InCombatLockdown() and c:IsProtected() then return end
 
     if savedY == nil then
         local _, _, _, _, y = c:GetPoint(1)
@@ -89,7 +97,6 @@ end
 local pendingTimer = nil
 local function RequestReposition()
     if IsInEditMode() then return end
-    if InCombatLockdown() then return end
     if pendingTimer then pendingTimer:Cancel(); pendingTimer = nil end
     pendingTimer = C_Timer.NewTimer(0.4, function()
         pendingTimer = nil

@@ -1,9 +1,23 @@
 -- Modules/QoL/LeaveServiceChannel.lua
--- Addon toggle on  -> LeaveChannelByName("Dienste")  (toggle off, entry stays)
--- Addon toggle off -> JoinPermanentChannel("Dienste") (toggle on)
--- If the player manually does /join Dienste -> automatically disable the addon toggle
+-- Hides everything belonging to the "Dienste" channel in chat.
+--
+-- The player stays in the channel on purpose. Leaving it and joining again
+-- would mean writing the channel into chatFrame.channelList, and since 12.0
+-- the chat history tables are forbidden to tainted execution: every following
+-- channel message would run into ChatHistory_GetAccessID and get dropped.
+-- Filtering the messages needs no access to Blizzard's chat tables at all.
 
 local CHANNEL_NAME = "Dienste"
+
+-- Every chat event that carries a channel name in the same argument slots
+local CHANNEL_EVENTS = {
+    "CHAT_MSG_CHANNEL",
+    "CHAT_MSG_CHANNEL_JOIN",
+    "CHAT_MSG_CHANNEL_LEAVE",
+    "CHAT_MSG_CHANNEL_NOTICE",
+    "CHAT_MSG_CHANNEL_NOTICE_USER",
+    "CHAT_MSG_CHANNEL_LIST",
+}
 
 local function GetDB()
     return AklimeModDB and AklimeModDB.leaveServiceChannel
@@ -20,69 +34,48 @@ local function IsInChannel()
 end
 
 -- ============================================================
--- Filter system messages
+-- Filter
 -- ============================================================
-local suppress = false
+local function Matches(text)
+    if type(text) ~= "string" then return false end
+    if issecretvalue and issecretvalue(text) then return false end
+    return text:find(CHANNEL_NAME, 1, true) ~= nil
+end
 
-ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", function(_, _, msg)
-    if type(msg) ~= "string" then return false end
+-- arg4 is the channel with its number ("5. Dienste"), arg9 the plain name.
+-- Notices only fill some of the slots, so both are checked.
+local function ChannelFilter(_, _, _, _, _, channelString, _, _, _, _, channelBaseName)
+    if not IsEnabled() then return false end
+    if Matches(channelBaseName) or Matches(channelString) then return true end
+    return false
+end
 
-    -- Suppress our own leave/join messages
-    if suppress and msg:find(CHANNEL_NAME, 1, true) then
-        return true
-    end
+local registered = false
 
-    -- Player joins manually -> disable the addon toggle
-    if IsEnabled() and msg:find(CHANNEL_NAME, 1, true) then
-        if msg:find("beigetreten") or msg:find("joined") then
-            local db = GetDB()
-            if db then db.enabled = false end
-            -- Refresh the UI checkbox (no rebuild, that would collapse all
-            -- expanded sections)
-            if AklimeModFrame and AklimeModFrame:IsShown() and AklimeMod_RefreshRightToggles then
-                AklimeMod_RefreshRightToggles()
-            end
+local function SetFilters(on)
+    if on == registered then return end
+    registered = on
+    for _, event in ipairs(CHANNEL_EVENTS) do
+        if on then
+            ChatFrame_AddMessageEventFilter(event, ChannelFilter)
+        else
+            ChatFrame_RemoveMessageEventFilter(event, ChannelFilter)
         end
     end
-
-    return false
-end)
-
--- ============================================================
--- Leave / Join
--- ============================================================
-local function DoLeave()
-    if IsInChannel() then
-        suppress = true
-        LeaveChannelByName(CHANNEL_NAME)
-        C_Timer.After(1.0, function() suppress = false end)
-    end
 end
 
--- Register the channel with the chat window, same as Blizzard's /join handler
-local function AddToChatFrame(chatFrame, name, zoneChannel)
-    local i = 1
-    while chatFrame.channelList[i] do
-        if chatFrame.channelList[i] == name then return end
-        i = i + 1
-    end
-    chatFrame.channelList[i] = name
-    chatFrame.zoneChannelList[i] = zoneChannel
-end
-
-local function DoJoin()
-    suppress = true
-
-    -- JoinPermanentChannel stores the channel in the client config, so it is
-    -- rejoined after a relog. JoinChannelByName only joins for this session,
-    -- the channel would be gone again on the next login.
-    local chatFrame = DEFAULT_CHAT_FRAME
-    local zoneChannel, channelName = JoinPermanentChannel(CHANNEL_NAME, nil, chatFrame:GetID(), 1)
-    if zoneChannel then
-        AddToChatFrame(chatFrame, channelName or CHANNEL_NAME, zoneChannel)
-    end
-
-    C_Timer.After(1.0, function() suppress = false end)
+-- ============================================================
+-- One time repair
+-- ============================================================
+-- Earlier versions of this module left the channel and that is stored in the
+-- client config, so the channel would stay gone even with the option off.
+-- Join it back once. The chat window picks it up on the next UPDATE_CHAT_WINDOWS.
+local function RepairMembership()
+    local db = GetDB()
+    if not db or db.repaired then return end
+    db.repaired = true
+    if IsInChannel() then return end
+    JoinPermanentChannel(CHANNEL_NAME, nil, DEFAULT_CHAT_FRAME:GetID(), 1)
 end
 
 -- ============================================================
@@ -91,11 +84,10 @@ end
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-frame:SetScript("OnEvent", function(_, event, isLogin, isReload)
+frame:SetScript("OnEvent", function(_, _, isLogin, isReload)
     if isLogin or isReload then
-        C_Timer.After(3.0, function()
-            if IsEnabled() then DoLeave() end
-        end)
+        SetFilters(IsEnabled() and true or false)
+        C_Timer.After(3.0, RepairMembership)
     end
 end)
 
@@ -107,6 +99,6 @@ AklimeMod_LeaveServiceChannel = {
     SetEnabled = function(v)
         local db = GetDB()
         if db then db.enabled = v end
-        if v then DoLeave() else DoJoin() end
+        SetFilters(v and true or false)
     end,
 }

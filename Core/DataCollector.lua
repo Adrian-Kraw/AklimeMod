@@ -140,6 +140,34 @@ local function RefreshInstanceExpansions()
 end
 
 -- ============================================================
+-- Warband bank money. Account wide, so it is stored once next to the
+-- characters and not per character. The client only knows the amount while
+-- the bank is viewable, outside of that a read would return 0 and wipe the
+-- stored value.
+-- ============================================================
+local function CollectWarbandMoney()
+    if not C_Bank or not C_Bank.FetchDepositedMoney or not Enum or not Enum.BankType then return end
+    if not BankFrame or not BankFrame:IsShown() then return end
+
+    local bankType = Enum.BankType.Account
+    if not bankType then return end
+
+    if C_Bank.CanViewBank then
+        local okView, canView = pcall(C_Bank.CanViewBank, bankType)
+        if not okView or not canView then return end
+    end
+
+    local ok, amount = pcall(C_Bank.FetchDepositedMoney, bankType)
+    if not ok or type(amount) ~= "number" then return end
+    if issecretvalue and issecretvalue(amount) then return end
+
+    local db = GetTrackerDB()
+    if not db then return end
+    db.WarbandMoney   = amount
+    db.WarbandMoneyAt = time()
+end
+
+-- ============================================================
 -- Build the character key in the form "Name - Realm".
 -- ============================================================
 local function GetToonKey()
@@ -523,6 +551,9 @@ eventFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
 -- Transfer events: pcall in case an event is missing in this client version
 pcall(eventFrame.RegisterEvent, eventFrame, "CURRENCY_TRANSFER_LOG_UPDATE")
 pcall(eventFrame.RegisterEvent, eventFrame, "ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED")
+-- Warband bank: only readable while the bank is open
+pcall(eventFrame.RegisterEvent, eventFrame, "BANKFRAME_OPENED")
+pcall(eventFrame.RegisterEvent, eventFrame, "BANK_TABS_CHANGED")
 
 eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
@@ -547,6 +578,11 @@ eventFrame:SetScript("OnEvent", function(self, event)
         if toonKey and db.Toons[toonKey] then
             db.Toons[toonKey].Money = GetMoney()
         end
+        -- Deposit and withdrawal at the bank also change the player's money
+        CollectWarbandMoney()
+
+    elseif event == "BANKFRAME_OPENED" or event == "BANK_TABS_CHANGED" then
+        C_Timer.After(0.3, CollectWarbandMoney)
 
     elseif event == "UPDATE_INSTANCE_INFO" then
         -- Update instances and clean up expired ones

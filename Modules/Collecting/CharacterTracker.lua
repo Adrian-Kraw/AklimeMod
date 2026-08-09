@@ -409,6 +409,238 @@ local COL_W = 68
 local PAD   = 6
 
 -- ============================================================
+-- Gold overview panel
+-- ============================================================
+local GOLD_ROW_H   = 14
+local GOLD_NAME_W  = 104
+local GOLD_AMT_W   = 68
+local GOLD_COL_W   = GOLD_NAME_W + GOLD_AMT_W + 6
+local GOLD_COL_GAP = 18
+local GOLD_PAD     = 14
+local GOLD_HEAD_H  = 58
+local GOLD_HEAD_H_BANK = 74   -- header grows by the warband bank line
+
+local goldPanel = nil
+local goldRows  = {}
+
+local function GoldRow(index)
+    local row = goldRows[index]
+    if row then return row end
+
+    row = {}
+    row.left = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.left:SetSize(GOLD_NAME_W, GOLD_ROW_H)
+    row.left:SetJustifyH("LEFT")
+    row.left:SetWordWrap(false)
+
+    row.right = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.right:SetSize(GOLD_AMT_W, GOLD_ROW_H)
+    row.right:SetJustifyH("RIGHT")
+    row.right:SetWordWrap(false)
+
+    row.line = goldPanel:CreateTexture(nil, "ARTWORK")
+    row.line:SetHeight(1)
+    row.line:SetColorTexture(0.5, 0.42, 0.18, 0.6)
+    row.line:Hide()
+
+    goldRows[index] = row
+    return row
+end
+
+-- Richest realm first, inside a realm the richest character first
+local function CollectGold()
+    local trackerDB = GetDataDB()
+    if not trackerDB or not trackerDB.Toons then return nil end
+
+    local byRealm, order = {}, {}
+    local total, charCount = 0, 0
+
+    for fullName, toon in pairs(trackerDB.Toons) do
+        local realmName = fullName:match("%-(.+)$") or "?"
+        local realm = byRealm[realmName]
+        if not realm then
+            realm = { name = realmName, total = 0, chars = {} }
+            byRealm[realmName] = realm
+            order[#order + 1] = realm
+        end
+        local gold = math.floor((toon.Money or 0) / 10000)
+        realm.total = realm.total + gold
+        realm.chars[#realm.chars + 1] = { name = ShortName(fullName), gold = gold, toon = toon }
+        total = total + gold
+        charCount = charCount + 1
+    end
+
+    table.sort(order, function(a, b)
+        if a.total ~= b.total then return a.total > b.total end
+        return SortKey(a.name) < SortKey(b.name)
+    end)
+    for _, realm in ipairs(order) do
+        table.sort(realm.chars, function(a, b)
+            if a.gold ~= b.gold then return a.gold > b.gold end
+            return SortKey(a.name) < SortKey(b.name)
+        end)
+    end
+
+    return order, total, charCount
+end
+
+-- One block per realm, kept together in a column: header, characters, spacer
+local function BuildGoldBlocks(order)
+    local blocks, lineCount = {}, 0
+    for _, realm in ipairs(order) do
+        local block = { { header = true, left = realm.name, right = FormatAmount(realm.total) or "0" } }
+        for _, char in ipairs(realm.chars) do
+            local r, g, b = ToonClassCol(char.toon)
+            block[#block + 1] = {
+                left  = string.format("|cFF%02x%02x%02x%s|r", r * 255, g * 255, b * 255, char.name),
+                right = FormatAmount(char.gold) or "0",
+            }
+        end
+        block[#block + 1] = { spacer = true }
+        blocks[#blocks + 1] = block
+        lineCount = lineCount + #block
+    end
+    return blocks, lineCount
+end
+
+-- Rows per column so that width and height end up roughly equal
+local function GoldRowsPerColumn(lineCount, headHeight)
+    local byScreen = math.floor((UIParent:GetHeight() * 0.75 - headHeight) / GOLD_ROW_H)
+    local square   = math.ceil(math.sqrt(lineCount * (GOLD_COL_W + GOLD_COL_GAP) / GOLD_ROW_H))
+    return math.max(8, math.min(square, math.max(10, byScreen)))
+end
+
+-- Warband bank, collected by the DataCollector while the bank is open
+local function GetWarbandGold()
+    local tracker = AklimeModDB and AklimeModDB.tracker
+    local money   = tracker and tracker.WarbandMoney
+    if type(money) ~= "number" or money <= 0 then return 0 end
+    return math.floor(money / 10000)
+end
+
+local function UpdateGoldPanel()
+    local order, total, charCount = CollectGold()
+    if not order or #order == 0 then return false end
+
+    local warband = GetWarbandGold()
+    local headH   = warband > 0 and GOLD_HEAD_H_BANK or GOLD_HEAD_H
+
+    local blocks, lineCount = BuildGoldBlocks(order)
+    local rowsPerCol = GoldRowsPerColumn(lineCount, headH)
+
+    local columns, current = {}, {}
+    for _, block in ipairs(blocks) do
+        if #current > 0 and #current + #block > rowsPerCol then
+            columns[#columns + 1] = current
+            current = {}
+        end
+        for _, line in ipairs(block) do current[#current + 1] = line end
+    end
+    if #current > 0 then columns[#columns + 1] = current end
+
+    local used, maxRows = 0, 0
+    for colIndex, col in ipairs(columns) do
+        local x = GOLD_PAD + (colIndex - 1) * (GOLD_COL_W + GOLD_COL_GAP)
+        for rowIndex, line in ipairs(col) do
+            used = used + 1
+            local row = GoldRow(used)
+            local y = -(headH + (rowIndex - 1) * GOLD_ROW_H)
+
+            row.left:ClearAllPoints()
+            row.left:SetPoint("TOPLEFT", goldPanel, "TOPLEFT", x, y)
+            row.right:ClearAllPoints()
+            row.right:SetPoint("TOPLEFT", goldPanel, "TOPLEFT", x + GOLD_NAME_W + 6, y)
+
+            if line.spacer then
+                row.left:SetText("")
+                row.right:SetText("")
+                row.line:Hide()
+            elseif line.header then
+                row.left:SetText("|cFFFFFFFF" .. line.left .. "|r")
+                row.right:SetText("|cFFFFD100" .. line.right .. " g|r")
+                row.line:ClearAllPoints()
+                row.line:SetPoint("TOPLEFT",  goldPanel, "TOPLEFT", x, y - GOLD_ROW_H + 2)
+                row.line:SetPoint("TOPRIGHT", goldPanel, "TOPLEFT", x + GOLD_COL_W, y - GOLD_ROW_H + 2)
+                row.line:Show()
+            else
+                row.left:SetText(line.left)
+                row.right:SetText("|cFFFFD100" .. line.right .. "|r")
+                row.line:Hide()
+            end
+
+            row.left:Show()
+            row.right:Show()
+        end
+        if #col > maxRows then maxRows = #col end
+    end
+
+    for i = used + 1, #goldRows do
+        goldRows[i].left:Hide()
+        goldRows[i].right:Hide()
+        goldRows[i].line:Hide()
+    end
+
+    goldPanel.total:SetText("|cFFFFD100" .. (FormatAmount(total + warband) or "0") .. " g|r")
+    goldPanel.sub:SetText(string.format(L["ct_gold_chars"] or "%d characters on %d realms",
+        charCount, #order))
+
+    if warband > 0 then
+        goldPanel.bank:SetText((L["ct_warband_bank"] or "Warband Bank") ..
+            ": |cFFFFD100" .. (FormatAmount(warband) or "0") .. " g|r")
+        goldPanel.bank:Show()
+    else
+        goldPanel.bank:Hide()
+    end
+
+    local width  = GOLD_PAD * 2 + #columns * GOLD_COL_W + (#columns - 1) * GOLD_COL_GAP
+    local height = headH + maxRows * GOLD_ROW_H + GOLD_PAD
+    goldPanel:SetSize(math.max(width, 260), height)
+    return true
+end
+
+local function EnsureGoldPanel(anchor)
+    if goldPanel then return end
+
+    goldPanel = CreateFrame("Frame", "AklimeModCTGoldPanel", anchor, "BackdropTemplate")
+    goldPanel:SetFrameStrata("TOOLTIP")
+    goldPanel:SetClampedToScreen(true)
+    goldPanel:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -6)
+    goldPanel:SetBackdrop({
+        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile     = true,
+        tileSize = 16,
+        edgeSize = 14,
+        insets   = { left = 4, right = 4, top = 4, bottom = 4 },
+    })
+    goldPanel:SetBackdropColor(0.04, 0.04, 0.04, 0.96)
+    goldPanel:SetBackdropBorderColor(0.55, 0.45, 0.15, 1)
+
+    goldPanel.title = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    goldPanel.title:SetPoint("TOPLEFT", GOLD_PAD, -12)
+    goldPanel.title:SetText("|cFFFFD100" .. (L["ct_gold_overview"] or "Gold Overview") .. "|r")
+
+    goldPanel.sub = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    goldPanel.sub:SetPoint("TOPLEFT", GOLD_PAD, -32)
+
+    goldPanel.bank = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    goldPanel.bank:SetPoint("TOPLEFT", GOLD_PAD, -48)
+    goldPanel.bank:Hide()
+
+    -- Total of every character, the headline number of this panel
+    goldPanel.total = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    goldPanel.total:SetPoint("TOPRIGHT", -GOLD_PAD, -12)
+    goldPanel.total:SetJustifyH("RIGHT")
+
+    goldPanel.totalLabel = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    goldPanel.totalLabel:SetPoint("TOPRIGHT", -GOLD_PAD, -34)
+    goldPanel.totalLabel:SetJustifyH("RIGHT")
+    goldPanel.totalLabel:SetText(L["ct_grand_total"] or "Total Gold")
+
+    goldPanel:Hide()
+end
+
+-- ============================================================
 -- UI
 -- ============================================================
 local mainFrame    = nil
@@ -539,77 +771,12 @@ local function CreateUI()
     instBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     goldBtn:SetScript("OnEnter", function(self)
-        local trackerDB = GetDataDB()
-        if not trackerDB then return end
-
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
-        GameTooltip:ClearLines()
-        GameTooltip:AddLine("|cFFFFD100" .. (L["ct_gold_overview"] or "Gold Overview") .. "|r")
-
-        -- ALL known characters (not just selected ones)
-        local byRealm = {}
-        local realmOrder = {}
-
-        for name, toon in pairs(trackerDB.Toons) do
-            local realm = name:match("%-(.+)$") or "?"
-            if not byRealm[realm] then
-                byRealm[realm] = { total=0, chars={} }
-                realmOrder[#realmOrder+1] = realm
-            end
-            local money = toon.Money or 0
-            local gold  = math.floor(money / 10000)
-            byRealm[realm].total = byRealm[realm].total + gold
-            byRealm[realm].chars[#byRealm[realm].chars+1] = { name=name, toon=toon, gold=gold }
-        end
-        table.sort(realmOrder)
-
-        local grandTotal = 0
-        for _, realm in ipairs(realmOrder) do
-            local data = byRealm[realm]
-            grandTotal = grandTotal + data.total
-            -- Realm-Header
-            GameTooltip:AddLine("|cFF888888" .. realm .. "|r")
-            -- Chars sortiert
-            table.sort(data.chars, function(a,b) return a.name < b.name end)
-            for _, entry in ipairs(data.chars) do
-                local r, g, b = ToonClassCol(entry.toon)
-                local nameStr = string.format("|cFF%02x%02x%02x%s|r", r*255, g*255, b*255, ShortName(entry.name))
-                GameTooltip:AddDoubleLine(
-                    nameStr,
-                    "|cFFFFD100" .. (FormatAmount(entry.gold) or "0") .. " g|r",
-                    1,1,1, 1,1,1)
-            end
-            -- Realm-Summe
-            GameTooltip:AddDoubleLine(
-                "|cFFFFFFFF" .. (L["ct_realm_total"] or "  Total") .. "|r",
-                "|cFFFFD100" .. (FormatAmount(data.total) or "0") .. " g|r",
-                1,1,1, 1,1,1)
-            GameTooltip:AddLine(" ")
-        end
-
-        -- Warband gold
-        local guildTotal = 0
-        for _, toon in pairs(trackerDB.Toons) do
-            if toon.GuildMoney and toon.GuildMoney > 0 then
-                guildTotal = guildTotal + math.floor(toon.GuildMoney / 10000)
-            end
-        end
-        if guildTotal > 0 then
-            GameTooltip:AddDoubleLine(
-                "|cFFCCCCCC" .. (L["ct_warband_gold"] or "Warband Gold") .. "|r",
-                "|cFFFFD100" .. (FormatAmount(guildTotal) or "0") .. " g|r",
-                1,1,1, 1,1,1)
-            grandTotal = grandTotal + guildTotal
-        end
-
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddDoubleLine(
-            "|cFFFFFFFF" .. (L["ct_grand_total"] or "Total Gold") .. "|r",
-            "|cFFFFD100" .. (FormatAmount(grandTotal) or "0") .. " g|r",
-            1,1,1, 1,1,1)
-        GameTooltip:Show()
+        EnsureGoldPanel(self)
+        if UpdateGoldPanel() then goldPanel:Show() end
     end)
-    goldBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    goldBtn:SetScript("OnLeave", function()
+        if goldPanel then goldPanel:Hide() end
+    end)
 
     local closeBtn = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
     closeBtn:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", 2, 2)

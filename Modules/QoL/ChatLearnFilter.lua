@@ -81,16 +81,22 @@ local BUBBLE_PATTERNS = {
     "eine neue Spezialisierung", -- deDE profession specialization
 }
 
--- Profession specialization alerts pop up over the same micro menu row.
--- Their text comes from Blizzard global strings, taking the patterns from
--- there keeps the match working in every client language.
+-- The alerts over the micro menu row all take their text from Blizzard global
+-- strings. Reading the patterns from there instead of typing them out keeps
+-- the match working in every client language.
 local BUBBLE_GLOBALS = {
+    -- Talents
+    "TALENT_MICRO_BUTTON_NO_HERO_SPEC",
+    "TALENT_MICRO_BUTTON_UNSPENT_TALENTS",
+    "TALENT_MICRO_BUTTON_UNSPENT_PVP_TALENT_SLOT",
+    "TALENT_MICRO_BUTTON_NEW_PVP_TALENT",
+    -- Professions
     "PROFESSIONS_SPECS_CAN_UNLOCK_SPEC",
     "PROFESSIONS_SPECS_PENDING_POINTS",
     "PROFESSIONS_UNSPENT_SPEC_POINTS_REMINDER",
 }
 
--- Part before the first placeholder, the profession name behind it varies
+-- Part before the first placeholder, the name behind it varies
 local function StaticPrefix(text)
     if type(text) ~= "string" then return nil end
     local cut = text:find("%%")

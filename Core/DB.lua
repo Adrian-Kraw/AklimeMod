@@ -57,6 +57,7 @@ function AklimeMod_InitDB()
 
     db.leaveServiceChannel = db.leaveServiceChannel or {}
     def(db.leaveServiceChannel, "enabled", false)
+    def(db.leaveServiceChannel, "repaired", false)
 
     db.mapCoords = db.mapCoords or {}
     def(db.mapCoords, "enabled", false)  -- Default: on
