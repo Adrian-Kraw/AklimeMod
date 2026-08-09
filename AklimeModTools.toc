@@ -1,9 +1,9 @@
-## Interface: 120007, 120005
+## Interface: 120100, 120007
 ## Title: Aklime Mod Tools
 ## X-Curse-Project-ID: 1548949
 ## Notes: /akm — Aklime Mod Tools
 ## Author: Aklime
-## Version: 1.2.0
+## Version: 1.3.0
 ## SavedVariables: AklimeModDB
 ## AddonCompartmentFunc: AklimeMod_OpenSettings
 ## IconTexture: Interface\AddOns\AklimeModTools\Assets\icon
