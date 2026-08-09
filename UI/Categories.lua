@@ -1519,6 +1519,12 @@ local function addQoLNodes(dp)
             function(v) AklimeMod_BuyConfirm.SetRefundEnabled(v) end
         )
         addInfo(sellNode, L["info_sell_confirm"])
+
+        local noRefundNode = addModule(dp, L["mod_no_refund_confirm"],
+            function() return AklimeMod_BuyConfirm.IsNoRefundEnabled() end,
+            function(v) AklimeMod_BuyConfirm.SetNoRefundEnabled(v) end
+        )
+        addInfo(noRefundNode, L["info_no_refund_confirm"])
     end
 
     local sellJunkNode = addModule(dp, L["mod_auto_sell"],

@@ -20,6 +20,11 @@ local REFUND_CONFIRM = {
     CONFIRM_REFUND_TOKEN_ITEM = true,
 }
 
+-- Warning that using or equipping an item ends its refund window
+local NO_REFUND_CONFIRM = {
+    USE_NO_REFUND_CONFIRM = true,
+}
+
 local function TryAccept(popup, idx, which)
     if not popup:IsShown() or popup.which ~= which then return end
 
@@ -54,6 +59,7 @@ local function Setup()
                 local db = GetDB()
                 local active = (AUTO_CONFIRM[self.which] and db.enabled)
                     or (REFUND_CONFIRM[self.which] and db.refundEnabled)
+                    or (NO_REFUND_CONFIRM[self.which] and db.noRefundEnabled)
                 if not active then return end
                 local which = self.which
 
@@ -109,3 +115,5 @@ function M.IsEnabled() return GetDB().enabled == true end
 function M.SetEnabled(v) GetDB().enabled = v and true or false end
 function M.IsRefundEnabled() return GetDB().refundEnabled == true end
 function M.SetRefundEnabled(v) GetDB().refundEnabled = v and true or false end
+function M.IsNoRefundEnabled() return GetDB().noRefundEnabled == true end
+function M.SetNoRefundEnabled(v) GetDB().noRefundEnabled = v and true or false end
