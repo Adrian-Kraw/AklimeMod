@@ -204,6 +204,7 @@ function AklimeMod_InitDB()
 
     db.summons = db.summons or {}
     def(db.summons, "enabled", false)
+    def(db.summons, "delay",   0)   -- 0 = accept right away
 
     db.chatHistory = db.chatHistory or {}
     def(db.chatHistory, "enabled",     false)

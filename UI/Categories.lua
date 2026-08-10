@@ -1361,6 +1361,14 @@ local function addQoLNodes(dp)
             function() return AklimeMod_Summons:IsEnabled() end,
             function(v) AklimeMod_Summons:SetEnabled(v) end
         )
+        addSlider(summonsNode, L["slider_delay"], 0, 10, 1,
+            function() return AklimeMod_Summons:GetDelay() end,
+            function(v) AklimeMod_Summons:SetDelay(v) end,
+            function(v)
+                if v <= 0 then return L["fmt_instant"] end
+                return v .. L["fmt_sec"]
+            end
+        )
         addInfo(summonsNode, L["info_auto_summon"])
     end
 

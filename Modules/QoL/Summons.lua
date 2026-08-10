@@ -12,6 +12,9 @@ local function GetDB()
     return {}
 end
 
+-- Seconds to wait before accepting. 0 accepts right away.
+local DELAY_MIN, DELAY_MAX = 0, 10
+
 -- ============================================================
 -- API
 -- ============================================================
@@ -19,6 +22,35 @@ function M:IsEnabled() return GetDB().enabled == true end
 
 function M:SetEnabled(v)
     GetDB().enabled = v and true or false
+end
+
+function M:GetDelay()
+    local d = GetDB().delay
+    if type(d) ~= "number" then return DELAY_MIN end
+    return math.max(DELAY_MIN, math.min(DELAY_MAX, d))
+end
+
+function M:SetDelay(v)
+    GetDB().delay = math.max(DELAY_MIN, math.min(DELAY_MAX, tonumber(v) or DELAY_MIN))
+end
+
+-- ============================================================
+-- Accept
+-- ============================================================
+-- ConfirmSummon() was moved to C_SummonInfo.ConfirmSummon() in patch 8.1.0
+-- and the old global no longer exists. C_SummonRequest.Accept is kept as
+-- a fallback in case a future patch renames it again.
+local function Accept(summoner, area)
+    if C_SummonInfo and C_SummonInfo.ConfirmSummon then
+        C_SummonInfo.ConfirmSummon()
+    elseif C_SummonRequest and C_SummonRequest.Accept then
+        C_SummonRequest.Accept()
+    elseif ConfirmSummon then
+        ConfirmSummon()
+    end
+    StaticPopup_Hide("CONFIRM_SUMMON")
+
+    print("|cFFFFD100Aklime Mod Tools:|r Beschwörung von " .. summoner .. " nach " .. area .. " automatisch angenommen.")
 end
 
 -- ============================================================
@@ -40,17 +72,17 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
                   or (GetSummonConfirmAreaName and GetSummonConfirmAreaName())
                   or "?"
 
-    -- ConfirmSummon() was moved to C_SummonInfo.ConfirmSummon() in patch 8.1.0
-    -- and the old global no longer exists. C_SummonRequest.Accept is kept as
-    -- a fallback in case a future patch renames it again.
-    if C_SummonInfo and C_SummonInfo.ConfirmSummon then
-        C_SummonInfo.ConfirmSummon()
-    elseif C_SummonRequest and C_SummonRequest.Accept then
-        C_SummonRequest.Accept()
-    elseif ConfirmSummon then
-        ConfirmSummon()
+    local delay = M:GetDelay()
+    if delay <= 0 then
+        Accept(summoner, area)
+        return
     end
-    StaticPopup_Hide("CONFIRM_SUMMON")
 
-    print("|cFFFFD100Aklime Mod Tools:|r Beschwörung von " .. summoner .. " nach " .. area .. " automatisch angenommen.")
+    -- With a delay the player can still answer the dialog themselves, so only
+    -- accept when it is still open
+    C_Timer.After(delay, function()
+        if not GetDB().enabled then return end
+        if StaticPopup_Visible and not StaticPopup_Visible("CONFIRM_SUMMON") then return end
+        Accept(summoner, area)
+    end)
 end)
