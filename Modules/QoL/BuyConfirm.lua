@@ -20,9 +20,13 @@ local REFUND_CONFIRM = {
     CONFIRM_REFUND_TOKEN_ITEM = true,
 }
 
--- Warning that using or equipping an item ends its refund window
+-- Warning that an action ends an item's refund window. Four different
+-- dialogs share the same END_REFUND text, one per action.
 local NO_REFUND_CONFIRM = {
-    USE_NO_REFUND_CONFIRM = true,
+    EQUIP_BIND_REFUNDABLE          = true,  -- equipping
+    USE_NO_REFUND_CONFIRM          = true,  -- using
+    REFUNDABLE_SOCKET              = true,  -- socketing
+    CONFIRM_MAIL_ITEM_UNREFUNDABLE = true,  -- sending by mail
 }
 
 local function TryAccept(popup, idx, which)

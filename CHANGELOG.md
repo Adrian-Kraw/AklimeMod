@@ -10,7 +10,7 @@ Auto Accept Summons
 
 Auto Accept Non-Refundable Warning
 
-* New: A third option next to the purchase and refund confirmations. It confirms the warning that using or equipping an item ends its refund window, so the popup no longer appears. Off by default, because that warning is the last chance to stop.
+* New: A third option next to the purchase and refund confirmations. It confirms the warning that an item can no longer be refunded, so the popup no longer appears. Covers all four cases that show it: equipping, using, socketing and mailing. Off by default, because that warning is the last chance to stop.
 
 Mana Warning
 
@@ -25,7 +25,7 @@ Beschwörungen automatisch annehmen
 
 Warnung zum Verfall der Rückerstattung annehmen
 
-* Neu: Eine dritte Option neben der Kauf- und der Rückerstattungsbestätigung. Sie bestätigt die Warnung, dass ein Gegenstand durch Benutzen oder Anlegen nicht mehr zurückerstattet werden kann, das Fenster erscheint damit nicht mehr. Standardmäßig aus, weil diese Warnung die letzte Möglichkeit zum Abbrechen ist.
+* Neu: Eine dritte Option neben der Kauf- und der Rückerstattungsbestätigung. Sie bestätigt die Warnung, dass ein Gegenstand nicht mehr zurückerstattet werden kann, das Fenster erscheint damit nicht mehr. Deckt alle vier Fälle ab, in denen es auftaucht: Anlegen, Benutzen, Sockeln und Verschicken per Post. Standardmäßig aus, weil diese Warnung die letzte Möglichkeit zum Abbrechen ist.
 
 Mana-Warnung
 
