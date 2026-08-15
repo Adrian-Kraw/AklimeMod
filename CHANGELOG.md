@@ -4,6 +4,10 @@ A new option to skip the non-refundable warning, plus a fix for the mana warning
 
 **EN**
 
+Center Raid Frames
+
+* Fixed: When a party turned into a raid, the frames stayed off center. The single attempt after the roster change ran while the raid container was still hidden or its groups were not laid out yet, and nothing tried again afterwards. Centering now also reacts to the container appearing and to it changing size.
+
 Quest Tracker
 
 * Fixed: The quest count in the tracker header was too low. It counted the entries currently shown in the quest log, so every quest below a collapsed header was missing. It now uses the game's own quest count, the same number the quest log shows.
@@ -26,6 +30,10 @@ Mana Warning
 * Changed: The warnings now use the game's current chat function. The old one is only kept as a fallback, Blizzard is phasing it out.
 
 **DE**
+
+Gruppenrahmen zentrieren
+
+* Behoben: Wurde aus einer Gruppe ein Schlachtzug, blieben die Rahmen unzentriert. Der einzelne Versuch nach der Gruppenänderung lief zu früh, da war der Schlachtzugsrahmen noch ausgeblendet oder seine Gruppen noch nicht angeordnet, und danach passierte nichts mehr. Die Zentrierung reagiert jetzt auch darauf, dass der Rahmen erscheint und dass er seine Größe ändert.
 
 Quest-Tracker
 

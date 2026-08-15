@@ -104,6 +104,31 @@ local function RequestReposition()
     end)
 end
 
+-- Roster events alone are not enough when a party turns into a raid: the
+-- container is still hidden or its groups are not laid out yet when the single
+-- debounced attempt runs, and nothing tries again afterwards. Reacting to the
+-- frame itself covers both, it appears and it resizes once the groups are in.
+local containerHooked = false
+
+local function HookContainer()
+    if containerHooked then return end
+    local c = CompactRaidFrameContainer
+    if not c then return end
+    containerHooked = true
+
+    c:HookScript("OnShow", function()
+        -- The container was hidden, so the cached layout tells us nothing
+        hasModified  = false
+        lastCount    = 0
+        lastMtOffset = 0
+        RequestReposition()
+    end)
+
+    c:HookScript("OnSizeChanged", function()
+        RequestReposition()
+    end)
+end
+
 local f = CreateFrame("Frame", "AklimeMod_RaidFrameCenter")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
@@ -115,8 +140,10 @@ f:SetScript("OnEvent", function(_, event)
     if IsInEditMode() then return end
 
     if event == "PLAYER_ENTERING_WORLD" then
+        HookContainer()
         C_Timer.After(2.0, function()
             if IsInEditMode() then return end
+            HookContainer()
             savedY       = nil
             hasModified  = false
             lastCount    = 0
@@ -169,5 +196,6 @@ end
 
 C_Timer.After(3.0, function()
     if IsInEditMode() then return end
+    HookContainer()
     RepositionContainer()
 end)
