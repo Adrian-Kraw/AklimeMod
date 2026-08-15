@@ -710,7 +710,7 @@ if GetLocale() == "deDE" then
     L["ct_no_chars"]         = "Keine Charaktere ausgewählt.\nKlicke auf 'Charaktere'."
     L["ct_sec_raids"]        = "Schlachtzüge"
     L["ct_raid_expires"]     = "Verbleibende Zeit:"
-    L["ct_boss_killed"]      = "Bezwunden"
+    L["ct_boss_killed"]      = "Bezwungen"
     L["ct_boss_avail"]       = "Verfügbar"
     L["ct_sec_currencies"]   = "Währungen"
     L["ct_currency_total"]   = "Summe"

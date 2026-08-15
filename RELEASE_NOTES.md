@@ -2,6 +2,10 @@
 
 **EN**
 
+Character Tracker
+
+* Fixed: A typo in the German raid tooltip, "Bezwunden" instead of "Bezwungen".
+
 Auto Accept Summons
 
 * New: A delay slider from 0 to 10 seconds. At "Instant" the summon is accepted right away as before, that stays the default. With a delay you keep the chance to answer the dialog yourself during the wait, and nothing is accepted if you already did.
@@ -16,6 +20,10 @@ Mana Warning
 * Changed: The warnings now use the game's current chat function. The old one is only kept as a fallback, Blizzard is phasing it out.
 
 **DE**
+
+Charakter-Tracker
+
+* Behoben: Tippfehler im Raid-Tooltip, dort stand "Bezwunden" statt "Bezwungen".
 
 Beschwörungen automatisch annehmen
 
