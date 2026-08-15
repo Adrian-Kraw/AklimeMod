@@ -16,23 +16,21 @@ end
 local QUEST_COUNT_COLOR = { r = 1, g = 210 / 255, b = 0 }
 local countFrame, countText
 
+-- GetNumQuestLogEntries returns two values. The first one is the number of
+-- entries currently shown in the quest log, so quests below a collapsed
+-- header are missing from it. The second one is the actual quest count and
+-- is what the cap from GetMaxNumQuestsCanAccept refers to.
 local function GetQuestCountText()
-    if not C_QuestLog then return "" end
-    local numEntries = C_QuestLog.GetNumQuestLogEntries and C_QuestLog.GetNumQuestLogEntries()
-    local visible = 0
-    if numEntries and numEntries > 0 then
-        for i = 1, numEntries do
-            local info = C_QuestLog.GetInfo(i)
-            if info and not info.isHidden and info.questID and info.questID > 0 then
-                visible = visible + 1
-            end
-        end
-    end
+    if not C_QuestLog or not C_QuestLog.GetNumQuestLogEntries then return "" end
+
+    local _, numQuests = C_QuestLog.GetNumQuestLogEntries()
+    numQuests = numQuests or 0
+
     local max = C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()
     if not max or max <= 0 then
-        return visible > 0 and tostring(visible) or ""
+        return numQuests > 0 and tostring(numQuests) or ""
     end
-    return string.format("%d/%d", visible, max)
+    return string.format("%d/%d", numQuests, max)
 end
 
 local function GetTrackerHeader()

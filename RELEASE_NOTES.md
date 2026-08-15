@@ -2,6 +2,10 @@
 
 **EN**
 
+Quest Tracker
+
+* Fixed: The quest count in the tracker header was too low. It counted the entries currently shown in the quest log, so every quest below a collapsed header was missing. It now uses the game's own quest count, the same number the quest log shows.
+
 Character Tracker
 
 * Fixed: A typo in the German raid tooltip, "Bezwunden" instead of "Bezwungen".
@@ -20,6 +24,10 @@ Mana Warning
 * Changed: The warnings now use the game's current chat function. The old one is only kept as a fallback, Blizzard is phasing it out.
 
 **DE**
+
+Quest-Tracker
+
+* Behoben: Die Questzahl in der Kopfzeile war zu niedrig. Gezählt wurden die im Questlog gerade sichtbaren Einträge, alle Quests unter einer zugeklappten Überschrift fehlten dadurch. Jetzt wird die Questzahl des Spiels verwendet, also dieselbe, die auch im Questlog steht.
 
 Charakter-Tracker
 
