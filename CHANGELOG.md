@@ -4,6 +4,10 @@ A new option to skip the non-refundable warning, plus a fix for the mana warning
 
 **EN**
 
+Colorizer
+
+* Fixed: The colored border around buff icons caused a flood of Lua errors, on the buff bar as well as on target and focus auras. The border was a backdrop frame anchored to the icon, and since the game hides aura sizes as secret values, Blizzard's backdrop code failed on every resize. The border is now drawn with four plain textures, which need no size calculation. It looks a little crisper than before.
+
 Center Raid Frames
 
 * Fixed: When a party turned into a raid, the frames stayed off center. The single attempt after the roster change ran while the raid container was still hidden or its groups were not laid out yet, and nothing tried again afterwards. Centering now also reacts to the container appearing and to it changing size.
@@ -30,6 +34,10 @@ Mana Warning
 * Changed: The warnings now use the game's current chat function. The old one is only kept as a fallback, Blizzard is phasing it out.
 
 **DE**
+
+Einfärber
+
+* Behoben: Der farbige Rahmen um Buff-Icons löste eine Flut von Lua-Fehlern aus, sowohl an der Buffleiste als auch bei Ziel- und Fokus-Auren. Der Rahmen war ein Backdrop-Frame, der an das Icon geheftet war, und da das Spiel Aurengrößen als geheime Werte behandelt, scheiterte Blizzards Backdrop-Code bei jeder Größenänderung. Der Rahmen besteht jetzt aus vier einfachen Texturen, die keine Größenberechnung brauchen. Er wirkt dadurch etwas klarer als vorher.
 
 Gruppenrahmen zentrieren
 

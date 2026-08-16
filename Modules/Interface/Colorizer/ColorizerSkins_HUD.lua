@@ -20,18 +20,7 @@ C:Register("buffFrame", {
         for _,widget in pairs({ BuffFrame.AuraContainer:GetChildren() }) do
             if widget.Icon then
                 widget.Icon:SetTexCoord(0.135,0.865,0.135,0.865)
-                if widget.border then
-                    widget.border:Show()
-                    widget.border:SetBackdropBorderColor(mr,mg,mb,ma)
-                else
-                    local b = CreateFrame("Frame",nil,widget,"BackdropTemplate")
-                    b:SetPoint("TOPLEFT",widget.Icon,"TOPLEFT",-2,2)
-                    b:SetPoint("BOTTOMRIGHT",widget.Icon,"BOTTOMRIGHT",2,-2)
-                    b:SetSize(36, 36)  -- explicit so there is no Secret Number GetWidth taint
-                    b:SetBackdrop({ edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", edgeSize=10, insets={left=2,right=2,top=2,bottom=2} })
-                    b:SetBackdropBorderColor(mr,mg,mb,ma)
-                    widget.border = b
-                end
+                C.IconBorderColor(C.IconBorder(widget, widget.Icon, 2), mr,mg,mb,ma)
             end
         end
     end,

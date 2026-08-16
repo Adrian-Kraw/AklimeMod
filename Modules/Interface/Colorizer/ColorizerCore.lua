@@ -134,6 +134,56 @@ function C.NSr(frame)
     })
 end
 
+-- Border around an aura icon, built from four plain textures.
+--
+-- A backdrop frame cannot be used here: the size of an aura icon is a secret
+-- value in 12.0, an anchored frame inherits that, and Blizzard's Backdrop code
+-- multiplies the width when laying out its pieces. That throws once per resize.
+-- Textures get their length from their anchors in C and need no size math.
+function C.IconBorder(widget, anchor, inset, thickness)
+    local existing = widget.border
+    if existing and existing.edges then return existing end
+    if existing then existing:Hide() end   -- backdrop border from an older version
+
+    local i = inset or 2
+    local t = thickness or 1
+
+    local f = CreateFrame("Frame", nil, widget)
+    f:SetAllPoints(widget)
+
+    local top = f:CreateTexture(nil, "OVERLAY")
+    top:SetPoint("BOTTOMLEFT",  anchor, "TOPLEFT",  -i, i)
+    top:SetPoint("BOTTOMRIGHT", anchor, "TOPRIGHT",  i, i)
+    top:SetHeight(t)
+
+    local bottom = f:CreateTexture(nil, "OVERLAY")
+    bottom:SetPoint("TOPLEFT",  anchor, "BOTTOMLEFT",  -i, -i)
+    bottom:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT",  i, -i)
+    bottom:SetHeight(t)
+
+    local left = f:CreateTexture(nil, "OVERLAY")
+    left:SetPoint("TOPRIGHT",    anchor, "TOPLEFT",    -i,  i)
+    left:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMLEFT", -i, -i)
+    left:SetWidth(t)
+
+    local right = f:CreateTexture(nil, "OVERLAY")
+    right:SetPoint("TOPLEFT",    anchor, "TOPRIGHT",    i,  i)
+    right:SetPoint("BOTTOMLEFT", anchor, "BOTTOMRIGHT", i, -i)
+    right:SetWidth(t)
+
+    f.edges = { top, bottom, left, right }
+    widget.border = f
+    return f
+end
+
+function C.IconBorderColor(border, r, g, b, a)
+    if not border or not border.edges then return end
+    for _, edge in ipairs(border.edges) do
+        edge:SetColorTexture(r, g, b, a)
+    end
+    border:Show()
+end
+
 -- SkinBox (EditBox Left/Middle/Right)
 function C.SkinBox(box, r, g, b, a)
     if not box then return end

@@ -137,17 +137,7 @@ C:Register("targetFrame", {
                 for widget in buffPool:EnumerateActive() do
                     if not targetSkinnedWidgets[widget] then
                         widget.Icon:SetTexCoord(0.1,0.9,0.1,0.9)
-                        if widget.border then
-                            widget.border:Show()
-                            widget.border:SetBackdropBorderColor(bbr,bbg,bbb,bba)
-                        else
-                            local b = CreateFrame("Frame",nil,widget,"BackdropTemplate")
-                            b:SetPoint("TOPLEFT",widget,"TOPLEFT",-2,2)
-                            b:SetPoint("BOTTOMRIGHT",widget,"BOTTOMRIGHT",2,-2)
-                            b:SetBackdrop({ edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", edgeSize=8, insets={left=1,right=1,top=1,bottom=1} })
-                            b:SetBackdropBorderColor(bbr,bbg,bbb,bba)
-                            widget.border = b
-                        end
+                        C.IconBorderColor(C.IconBorder(widget, widget, 2), bbr,bbg,bbb,bba)
                         targetSkinnedWidgets[widget] = true
                     end
                 end
@@ -236,17 +226,7 @@ C:Register("focusFrame", {
                 for widget in buffPool:EnumerateActive() do
                     if not focusSkinnedWidgets[widget] then
                         widget.Icon:SetTexCoord(0.1,0.9,0.1,0.9)
-                        if widget.border then
-                            widget.border:Show()
-                            widget.border:SetBackdropBorderColor(bbr,bbg,bbb,bba)
-                        else
-                            local b = CreateFrame("Frame",nil,widget,"BackdropTemplate")
-                            b:SetPoint("TOPLEFT",widget,"TOPLEFT",-2,2)
-                            b:SetPoint("BOTTOMRIGHT",widget,"BOTTOMRIGHT",2,-2)
-                            b:SetBackdrop({ edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", edgeSize=8, insets={left=1,right=1,top=1,bottom=1} })
-                            b:SetBackdropBorderColor(bbr,bbg,bbb,bba)
-                            widget.border = b
-                        end
+                        C.IconBorderColor(C.IconBorder(widget, widget, 2), bbr,bbg,bbb,bba)
                         focusSkinnedWidgets[widget] = true
                     end
                 end
