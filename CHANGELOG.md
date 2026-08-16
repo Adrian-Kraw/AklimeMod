@@ -10,7 +10,9 @@ Colorizer
 
 Center Raid Frames
 
+* New: Recentering now also happens during combat, so a group turning into a raid or a new group appearing mid fight no longer leaves the frames off center until the fight ends. The raid container is a protected frame that an addon may not move in combat, so this runs through a secure snippet inside the game's own restricted environment.
 * Fixed: When a party turned into a raid, the frames stayed off center. The single attempt after the roster change ran while the raid container was still hidden or its groups were not laid out yet, and nothing tried again afterwards. Centering now also reacts to the container appearing and to it changing size.
+* Fixed: The frames could end up off center, especially with a raid frame size other than the default. The width was estimated from the number of groups times one group's width, which ignored that size setting and fell back to a fixed guess when the group frames were not found. The container's own width is used now.
 
 Quest Tracker
 
@@ -41,7 +43,9 @@ Einfärber
 
 Gruppenrahmen zentrieren
 
+* Neu: Die Zentrierung greift jetzt auch im Kampf. Wird mitten im Kampf aus einer Gruppe ein Schlachtzug oder kommt eine Gruppe dazu, stehen die Rahmen nicht mehr bis Kampfende schief. Der Schlachtzugsrahmen ist ein geschütztes Frame, das ein Addon im Kampf nicht bewegen darf, das läuft deshalb über ein Secure Snippet in der geschützten Umgebung des Spiels.
 * Behoben: Wurde aus einer Gruppe ein Schlachtzug, blieben die Rahmen unzentriert. Der einzelne Versuch nach der Gruppenänderung lief zu früh, da war der Schlachtzugsrahmen noch ausgeblendet oder seine Gruppen noch nicht angeordnet, und danach passierte nichts mehr. Die Zentrierung reagiert jetzt auch darauf, dass der Rahmen erscheint und dass er seine Größe ändert.
+* Behoben: Die Rahmen konnten daneben landen, vor allem bei einer anderen Rahmengröße als der Voreinstellung. Die Breite wurde aus Gruppenanzahl mal Breite einer Gruppe geschätzt, das ignorierte die eingestellte Größe und fiel auf einen festen Schätzwert zurück, wenn die Gruppenrahmen nicht gefunden wurden. Jetzt wird die tatsächliche Breite des Rahmens verwendet.
 
 Quest-Tracker
 
@@ -66,7 +70,7 @@ Mana-Warnung
 
 ## 1.3.0
 
-A rebuilt gold overview with Warband Bank support, a tidied up mail address book, the Services channel is now hidden instead of left, raid frames stay centered during combat, and a fix for raids landing in the wrong expansion. / Eine neu gebaute Gold-Übersicht mit Kriegsmeutenbank, ein aufgeräumtes Adressbuch für Post, der Dienste-Channel wird jetzt ausgeblendet statt verlassen, Gruppenrahmen bleiben auch im Kampf zentriert und ein Fix für Raids, die in der falschen Erweiterung einsortiert wurden.
+A rebuilt gold overview with Warband Bank support, a tidied up mail address book, the Services channel is now hidden instead of left, and a fix for raids landing in the wrong expansion. / Eine neu gebaute Gold-Übersicht mit Kriegsmeutenbank, ein aufgeräumtes Adressbuch für Post, der Dienste-Channel wird jetzt ausgeblendet statt verlassen und ein Fix für Raids, die in der falschen Erweiterung einsortiert wurden.
 
 **EN**
 
@@ -92,7 +96,6 @@ Hide Talent and Profession Popups
 
 Center Raid Frames
 
-* Changed: The frames are re-centered during combat as well. Before, players joining or leaving left the raid off center until the fight was over.
 
 **DE**
 
@@ -118,7 +121,6 @@ Talent- und Berufs-Popups ausblenden
 
 Gruppenrahmen zentrieren
 
-* Geändert: Die Rahmen werden jetzt auch im Kampf neu zentriert. Vorher blieb die Gruppe unzentriert, wenn während des Kampfes Spieler dazukamen oder gingen, bis der Kampf vorbei war.
 
 ## 1.1.3 + 1.2.0
 

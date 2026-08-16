@@ -2,10 +2,11 @@
 -- Centers raid frames horizontally. The Y position is kept.
 -- The MT frame sticks out to the left and is ignored when centering.
 --
--- Works during combat as well. Only the CompactUnitFrame buttons inside the
--- container are protected, the container itself is not, so moving it is not
--- blocked. Group frames appearing or disappearing mid fight would otherwise
--- leave the raid off center until combat ends.
+-- The container is protected, so a plain SetPoint from addon code is refused
+-- during combat. For that case a secure snippet does the move: it runs inside
+-- the client's own restricted environment, where moving the frame is allowed.
+-- Out of combat the normal path is used, it also keeps the values the snippet
+-- cannot measure itself up to date.
 
 AklimeMod_Defaults = AklimeMod_Defaults or {}
 AklimeMod_Defaults.raidFrameCenter = { enabled = true, offsetX = 0 }
@@ -23,15 +24,95 @@ end
 
 local savedY    = nil
 local hasModified = false
-local lastCount = 0
+local lastWidth = 0
 local lastMtOffset = 0
 
 local function RestorePosition()
     if not hasModified then return end
     if InCombatLockdown() then return end
     hasModified = false
-    lastCount   = 0
+    lastWidth   = 0
     lastMtOffset = 0
+end
+
+-- ============================================================
+-- Secure driver (combat)
+-- ============================================================
+-- The snippet recomputes the position from the container's own width. Scale,
+-- MT offset, Y position and the user offset cannot be measured in the
+-- restricted environment, they are handed over as attributes out of combat.
+local driver = nil
+
+local UPDATE_SNIPPET = [[
+    local c = self:GetFrameRef("container")
+    local p = self:GetFrameRef("uiparent")
+    if not c or not p then return end
+
+    -- Never guess the Y position. Without it the frame would jump to the top
+    -- edge of the screen.
+    local y = self:GetAttribute("posY")
+    if not y then return end
+
+    local width = (c:GetWidth() or 0) * (self:GetAttribute("scale") or 1)
+    if width <= 0 then return end
+
+    local mt = self:GetAttribute("mtOffset") or 0
+    local x  = (p:GetWidth() - (width - mt)) / 2 + (self:GetAttribute("offsetX") or 0) - mt
+
+    c:ClearAllPoints()
+    c:SetPoint("TOPLEFT", p, "TOPLEFT", x, y)
+]]
+
+local function EnsureDriver()
+    if driver then return driver end
+    if InCombatLockdown() then return nil end
+
+    local c = CompactRaidFrameContainer
+    if not c then return nil end
+
+    driver = CreateFrame("Frame", "AklimeMod_RaidCenterDriver", UIParent, "SecureHandlerStateTemplate")
+    driver:SetFrameRef("container", c)
+    driver:SetFrameRef("uiparent", UIParent)
+    driver:SetAttribute("updatePosition", UPDATE_SNIPPET)
+    driver:SetAttribute("_onstate-akmraid", [[ self:RunAttribute("updatePosition") ]])
+    -- Second path: the insecure side sets "recheck" when the container resizes
+    driver:SetAttribute("_onattributechanged", [[
+        if name == "recheck" then
+            self:RunAttribute("updatePosition")
+        end
+    ]])
+
+    return driver
+end
+
+local driverArmed = false
+
+local function UpdateDriverValues(scale, mtOffset)
+    local d = EnsureDriver()
+    if not d then return end
+    d:SetAttribute("scale",    scale)
+    d:SetAttribute("mtOffset", mtOffset)
+    d:SetAttribute("offsetX",  GetDB().offsetX or 0)
+    d:SetAttribute("posY",     savedY)
+
+    -- Register only once the snippet has everything it needs. Registering
+    -- evaluates the condition right away and runs the snippet immediately,
+    -- so doing it earlier would move the container with unknown values.
+    if not driverArmed and savedY then
+        driverArmed = true
+        -- One state per group count. The value is never read, it only has to
+        -- change so the snippet runs when a group appears or disappears.
+        RegisterStateDriver(d, "akmraid",
+            "[@raid36,exists] 8; [@raid31,exists] 7; [@raid26,exists] 6; [@raid21,exists] 5; " ..
+            "[@raid16,exists] 4; [@raid11,exists] 3; [@raid6,exists] 2; [@raid1,exists] 1; 0")
+    end
+end
+
+-- Ask the snippet to run. Works in combat, the attribute belongs to our own
+-- frame and changing it is not protected.
+local function RequestSecureUpdate()
+    if not driver then return end
+    driver:SetAttribute("recheck", GetTime())
 end
 
 local function RepositionContainer()
@@ -41,9 +122,13 @@ local function RepositionContainer()
     local c = CompactRaidFrameContainer
     if not c or not c:IsShown() then return end
 
-    -- Safety net: should the container ever become protected, skip in combat
-    -- instead of running into blocked actions
-    if InCombatLockdown() and c:IsProtected() then return end
+    -- CompactRaidFrameContainer:IsProtected() is true, verified in game via
+    -- /akmraid. A SetPoint from here is refused during combat, the secure
+    -- snippet takes over for that.
+    if InCombatLockdown() then
+        RequestSecureUpdate()
+        return
+    end
 
     if savedY == nil then
         local _, _, _, _, y = c:GetPoint(1)
@@ -53,45 +138,45 @@ local function RepositionContainer()
 
     if not IsInRaid() then
         hasModified  = false
-        lastCount    = 0
+        lastWidth    = 0
         lastMtOffset = 0
         return
     end
 
-    local count  = 0
-    local gWidth = 0
-    for i = 1, NUM_RAID_GROUPS do
-        local g = _G["CompactRaidGroup" .. i]
-        if g and g:IsShown() then
-            count = count + 1
-            if gWidth == 0 then gWidth = g:GetWidth() end
-        end
-    end
-    if count == 0 then
-        count = math.max(1, math.min(math.ceil(GetNumGroupMembers() / 5), 8))
-    end
-    if gWidth == 0 then gWidth = 220 end
+    -- The container resizes itself to its content, so its own width is the
+    -- truth. Counting groups and multiplying by one group width ignored the
+    -- frame size set in Edit Mode and fell back to a guessed 220 whenever the
+    -- group frames were not found.
+    --
+    -- GetWidth and GetLeft are in the frame's own coordinate space. The anchor
+    -- offset below is in UIParent units, so everything is converted.
+    local scale = c:GetEffectiveScale() / UIParent:GetEffectiveScale()
+    local width = (c:GetWidth() or 0) * scale
+    if width <= 0 then return end
 
-    -- Measure the MT offset (always current, relative between container and Group1)
+    -- The MT frames stick out to the left and are not part of the centering
     local mtOffset = 0
     local g1 = _G["CompactRaidGroup1"]
-    if g1 and g1:IsShown() then
-        local off = g1:GetLeft() - c:GetLeft()
-        if off and off > 10 then mtOffset = off end
+    if g1 and g1:IsShown() and g1:GetLeft() and c:GetLeft() then
+        local off = (g1:GetLeft() - c:GetLeft()) * scale
+        if off > 10 then mtOffset = off end
     end
 
-    -- Only reposition when the group count OR MT offset has changed
-    if count == lastCount and mtOffset == lastMtOffset and hasModified then return end
-    lastCount    = count
+    -- Only reposition when the width OR the MT offset has changed
+    if width == lastWidth and mtOffset == lastMtOffset and hasModified then return end
+    lastWidth    = width
     lastMtOffset = mtOffset
 
-    local totalWidth = count * gWidth
-    local group1X    = (GetScreenWidth() / 2) - (totalWidth / 2) + (GetDB().offsetX or 0)
-    local newX       = group1X - mtOffset
+    local groupsWidth = width - mtOffset
+    local groupsX     = (UIParent:GetWidth() - groupsWidth) / 2 + (GetDB().offsetX or 0)
+    local targetX     = groupsX - mtOffset
 
     c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, savedY)
+    c:SetPoint("TOPLEFT", UIParent, "TOPLEFT", targetX, savedY)
     hasModified = true
+
+    -- Keep the snippet supplied for the next fight
+    UpdateDriverValues(scale, mtOffset)
 end
 
 local pendingTimer = nil
@@ -119,13 +204,18 @@ local function HookContainer()
     c:HookScript("OnShow", function()
         -- The container was hidden, so the cached layout tells us nothing
         hasModified  = false
-        lastCount    = 0
+        lastWidth    = 0
         lastMtOffset = 0
         RequestReposition()
     end)
 
     c:HookScript("OnSizeChanged", function()
-        RequestReposition()
+        if InCombatLockdown() then
+            -- A group appeared or vanished mid fight, only the snippet may move
+            RequestSecureUpdate()
+        else
+            RequestReposition()
+        end
     end)
 end
 
@@ -146,7 +236,7 @@ f:SetScript("OnEvent", function(_, event)
             HookContainer()
             savedY       = nil
             hasModified  = false
-            lastCount    = 0
+            lastWidth    = 0
             lastMtOffset = 0
             RepositionContainer()
         end)
@@ -168,11 +258,43 @@ if EditModeManagerFrame then
         C_Timer.After(0.5, function()
             savedY       = nil
             hasModified  = false
-            lastCount    = 0
+            lastWidth    = 0
             lastMtOffset = 0
             RepositionContainer()
         end)
     end)
+end
+
+-- Debug: /akmraid
+SLASH_AKMRAID1 = "/akmraid"
+SlashCmdList["AKMRAID"] = function()
+    local c = CompactRaidFrameContainer
+    if not c then
+        print("|cFFFF4444Aklime Mod Tools:|r kein CompactRaidFrameContainer.")
+        return
+    end
+    local scale = c:GetEffectiveScale() / UIParent:GetEffectiveScale()
+    local width = (c:GetWidth() or 0) * scale
+    local left  = (c:GetLeft() or 0) * scale
+    print(string.format(
+        "|cFFFFD100Aklime Mod Tools Raid:|r aktiv=%s sichtbar=%s schlachtzug=%s",
+        tostring(GetDB().enabled), tostring(c:IsShown()), tostring(IsInRaid())))
+    print(string.format(
+        "  Kampf=%s  geschuetzt=%s  Secure-Treiber=%s",
+        tostring(InCombatLockdown()), tostring(c:IsProtected()),
+        driver and "vorhanden" or "fehlt"))
+    if driver then
+        print(string.format(
+            "  Treiberwerte: skalierung=%s mt=%s versatz=%s y=%s",
+            tostring(driver:GetAttribute("scale")),   tostring(driver:GetAttribute("mtOffset")),
+            tostring(driver:GetAttribute("offsetX")), tostring(driver:GetAttribute("posY"))))
+    end
+    print(string.format(
+        "  Breite=%.1f  links=%.1f  Bildschirm=%.1f  MT=%.1f  Skalierung=%.3f",
+        width, left, UIParent:GetWidth(), lastMtOffset, scale))
+    print(string.format(
+        "  Mitte Rahmen=%.1f  Mitte Bildschirm=%.1f  Versatz=%d  gesetzt=%s",
+        left + width / 2, UIParent:GetWidth() / 2, GetDB().offsetX or 0, tostring(hasModified)))
 end
 
 AklimeMod_RaidFrameCenter = {
@@ -181,9 +303,9 @@ AklimeMod_RaidFrameCenter = {
         GetDB().enabled = v
         if v then RepositionContainer() else RestorePosition() end
     end,
-    SetOffsetX = function(x) GetDB().offsetX = x; lastCount = 0; RepositionContainer() end,
+    SetOffsetX = function(x) GetDB().offsetX = x; lastWidth = 0; RepositionContainer() end,
     GetOffsetX = function() return GetDB().offsetX or 0 end,
-    Update     = function() lastCount = 0; lastMtOffset = 0; hasModified = false; RepositionContainer() end,
+    Update     = function() lastWidth = 0; lastMtOffset = 0; hasModified = false; RepositionContainer() end,
 }
 
 -- Hook SetMainTank/ClearMainTank directly
