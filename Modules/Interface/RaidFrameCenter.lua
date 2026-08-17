@@ -41,6 +41,10 @@ end
 -- The snippet recomputes the position from the container's own width. Scale,
 -- MT offset, Y position and the user offset cannot be measured in the
 -- restricted environment, they are handed over as attributes out of combat.
+--
+-- The state driver is the only way to start the snippet during combat.
+-- Setting an attribute from insecure code does not work there, SetAttribute
+-- on a secure handler is protected in combat.
 local driver = nil
 
 local UPDATE_SNIPPET = [[
@@ -75,12 +79,6 @@ local function EnsureDriver()
     driver:SetFrameRef("uiparent", UIParent)
     driver:SetAttribute("updatePosition", UPDATE_SNIPPET)
     driver:SetAttribute("_onstate-akmraid", [[ self:RunAttribute("updatePosition") ]])
-    -- Second path: the insecure side sets "recheck" when the container resizes
-    driver:SetAttribute("_onattributechanged", [[
-        if name == "recheck" then
-            self:RunAttribute("updatePosition")
-        end
-    ]])
 
     return driver
 end
@@ -108,13 +106,6 @@ local function UpdateDriverValues(scale, mtOffset)
     end
 end
 
--- Ask the snippet to run. Works in combat, the attribute belongs to our own
--- frame and changing it is not protected.
-local function RequestSecureUpdate()
-    if not driver then return end
-    driver:SetAttribute("recheck", GetTime())
-end
-
 local function RepositionContainer()
     if IsInEditMode() then return end
     if not GetDB().enabled then return end
@@ -123,12 +114,9 @@ local function RepositionContainer()
     if not c or not c:IsShown() then return end
 
     -- CompactRaidFrameContainer:IsProtected() is true, verified in game via
-    -- /akmraid. A SetPoint from here is refused during combat, the secure
-    -- snippet takes over for that.
-    if InCombatLockdown() then
-        RequestSecureUpdate()
-        return
-    end
+    -- /akmraid. A SetPoint from here is refused during combat, the state
+    -- driver and its snippet take over for that.
+    if InCombatLockdown() then return end
 
     if savedY == nil then
         local _, _, _, _, y = c:GetPoint(1)
@@ -209,13 +197,11 @@ local function HookContainer()
         RequestReposition()
     end)
 
+    -- This runs inside Blizzard's layout call. Nothing protected may be
+    -- touched here, the timer inside RequestReposition keeps it out of that
+    -- call stack, and during combat it exits on its own.
     c:HookScript("OnSizeChanged", function()
-        if InCombatLockdown() then
-            -- A group appeared or vanished mid fight, only the snippet may move
-            RequestSecureUpdate()
-        else
-            RequestReposition()
-        end
+        RequestReposition()
     end)
 end
 
