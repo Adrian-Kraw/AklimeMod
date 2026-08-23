@@ -16,7 +16,9 @@ Center Raid Frames
 
 Quest Tracker
 
-* Fixed: The quest count in the tracker header was too low. It counted the entries currently shown in the quest log, so every quest below a collapsed header was missing. It now uses the game's own quest count, the same number the quest log shows.
+* Fixed: On characters whose quests are all campaign quests, the count was invisible. Campaign quests have their own section in the tracker, and the count was pinned to the header of the normal quest section, which is hidden on such a character. It now attaches to whichever quest header is actually on screen.
+* Fixed: On some characters no quest count appeared at all. It was only calculated half a second after login, and the quest log arrives from the server later than that, so the result was zero and the display stayed hidden. The count now recalculates whenever the quest log changes.
+* Fixed: The quest count in the tracker header did not match the quest log. World quests and bonus objectives are entries in the quest log too, but they are not quests and do not count against the limit of 35. The count now uses the same rule the quest log itself uses to decide what is a quest.
 
 Character Tracker
 
@@ -49,7 +51,9 @@ Gruppenrahmen zentrieren
 
 Quest-Tracker
 
-* Behoben: Die Questzahl in der Kopfzeile war zu niedrig. Gezählt wurden die im Questlog gerade sichtbaren Einträge, alle Quests unter einer zugeklappten Überschrift fehlten dadurch. Jetzt wird die Questzahl des Spiels verwendet, also dieselbe, die auch im Questlog steht.
+* Behoben: Bei Charakteren, deren Quests alle Kampagnenquests sind, war die Zahl unsichtbar. Kampagnenquests haben im Tracker einen eigenen Abschnitt, die Zahl hing aber an der Kopfzeile des normalen Quest-Abschnitts, und die ist bei so einem Charakter ausgeblendet. Sie hängt sich jetzt an die Quest-Kopfzeile, die tatsächlich zu sehen ist.
+* Behoben: Bei manchen Charakteren stand gar keine Questzahl da. Sie wurde nur eine halbe Sekunde nach dem Login berechnet, das Questlog kommt aber später vom Server. Das Ergebnis war dann null und die Anzeige blieb ausgeblendet. Jetzt wird bei jeder Änderung am Questlog neu gezählt.
+* Behoben: Die Questzahl in der Kopfzeile passte nicht zum Questlog. Weltquests und Bonusziele sind dort ebenfalls Einträge, zählen aber nicht als Quest und nicht gegen das Limit von 35. Gezählt wird jetzt nach derselben Regel, mit der auch das Questlog entscheidet, was eine Quest ist.
 
 Charakter-Tracker
 

@@ -16,25 +16,56 @@ end
 local QUEST_COUNT_COLOR = { r = 1, g = 210 / 255, b = 0 }
 local countFrame, countText
 
--- GetNumQuestLogEntries returns two values. The first one is the number of
--- entries currently shown in the quest log, so quests below a collapsed
--- header are missing from it. The second one is the actual quest count and
--- is what the cap from GetMaxNumQuestsCanAccept refers to.
+-- Counts exactly what the quest log shows. Same rule Blizzard uses in
+-- QuestMapFrame.lua (QuestLogQuests_ShouldShowQuest): world quests and bonus
+-- objectives are quest log entries as well, but they are not quests in the
+-- log and do not count against the cap.
+--
+-- The enumeration contains every entry, also the ones below a collapsed
+-- header, Blizzard filters those out later when building the display.
+local function IsCountableQuest(info)
+    if not info or info.isHeader then return false end
+    if info.isTask or info.isHidden then return false end
+    if info.isBounty then
+        return C_QuestLog.IsComplete and C_QuestLog.IsComplete(info.questID) or false
+    end
+    return true
+end
+
 local function GetQuestCountText()
     if not C_QuestLog or not C_QuestLog.GetNumQuestLogEntries then return "" end
 
-    local _, numQuests = C_QuestLog.GetNumQuestLogEntries()
-    numQuests = numQuests or 0
+    local count = 0
+    for i = 1, (C_QuestLog.GetNumQuestLogEntries() or 0) do
+        if IsCountableQuest(C_QuestLog.GetInfo(i)) then
+            count = count + 1
+        end
+    end
 
     local max = C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()
     if not max or max <= 0 then
-        return numQuests > 0 and tostring(numQuests) or ""
+        return count > 0 and tostring(count) or ""
     end
-    return string.format("%d/%d", numQuests, max)
+    return string.format("%d/%d", count, max)
 end
 
+-- Quests sit in two sections of the tracker, campaign quests have their own
+-- one with its own header. On a character whose quests are all campaign
+-- quests the plain quest header is hidden, and a count anchored to it would
+-- never be visible. So take the header that is actually on screen.
+local TRACKER_MODULES = { "QuestObjectiveTracker", "CampaignQuestObjectiveTracker" }
+
 local function GetTrackerHeader()
-    return QuestObjectiveTracker and QuestObjectiveTracker.Header
+    local fallback
+    for _, name in ipairs(TRACKER_MODULES) do
+        local tracker = _G[name]
+        local header  = tracker and tracker.Header
+        if header then
+            if header:IsVisible() then return header end
+            fallback = fallback or header
+        end
+    end
+    return fallback
 end
 
 local function PositionCountFrame()
@@ -225,19 +256,31 @@ end
 -- ============================================================
 
 local questCountWatcher
+local countPending = false
+
+-- Always read the quest log fresh, nothing about the count is stored. The
+-- short delay serves two purposes: QUEST_LOG_UPDATE arrives in bursts, and
+-- QUEST_ACCEPTED fires before the log actually contains the new quest.
+local function RequestCountUpdate()
+    if countPending then return end
+    countPending = true
+    C_Timer.After(0.2, function()
+        countPending = false
+        UpdateQuestCount()
+    end)
+end
 
 local function InitWatchers()
     if questCountWatcher then return end
     questCountWatcher = CreateFrame("Frame")
+    -- QUEST_LOG_UPDATE is the one that matters on login: the quest log arrives
+    -- from the server with a delay, before that every count would be zero
+    questCountWatcher:RegisterEvent("QUEST_LOG_UPDATE")
     questCountWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
     questCountWatcher:RegisterEvent("QUEST_ACCEPTED")
     questCountWatcher:RegisterEvent("QUEST_REMOVED")
-    questCountWatcher:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_ENTERING_WORLD" then
-            C_Timer.After(0.5, UpdateQuestCount)
-        else
-            UpdateQuestCount()
-        end
+    questCountWatcher:SetScript("OnEvent", function()
+        RequestCountUpdate()
     end)
 end
 
@@ -252,6 +295,6 @@ initFrame:SetScript("OnEvent", function(self, event, name)
     end)
     if event == "PLAYER_LOGIN" then
         InitWatchers()
-        C_Timer.After(0.5, UpdateQuestCount)
+        RequestCountUpdate()
     end
 end)
