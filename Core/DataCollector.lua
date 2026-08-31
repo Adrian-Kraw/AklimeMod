@@ -25,6 +25,7 @@ local CURRENCY_IDS = {
     3319, 3316, 3376, 3377, 3379, 3385, 3392, 3400, 3373, 3393, 3405,
     3256, 3257, 3258, 3259, 3260, 3261, 3262, 3263, 3264, 3265, 3266,
     3028, 3310, 3212, 3378, 3383, 3341, 3343, 3345, 3347, 3418,
+    3442, 3443, 3444, 3445, 3446, 3448, 3465, 3509,
 }
 
 -- ============================================================
@@ -281,20 +282,38 @@ end
 
 -- ============================================================
 -- Weekly Vault (Great Vault)
--- Enum.WeeklyRewardChestThresholdType: Raid=1, MythicPlus=2, World=4
+-- The numeric values of Enum.WeeklyRewardChestThresholdType change between
+-- patches, so the categories are read from the enum by name.
 -- ============================================================
-local VAULT_TYPES = {
-    { key = "raid",    typeID = 1 },
-    { key = "dungeon", typeID = 2 },
-    { key = "world",   typeID = 4 },
-}
+local function GetVaultTypes()
+    local threshold = Enum and Enum.WeeklyRewardChestThresholdType
+    if not threshold then return nil end
+
+    local types = {}
+    if threshold.Raid then
+        types[#types+1] = { key = "raid", typeID = threshold.Raid }
+    end
+    -- "Activities" is the current name of the former "MythicPlus" category
+    local dungeonID = threshold.Activities or threshold.MythicPlus
+    if dungeonID then
+        types[#types+1] = { key = "dungeon", typeID = dungeonID }
+    end
+    if threshold.World then
+        types[#types+1] = { key = "world", typeID = threshold.World }
+    end
+
+    return types
+end
 
 local function CollectWeeklyVault(toon)
     if not C_WeeklyRewards then return end
+    local vaultTypes = GetVaultTypes()
+    if not vaultTypes then return end
+
     toon.weeklyVault = toon.weeklyVault or {}
     local vault = toon.weeklyVault
 
-    for _, vt in ipairs(VAULT_TYPES) do
+    for _, vt in ipairs(vaultTypes) do
         local ok, activities = pcall(C_WeeklyRewards.GetActivities, vt.typeID)
         if ok and activities then
             local slots = 0

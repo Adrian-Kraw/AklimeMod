@@ -1954,10 +1954,12 @@ local function BuildCollectingContent()
     }
     local CURR_BY_EXP = {}
     for _, ce in ipairs({
-        -- Season (Morgenlight crests + season currencies)
+        -- Season (Morgenlicht- und Nebelwappen + season currencies)
         {id=3310,exp=15},{id=2803,exp=15},{id=3378,exp=15},{id=3418,exp=15},
         {id=3028,exp=15},{id=3356,exp=15},{id=3383,exp=15},{id=3341,exp=15},
-        {id=3343,exp=15},{id=3346,exp=15},{id=3347,exp=15},{id=3212,exp=15},
+        {id=3343,exp=15},{id=3345,exp=15},{id=3347,exp=15},{id=3212,exp=15},
+        {id=3442,exp=15},{id=3443,exp=15},{id=3444,exp=15},{id=3445,exp=15},
+        {id=3446,exp=15},{id=3465,exp=15},{id=3509,exp=15},
         -- Dungeon & Raid
         {id=1166,exp=14},
         -- Player vs Player
@@ -1968,7 +1970,7 @@ local function BuildCollectingContent()
         -- Midnight (content + artisan's acuity profession currencies)
         {id=3373,exp=11},{id=3405,exp=11},{id=3393,exp=11},{id=3316,exp=11},
         {id=3385,exp=11},{id=3376,exp=11},{id=3392,exp=11},{id=3379,exp=11},
-        {id=3377,exp=11},{id=3400,exp=11},
+        {id=3377,exp=11},{id=3400,exp=11},{id=3448,exp=11},
         {id=3256,exp=11},{id=3257,exp=11},{id=3258,exp=11},{id=3260,exp=11},
         {id=3261,exp=11},{id=3262,exp=11},{id=3263,exp=11},{id=3264,exp=11},
         {id=3265,exp=11},{id=3266,exp=11},

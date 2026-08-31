@@ -20,6 +20,7 @@ Quest Tracker
 
 Character Tracker
 
+* Fixed: In the Great Vault the rows for raids, dungeons and world activities always showed 0/3, even on characters that had long since unlocked slots. Only the "Reward" row was right. The addon asked the game for the three categories in a way that stopped working with a patch and got nothing back. The values are correct again as soon as the character in question logs in once.
 * Fixed: A typo in the German raid tooltip, "Bezwunden" instead of "Bezwungen".
 
 Auto Accept Summons
@@ -55,6 +56,7 @@ Quest-Tracker
 
 Charakter-Tracker
 
+* Behoben: Bei der Großen Schatzkammer standen Schlachtzüge, Dungeons und Weltaktivitäten immer auf 0/3, auch bei Charakteren, die längst Plätze freigeschaltet hatten. Nur die Zeile "Belohnung" stimmte. Das Addon hat die drei Kategorien auf eine Art beim Spiel abgefragt, die seit einem Patch nicht mehr funktioniert, und bekam nichts zurück. Die Werte stimmen wieder, sobald der jeweilige Charakter einmal einloggt.
 * Behoben: Tippfehler im Raid-Tooltip, dort stand "Bezwunden" statt "Bezwungen".
 
 Beschwörungen automatisch annehmen
