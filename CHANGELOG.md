@@ -22,8 +22,17 @@ Quest Tracker
 
 Character Tracker
 
+* New: The currencies of Midnight season 2 are tracked: the five Mistcrests, Venomblight Manaflux, Tidal Spark Dust and the Corrosive Coin.
+* Fixed: The Hero Dawncrest never showed up. It was collected under the right id but looked up under a wrong one when displayed, so the row stayed empty on every character.
 * Fixed: In the Great Vault the rows for raids, dungeons and world activities always showed 0/3, even on characters that had long since unlocked slots. Only the "Reward" row was right. The addon asked the game for the three categories in a way that stopped working with a patch and got nothing back. The values are correct again as soon as the character in question logs in once.
 * Fixed: A typo in the German raid tooltip, "Bezwunden" instead of "Bezwungen".
+
+Merchant Window
+
+* Changed: The bottom of the widened vendor window was rebuilt. Instead of two small boxes in the right corner there is now one panel across the full width, split into two rows by a separator. The upper row carries the paging on the left and the buyback slot, sell junk and the repair buttons on the right, the lower row carries your gold at the left with the currencies this vendor accepts running to the right.
+* Fixed: Only four vendor currencies were ever shown, vendors that take more than four left the rest invisible. The number now comes from the game instead of a fixed four.
+* Fixed: The gold display vanished at vendors that take no gold, and the currencies then slid to the left edge. Gold now keeps its place at the left and is always shown.
+* Fixed: The bottom edge of the window ended in the middle. That border is built for the original window width and was never stretched along when the window was widened.
 
 Auto Accept Summons
 
@@ -58,8 +67,17 @@ Quest-Tracker
 
 Charakter-Tracker
 
+* Neu: Die Währungen aus Season 2 von Midnight werden mitgezählt: die fünf Nebelwappen, der Gifthauchmanaflux, der Gezeitenfunkenstaub und die Korrosive Münze.
+* Behoben: Das Morgenlichtwappen des Helden tauchte nie auf. Es wurde unter der richtigen Kennung eingesammelt, bei der Anzeige aber unter einer falschen gesucht, deshalb blieb die Zeile bei jedem Charakter leer.
 * Behoben: Bei der Großen Schatzkammer standen Schlachtzüge, Dungeons und Weltaktivitäten immer auf 0/3, auch bei Charakteren, die längst Plätze freigeschaltet hatten. Nur die Zeile "Belohnung" stimmte. Das Addon hat die drei Kategorien auf eine Art beim Spiel abgefragt, die seit einem Patch nicht mehr funktioniert, und bekam nichts zurück. Die Werte stimmen wieder, sobald der jeweilige Charakter einmal einloggt.
 * Behoben: Tippfehler im Raid-Tooltip, dort stand "Bezwunden" statt "Bezwungen".
+
+Händlerfenster
+
+* Geändert: Der untere Teil des verbreiterten Händlerfensters wurde neu aufgebaut. Statt zweier kleiner Kästen in der rechten Ecke gibt es jetzt eine Leiste über die volle Breite, durch eine Trennlinie in zwei Zeilen geteilt. Oben sitzt links das Blättern und rechts Rückkauf, Müll verkaufen und die Reparaturknöpfe, unten links dein Gold und daneben nach rechts die Währungen, die dieser Händler nimmt.
+* Behoben: Es wurden immer nur vier Händlerwährungen angezeigt, bei Händlern mit mehr blieb der Rest unsichtbar. Die Anzahl kommt jetzt vom Spiel statt aus einer festen Vier.
+* Behoben: Die Goldanzeige verschwand bei Händlern, die kein Gold nehmen, und die Währungen rutschten dann an den linken Rand. Gold behält jetzt seinen Platz links und wird immer angezeigt.
+* Behoben: Der untere Fensterrand hörte auf halber Strecke auf. Diese Leiste ist für die ursprüngliche Fensterbreite gebaut und wurde beim Verbreitern nie mitgezogen.
 
 Beschwörungen automatisch annehmen
 
