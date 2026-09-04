@@ -285,6 +285,29 @@ local function FormatAmount(a)
     return tostring(a)
 end
 
+-- Money down to the copper, split into its three parts so they can be put in
+-- columns of their own. The gold panel shows exact amounts, currencies keep
+-- the short form above.
+local GOLD_COIN_COL   = "|cFFFFD100"
+local SILVER_COIN_COL = "|cFFCCCCCC"
+local COPPER_COIN_COL = "|cFFCC6633"
+
+local function SplitMoney(copper)
+    copper = copper or 0
+    local gold = math.floor(copper / 10000)
+    local goldStr = BreakUpLargeNumbers and BreakUpLargeNumbers(gold) or tostring(gold)
+    return goldStr .. "g",
+           math.floor((copper % 10000) / 100) .. "s",
+           (copper % 100) .. "c"
+end
+
+local function FormatMoney(copper)
+    local gold, silver, rest = SplitMoney(copper)
+    return GOLD_COIN_COL .. gold .. "|r " ..
+           SILVER_COIN_COL .. silver .. "|r " ..
+           COPPER_COIN_COL .. rest .. "|r"
+end
+
 -- Sort key: lowercase + umlaut normalization so A-Z works for both DE and EN names.
 -- Lua's < operator compares bytes; UTF-8 umlauts (C3 xx) sort after z without this.
 local function SortKey(s)
@@ -415,7 +438,15 @@ local PAD   = 6
 -- ============================================================
 local GOLD_ROW_H   = 14
 local GOLD_NAME_W  = 104
-local GOLD_AMT_W   = 68
+-- Each coin gets its own column, so gold, silver and copper line up no matter
+-- how long the name or the amount in the row above is
+local GOLD_G_W     = 66
+local GOLD_S_W     = 28
+local GOLD_C_W     = 28
+local GOLD_PART_GAP = 4
+local GOLD_AMT_W   = GOLD_G_W + GOLD_S_W + GOLD_C_W + GOLD_PART_GAP * 2
+local GOLD_COIN_W    = { GOLD_G_W, GOLD_S_W, GOLD_C_W }
+local GOLD_COIN_COLS = { GOLD_COIN_COL, SILVER_COIN_COL, COPPER_COIN_COL }
 local GOLD_COL_W   = GOLD_NAME_W + GOLD_AMT_W + 6
 local GOLD_COL_GAP = 18
 local GOLD_PAD     = 14
@@ -435,10 +466,14 @@ local function GoldRow(index)
     row.left:SetJustifyH("LEFT")
     row.left:SetWordWrap(false)
 
-    row.right = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.right:SetSize(GOLD_AMT_W, GOLD_ROW_H)
-    row.right:SetJustifyH("RIGHT")
-    row.right:SetWordWrap(false)
+    row.coins = {}
+    for i, width in ipairs(GOLD_COIN_W) do
+        local fs = goldPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        fs:SetSize(width, GOLD_ROW_H)
+        fs:SetJustifyH("RIGHT")
+        fs:SetWordWrap(false)
+        row.coins[i] = fs
+    end
 
     row.line = goldPanel:CreateTexture(nil, "ARTWORK")
     row.line:SetHeight(1)
@@ -465,10 +500,10 @@ local function CollectGold()
             byRealm[realmName] = realm
             order[#order + 1] = realm
         end
-        local gold = math.floor((toon.Money or 0) / 10000)
-        realm.total = realm.total + gold
-        realm.chars[#realm.chars + 1] = { name = ShortName(fullName), gold = gold, toon = toon }
-        total = total + gold
+        local money = toon.Money or 0
+        realm.total = realm.total + money
+        realm.chars[#realm.chars + 1] = { name = ShortName(fullName), money = money, toon = toon }
+        total = total + money
         charCount = charCount + 1
     end
 
@@ -478,7 +513,7 @@ local function CollectGold()
     end)
     for _, realm in ipairs(order) do
         table.sort(realm.chars, function(a, b)
-            if a.gold ~= b.gold then return a.gold > b.gold end
+            if a.money ~= b.money then return a.money > b.money end
             return SortKey(a.name) < SortKey(b.name)
         end)
     end
@@ -490,12 +525,12 @@ end
 local function BuildGoldBlocks(order)
     local blocks, lineCount = {}, 0
     for _, realm in ipairs(order) do
-        local block = { { header = true, left = realm.name, right = FormatAmount(realm.total) or "0" } }
+        local block = { { header = true, left = realm.name, money = realm.total } }
         for _, char in ipairs(realm.chars) do
             local r, g, b = ToonClassCol(char.toon)
             block[#block + 1] = {
                 left  = string.format("|cFF%02x%02x%02x%s|r", r * 255, g * 255, b * 255, char.name),
-                right = FormatAmount(char.gold) or "0",
+                money = char.money,
             }
         end
         block[#block + 1] = { spacer = true }
@@ -517,7 +552,7 @@ local function GetWarbandGold()
     local tracker = AklimeModDB and AklimeModDB.tracker
     local money   = tracker and tracker.WarbandMoney
     if type(money) ~= "number" or money <= 0 then return 0 end
-    return math.floor(money / 10000)
+    return money
 end
 
 local function UpdateGoldPanel()
@@ -550,45 +585,54 @@ local function UpdateGoldPanel()
 
             row.left:ClearAllPoints()
             row.left:SetPoint("TOPLEFT", goldPanel, "TOPLEFT", x, y)
-            row.right:ClearAllPoints()
-            row.right:SetPoint("TOPLEFT", goldPanel, "TOPLEFT", x + GOLD_NAME_W + 6, y)
+
+            local coinX = x + GOLD_NAME_W + 6
+            for i, fs in ipairs(row.coins) do
+                fs:ClearAllPoints()
+                fs:SetPoint("TOPLEFT", goldPanel, "TOPLEFT", coinX, y)
+                coinX = coinX + GOLD_COIN_W[i] + GOLD_PART_GAP
+                fs:Show()
+            end
 
             if line.spacer then
                 row.left:SetText("")
-                row.right:SetText("")
+                for _, fs in ipairs(row.coins) do fs:SetText("") end
                 row.line:Hide()
-            elseif line.header then
-                row.left:SetText("|cFFFFFFFF" .. line.left .. "|r")
-                row.right:SetText("|cFFFFD100" .. line.right .. " g|r")
-                row.line:ClearAllPoints()
-                row.line:SetPoint("TOPLEFT",  goldPanel, "TOPLEFT", x, y - GOLD_ROW_H + 2)
-                row.line:SetPoint("TOPRIGHT", goldPanel, "TOPLEFT", x + GOLD_COL_W, y - GOLD_ROW_H + 2)
-                row.line:Show()
             else
-                row.left:SetText(line.left)
-                row.right:SetText("|cFFFFD100" .. line.right .. "|r")
-                row.line:Hide()
+                if line.header then
+                    row.left:SetText("|cFFFFFFFF" .. line.left .. "|r")
+                    row.line:ClearAllPoints()
+                    row.line:SetPoint("TOPLEFT",  goldPanel, "TOPLEFT", x, y - GOLD_ROW_H + 2)
+                    row.line:SetPoint("TOPRIGHT", goldPanel, "TOPLEFT", x + GOLD_COL_W, y - GOLD_ROW_H + 2)
+                    row.line:Show()
+                else
+                    row.left:SetText(line.left)
+                    row.line:Hide()
+                end
+                local gold, silver, rest = SplitMoney(line.money)
+                row.coins[1]:SetText(GOLD_COIN_COLS[1] .. gold .. "|r")
+                row.coins[2]:SetText(GOLD_COIN_COLS[2] .. silver .. "|r")
+                row.coins[3]:SetText(GOLD_COIN_COLS[3] .. rest .. "|r")
             end
 
             row.left:Show()
-            row.right:Show()
         end
         if #col > maxRows then maxRows = #col end
     end
 
     for i = used + 1, #goldRows do
         goldRows[i].left:Hide()
-        goldRows[i].right:Hide()
+        for _, fs in ipairs(goldRows[i].coins) do fs:Hide() end
         goldRows[i].line:Hide()
     end
 
-    goldPanel.total:SetText("|cFFFFD100" .. (FormatAmount(total + warband) or "0") .. " g|r")
+    goldPanel.total:SetText(FormatMoney(total + warband))
     goldPanel.sub:SetText(string.format(L["ct_gold_chars"] or "%d characters on %d realms",
         charCount, #order))
 
     if warband > 0 then
         goldPanel.bank:SetText((L["ct_warband_bank"] or "Warband Bank") ..
-            ": |cFFFFD100" .. (FormatAmount(warband) or "0") .. " g|r")
+            ": " .. FormatMoney(warband))
         goldPanel.bank:Show()
     else
         goldPanel.bank:Hide()
